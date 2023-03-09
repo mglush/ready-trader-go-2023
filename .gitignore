@@ -1,0 +1,6 @@
+py/bin/
+py/lib/
+cpp/bin/
+cpp/lib/
+py/pyvenv.cfg
+cpp/pyvenv.cfg
