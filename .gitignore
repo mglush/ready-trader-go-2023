@@ -4,3 +4,6 @@ cpp/bin/
 cpp/lib/
 py/pyvenv.cfg
 cpp/pyvenv.cfg
+autotrader.log
+provided_autotrader.log
+exchange.log
