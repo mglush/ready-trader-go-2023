@@ -147,12 +147,14 @@ class AutoTrader(BaseAutoTrader):
             self.send_insert_order(self.ask_id, Side.SELL, ask, ask_volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
             self.asks.add(self.ask_id)
 
-    def is_volume_trending_up(self):
+    def is_volume_trending_up(self, n) -> bool:
         '''
         return: true if volume is trending up.
                 false otherwise.
         '''
-        pass # vasyl's work will go here.
+        if sum(self.orderbook_volumes[-n:])/len(self.orderbook_volumes[-n:]) - self.average_volume() > 0:
+            return True
+        return False
 
     def on_error_message(self, client_order_id: int, error_message: bytes) -> None:
         """Called when the exchange detects an error.
