@@ -37,6 +37,8 @@
   },
   "Traders": {
     "LiquidBear": "glush",
-    "Contender": "secret"
+    "ContenderPY": "secret",
+    "ContenderCPP": "secret",
+    "GlushOriginal": "glush"
   }
 }
