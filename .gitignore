@@ -1,7 +1,6 @@
 bin/
 lib/
 pyvenv.cfg
-pyvenv.cfg
 autotrader.log
 provided_autotrader.log
 exchange.log
