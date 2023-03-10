@@ -5,3 +5,5 @@ autotrader.log
 provided_autotrader.log
 exchange.log
 temp.txt
+match_events.csv
+score_board.csv
