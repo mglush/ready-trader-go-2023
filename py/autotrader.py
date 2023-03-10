@@ -30,7 +30,6 @@ LIVE_ORDER_LIMIT = 10
 TICK_SIZE_IN_CENTS = 100
 MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
-TRADES_NEEDED_TO_TRAIN_FEATURES = 25
 
 SPREAD_SCALE_FACTOR = 0.2
 
@@ -69,7 +68,7 @@ class AutoTrader(BaseAutoTrader):
         '''
         fill_ratios = list()
         # for each id in the last however many orders orders
-        for id in self.fill_ratios:
+        for id in self.last_orders:
             # order is either current or executed or cancelled orders, filled ratio still applies!
             if id in self.current_orders:
                 # calc the actual ratio = filled/volume.
@@ -112,6 +111,33 @@ class AutoTrader(BaseAutoTrader):
             'lifespan' : lifespan,      # good for day vs fill and kill
         }
 
+    def place_orders_at_two_levels(self, bid, bid_volume, ask, ask_volume) -> None:
+        '''
+        places two orders at the given bid and ask with given volumes,
+        inserts order into current_orders data structure.
+        returns: nothing.
+        '''
+        self.logger.info(f'PLACING ORDERS AT BID {bid} VOLUME {bid_volume} AND ASK {ask} VOLUME {ask_volume}!')
+        # placing the bid order here.
+        # size could be based on other factors than just lot LOT_SIZE variable!!!
+        self.bid_id = next(self.order_ids)
+        # record the order as as currently-placed order.
+        self.record_order(self.bid_id, Side.BUY, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
+        self.bid_price = bid
+        # send the order out.
+        self.send_insert_order(self.bid_id, Side.BUY, bid, bid_volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
+        self.bids.add(self.bid_id)
+
+        # placing the ask order here.
+        # size could be based on other factors than just lot LOT_SIZE variable!!!
+        self.ask_id = next(self.order_ids)
+        # record the order as as currently-placed order.
+        self.record_order(self.ask_id, Side.SELL, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
+        # send the order out.
+        self.ask_price = ask
+        self.send_insert_order(self.ask_id, Side.SELL, ask, ask_volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
+        self.asks.add(self.ask_id)
+
     def is_volume_trending_up(self):
         '''
         return: true if volume is trending up.
@@ -151,9 +177,10 @@ class AutoTrader(BaseAutoTrader):
         self.logger.info("received order book for instrument %d with sequence number %d", instrument,
                          sequence_number)
         
-        if bid_prices[0] == 0 or ask_prices[0] == 0 or ask_volumes[0] == 0 or bid_volumes[0] == 0:
+        if bid_prices[0] == 0 or ask_prices[0] == 0:
             self.logger.info("LOOKS LIKE DA FIRST ITERATION! DOING NOTHING!")
         elif instrument == Instrument.ETF:
+            self.logger.info("RECEIVED ETF ORDER BOOK!")
             # first, we need to aggregate the volumes and append it to the orderbook_volumes list.
             self.orderbook_volumes.append(sum(ask_volumes) + sum(bid_volumes))
             # check if we now have too many volumes stored.
@@ -166,13 +193,13 @@ class AutoTrader(BaseAutoTrader):
             bid_volume_ratios = np.array(np.array(bid_volumes)/total_volume)
             theoretical_price = np.dot(np.array(ask_prices), ask_volume_ratios) \
                        + np.dot(np.array(bid_prices), bid_volume_ratios)
-            self.logger.debug(f'THEORETICAL PRICE CALCULATED TO BE {theoretical_price}.') 
+            self.logger.info(f'THEORETICAL PRICE CALCULATED TO BE {theoretical_price}.') 
 
             # standard deviation to use for spread.
             spread = np.std(np.array(ask_prices + bid_prices)) * SPREAD_SCALE_FACTOR
 
             # check if we are just starting up and have no current information.
-            if len(self.executed_orders == 0) and len(self.current_orders == 0):
+            if len(self.executed_orders) == 0 and len(self.current_orders) == 0:
                 # need to find fair price using JUST weighted average,
                 # calculate the spread with variance,
                 # start placing orders and collecting info,
@@ -193,27 +220,48 @@ class AutoTrader(BaseAutoTrader):
                 # the order size should be determined by the depth of the book.
                 # the order timing should be full lot in one order (for each side), because we don't
                 # yet have information on how to break up the order properly.
+                # in every single case, we MUST check if we have existing orders outside our calculated interval, and CANCEL them.
+                # perhaps not the best solution once we do time-weighted execution, but if the interval we have does not contain
+                # the price of a current order, it should not be a current order in my opinion.
                 # 7 cases:
-                if theoretical_price > ask_prices[0] and new_bid_by_tick > ask_prices[0]:
+                if new_bid_by_tick > ask_prices[0]:
                     # our interval is completely ABOVE current market interval.
-                    pass
-                elif theoretical_price > ask_prices[0]:
+                    # => we want to move the market UP.
+                    # => we want to break to ASK and go PAST it.
+                    # => we need to RAISE our calculated BID to or past the current ASK and keep the ASK we calculated the SAME.
+                    new_bid_by_tick = ask_prices[0] # raising the bid, using volume = min(volume at that bid, LOT_SIZE) at that bid.
+                    self.place_orders_at_two_levels(new_bid_by_tick, min(ask_volumes[0], LOT_SIZE), new_ask_by_tick, LOT_SIZE)
+                elif new_bid_by_tick > bid_prices[0] and new_ask_by_tick > ask_prices[0]:
                     # our interval OVERLAPS actual market interval on the right side.
-                    pass
-                elif theoretical_price < bid_prices[0] and new_ask_by_tick < bid_prices[0]:
+                    # => we want to move the market UP, not as aggressively as the previous case.
+                    # => we want to break the ASK and STAY at it, or just rattle the ASK a little.
+                    # => we need to RAISE our calculated BID towards current ASK and keep the ASK we calculated the SAME.
+                    new_bid_by_tick = ask_prices[0] # raising the bid, using volume = min(volume at that bid, LOT_SIZE) at that bid.
+                    self.place_orders_at_two_levels(new_bid_by_tick, min(bid_volumes[0], LOT_SIZE), new_ask_by_tick, LOT_SIZE)
+                elif new_ask_by_tick < bid_prices[0]:
                     # our interval is completely BELOW current market interval.
-                    pass
-                elif theoretical_price < bid_prices[0]:
-                    # our interval OVERLAPS actual market interval on the right side.
-                    pass
-                elif new_ask_by_tick < ask_prices[0] and new_bid_by_tick > bid_prices[0]:
-                    # our interval is WITHIN the actual market interval, THIS IS GREAT.
-                    pass
+                    # => we want to move the market DOWN.
+                    # => we want to break to BID and go PAST it.
+                    # => we need to LOWER our calculated ASK to or past current BID and keep the BID we calculated the SAME.
+                    new_ask_by_tick = bid_prices[0] # lowering the ask, using volume = min(volume at that bid, LOT_SIZE) at that bid.
+                    self.place_orders_at_two_levels(new_bid_by_tick, min(bid_volumes[0], LOT_SIZE), new_ask_by_tick, LOT_SIZE)
+                elif new_bid_by_tick < bid_prices[0] and new_ask_by_tick < ask_prices[0]:
+                    # our interval OVERLAPS actual market interval on the left side.
+                    # => we want to move the market DOWN, not as aggressively as the previous case.
+                    # => we want to break the BIO and STAY at it, or just rattle the BID a little.
+                    # => we need to LOWER our calculated ASK towards current BID and keep the BID we calculated the SAME.
+                    new_ask_by_tick = bid_prices[0] # lowering the ask, using volume = min(volume at that bid, LOT_SIZE) at that bid.
+                    self.place_orders_at_two_levels(new_bid_by_tick, min(bid_volumes[0], LOT_SIZE), new_ask_by_tick, LOT_SIZE)
+                elif new_bid_by_tick > bid_prices[0] and new_ask_by_tick < ask_prices[0]:
+                    # our interval is WITHIN the actual market interval, GREAT!
+                    # => just place orders at the bid and ask we calculated, ba-da-bing ba-da-bang.
+                    # must be a better way than just using LOT_SIZE here!!!
+                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
                 elif new_ask_by_tick > ask_prices[0] and new_bid_by_tick < bid_prices[0]:
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     pass
                 else:
-                    # our interval perfectly MATCHES the actual market interval, also a little interesting, perhaps need to recalculate?
+                    # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
                     pass
                 
 
