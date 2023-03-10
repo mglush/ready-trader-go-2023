@@ -160,6 +160,70 @@ class AutoTrader(BaseAutoTrader):
             if len(self.orderbook_volumes) > self.window_size:
                 self.orderbook_volumes.pop(0) # remove least reacent volume.
 
+            # weighted average to compute theoretical_price, to be modified later.
+            total_volume = sum(ask_volumes) + sum(bid_volumes)
+            ask_volume_ratios = np.array(np.array(ask_volumes)/total_volume)
+            bid_volume_ratios = np.array(np.array(bid_volumes)/total_volume)
+            theoretical_price = np.dot(np.array(ask_prices), ask_volume_ratios) \
+                       + np.dot(np.array(bid_prices), bid_volume_ratios)
+            self.logger.debug(f'THEORETICAL PRICE CALCULATED TO BE {theoretical_price}.') 
+
+            # standard deviation to use for spread.
+            spread = np.std(np.array(ask_prices + bid_prices)) * SPREAD_SCALE_FACTOR
+
+            # check if we are just starting up and have no current information.
+            if len(self.executed_orders == 0) and len(self.current_orders == 0):
+                # need to find fair price using JUST weighted average,
+                # calculate the spread with variance,
+                # start placing orders and collecting info,
+                # calculate newBid and newAsk based on our fair price and spread.
+                new_ask = theoretical_price + spread / 2
+                new_bid = theoretical_price - spread / 2
+
+                # new_ask and new_bid are probably not to the tick_size_in_cents correct.
+                # two appraoches here.
+                # can either round up new_ask and new_bid to their nearest tick mark
+                # or we can keep them there and place orders around
+                # the new_ask at nearest ticks on both sides.
+                new_ask_by_tick = int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
+                new_bid_by_tick = int(new_bid - new_bid % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
+
+                # we want to asymetrically "change" the spread we have based on the current order book spread.
+                # within the cases, we change the spread by inserting two orders at our spread (no information on what better to do yet).
+                # the order size should be determined by the depth of the book.
+                # the order timing should be full lot in one order (for each side), because we don't
+                # yet have information on how to break up the order properly.
+                # 7 cases:
+                if theoretical_price > ask_prices[0] and new_bid_by_tick > ask_prices[0]:
+                    # our interval is completely ABOVE current market interval.
+                    pass
+                elif theoretical_price > ask_prices[0]:
+                    # our interval OVERLAPS actual market interval on the right side.
+                    pass
+                elif theoretical_price < bid_prices[0] and new_ask_by_tick < bid_prices[0]:
+                    # our interval is completely BELOW current market interval.
+                    pass
+                elif theoretical_price < bid_prices[0]:
+                    # our interval OVERLAPS actual market interval on the right side.
+                    pass
+                elif new_ask_by_tick < ask_prices[0] and new_bid_by_tick > bid_prices[0]:
+                    # our interval is WITHIN the actual market interval, THIS IS GREAT.
+                    pass
+                elif new_ask_by_tick > ask_prices[0] and new_bid_by_tick < bid_prices[0]:
+                    # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
+                    pass
+                else:
+                    # our interval perfectly MATCHES the actual market interval, also a little interesting, perhaps need to recalculate?
+                    pass
+                
+
+            else:
+                # we have information, so modify the theoretical_price and spread and execution duration of the orders.
+
+                # we want to asymetrically change the spread we have based on the current order book spread.
+                # after that, we want to determine our order size via a ratio of the average volume, since we now have data.
+                pass
+
     def order_status_update_helper(self, id, volume) -> None:
         '''
         finds amount of shares filled,
