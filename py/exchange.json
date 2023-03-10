@@ -36,7 +36,7 @@
     "PositionLimit": 100
   },
   "Traders": {
-    "TraderOne": "secret",
-    "TraderTwo": "secret"
+    "LiquidBear": "glush",
+    "Contender": "secret"
   }
 }

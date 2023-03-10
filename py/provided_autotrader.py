@@ -17,19 +17,17 @@
 #     <https://www.gnu.org/licenses/>.
 import asyncio
 import itertools
-import numpy as np
 
 from typing import List
 
 from ready_trader_go import BaseAutoTrader, Instrument, Lifespan, MAXIMUM_ASK, MINIMUM_BID, Side
 
 
-LOT_SIZE = 2
+LOT_SIZE = 10
 POSITION_LIMIT = 100
 TICK_SIZE_IN_CENTS = 100
 MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
-TRADES_NEEDED_TO_TRAIN_FEATURES = 10
 
 
 class AutoTrader(BaseAutoTrader):
@@ -49,13 +47,6 @@ class AutoTrader(BaseAutoTrader):
         self.bids = set()
         self.asks = set()
         self.ask_id = self.ask_price = self.bid_id = self.bid_price = self.position = 0
-        
-        # MG ADDITIONS THURSDAY 03/09/2023.
-        self.enough_data_acquired = False # must collect data about how our actions 
-                                          # influence features/prices.
-        self.our_order_impacts = list() # will hold last x impacts of our trades on prices.
-        self.current_orders_mapping = dict() # maps orderId -> fairPrice at time of order placement.
-                                            # can also have it map to time of order placement.
 
     def on_error_message(self, client_order_id: int, error_message: bytes) -> None:
         """Called when the exchange detects an error.
@@ -88,65 +79,29 @@ class AutoTrader(BaseAutoTrader):
         """
         self.logger.info("received order book for instrument %d with sequence number %d", instrument,
                          sequence_number)
-        # MG ADDITIONS THURSDAY 03/09/2023.
-        if bid_prices[0] == 0 or ask_prices[0] == 0 or ask_volumes[0] == 0 or bid_volumes[0] == 0:
-            self.logger.info("LOOKS LIKE DA FIRST ITERATION!")
-        elif instrument == Instrument.ETF:
-            # compute fair price using weighted average.
-            # parameter: how much more important are the asks/bids closer to top?
-            # for now, treating each position as equal weight.
-            # in the end, log the price we computed.
-            
-            total_volume = sum(ask_volumes) + sum(bid_volumes)
-            ask_volume_ratios = np.array(np.array(ask_volumes)/total_volume)
-            bid_volume_ratios = np.array(np.array(bid_volumes)/total_volume)
-            new_price = np.dot(np.array(ask_prices), ask_volume_ratios) \
-                       + np.dot(np.array(bid_prices), bid_volume_ratios)
-            self.logger.info(f'new price calculated to be {new_price}.') 
+        if instrument == Instrument.FUTURE:
+            price_adjustment = - (self.position // LOT_SIZE) * TICK_SIZE_IN_CENTS
+            new_bid_price = bid_prices[0] + price_adjustment if bid_prices[0] != 0 else 0
+            new_ask_price = ask_prices[0] + price_adjustment if ask_prices[0] != 0 else 0
 
-            # compute standard deviation given the bids and asks.
-            # parameter: how many sigmas should the spread be?
-            # for now, treating the spread to be ONE sigma.
-            # in the end, log the spread we computed.
-            spread = np.sqrt(np.sqrt(np.std(np.array(ask_prices + bid_prices))))
-            self.logger.info(f'spread calculated to be {spread}.') 
+            if self.bid_id != 0 and new_bid_price not in (self.bid_price, 0):
+                self.send_cancel_order(self.bid_id)
+                self.bid_id = 0
+            if self.ask_id != 0 and new_ask_price not in (self.ask_price, 0):
+                self.send_cancel_order(self.ask_id)
+                self.ask_id = 0
 
-            # calculate newBid and newAsk based on our fair price and spread.
-            new_ask = new_price + spread / 2
-            new_bid = new_price - spread / 2
-
-            # new_ask and new_bid are probably not to the tick_size_in_cents correct.
-            # two appraoches here.
-            # can either round up new_ask and new_bid to their nearest tick mark
-            # or we can keep them there and place orders around
-            # the new_ask at nearest ticks on both sides.
-            new_ask_by_tick = int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
-            new_bid_by_tick = int(new_bid - new_bid % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
-            
-            if not self.enough_data_acquired:
-                self.logger.info(f'PLACING TWO NEW ORDERS AT {new_bid_by_tick} and {new_ask_by_tick}.') 
-                # submit orders around the new price.
-                # once they are executed, the order_filled_function will collect data on impact on price.
-                # once we have enough data, this flag will forever be set to true.
+            if self.bid_id == 0 and new_bid_price != 0 and self.position < POSITION_LIMIT:
                 self.bid_id = next(self.order_ids)
-                self.bid_price = new_bid_by_tick
-                self.send_insert_order(self.bid_id, Side.BUY, new_bid_by_tick, LOT_SIZE, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
+                self.bid_price = new_bid_price
+                self.send_insert_order(self.bid_id, Side.BUY, new_bid_price, LOT_SIZE, Lifespan.GOOD_FOR_DAY)
                 self.bids.add(self.bid_id)
-                self.current_orders_mapping[self.bid_id] = new_price
-                
-                self.ask_id = next(self.order_ids)
-                self.ask_price = new_ask_by_tick
-                self.send_insert_order(self.ask_id, Side.SELL, new_ask_by_tick, LOT_SIZE, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
-                self.asks.add(self.ask_id)
-                self.current_orders_mapping[self.ask_id] = new_price
 
-                self.logger.info("ORDERS DONE BEEN PLACED.") 
-            else:
-                # must see whether our perceived price impact lets us insert an order.
-                # if it does, we insert order at both new bid and new ask.
-                # if it does not, we do nothing, perhaps try to unwind position a little.
-                pass
-            # trade.
+            if self.ask_id == 0 and new_ask_price != 0 and self.position > -POSITION_LIMIT:
+                self.ask_id = next(self.order_ids)
+                self.ask_price = new_ask_price
+                self.send_insert_order(self.ask_id, Side.SELL, new_ask_price, LOT_SIZE, Lifespan.GOOD_FOR_DAY)
+                self.asks.add(self.ask_id)
 
     def on_order_filled_message(self, client_order_id: int, price: int, volume: int) -> None:
         """Called when one of your orders is filled, partially or fully.
@@ -157,27 +112,12 @@ class AutoTrader(BaseAutoTrader):
         """
         self.logger.info("received order filled for order %d with price %d and volume %d", client_order_id,
                          price, volume)
-        # MG ADDITIONS THURSDAY 03/09/2023.
-        # calculate impact of order fill on the price.
-        # NEED some calculation of impact here.
-        # DO NOT KNOW HOW TO COMPUTE PRICE IMPACT HERE!!!
-
-        # record impact and update the list.
-
-        # change flag if we now have enough information.
-        if len(self.our_order_impacts) == TRADES_NEEDED_TO_TRAIN_FEATURES:
-            self.enough_data_acquired = True
-
         if client_order_id in self.bids:
             self.position += volume
             self.send_hedge_order(next(self.order_ids), Side.ASK, MIN_BID_NEAREST_TICK, volume)
         elif client_order_id in self.asks:
             self.position -= volume
             self.send_hedge_order(next(self.order_ids), Side.BID, MAX_ASK_NEAREST_TICK, volume)
-        
-        # delete orderId from active orders mapping.
-        if client_order_id in self.current_orders_mapping:
-            del self.current_orders_mapping[client_order_id]
 
     def on_order_status_message(self, client_order_id: int, fill_volume: int, remaining_volume: int,
                                 fees: int) -> None:
@@ -190,10 +130,6 @@ class AutoTrader(BaseAutoTrader):
 
         If an order is cancelled its remaining volume will be zero.
         """
-
-        # WE CAN DO SHIT HERE TO WORK WITH PARTIALLY-FILELD ORDERS,
-        # TRY TO THINK OF WHAT WE CAN RECOMPUTE OR DO WITHIN THIS THANG!!!
-
         self.logger.info("received order status for order %d with fill volume %d remaining %d and fees %d",
                          client_order_id, fill_volume, remaining_volume, fees)
         if remaining_volume == 0:

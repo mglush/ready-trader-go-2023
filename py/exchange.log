@@ -50,3 +50,753 @@ task: <Task pending name='Task-1' coro=<Controller.start() running at /Users/glu
 2023-03-09 15:36:40,261 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:59395
 2023-03-09 15:36:56,206 [INFO   ] [APP] SIGTERM signal received - shutting down...
 2023-03-09 15:36:56,207 [INFO   ] [APP] closing event loop
+2023-03-09 16:53:57,285 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py}
+2023-03-09 16:53:57,286 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"TraderOne":"secret","TraderTwo":"secret"}}
+2023-03-09 16:53:57,286 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 16:53:57,286 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 16:53:57,287 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 16:53:57,306 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 16:53:57,306 [INFO   ] [INFORMATION] information channel established
+2023-03-09 16:53:59,138 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61049
+2023-03-09 16:54:02,313 [INFO   ] [CONTROLLER] market open
+2023-03-09 16:54:07,762 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 16:54:07,763 [INFO   ] [APP] closing event loop
+2023-03-09 16:54:30,823 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py}
+2023-03-09 16:54:30,826 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"TraderOne":"secret","TraderTwo":"secret"}}
+2023-03-09 16:54:30,826 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 16:54:30,826 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 16:54:30,827 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 16:54:30,856 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 16:54:30,856 [INFO   ] [INFORMATION] information channel established
+2023-03-09 16:54:30,877 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61057
+2023-03-09 16:54:30,878 [INFO   ] [EXECUTION] fd=25 'TraderOne' is ready!
+2023-03-09 16:54:32,154 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61058
+2023-03-09 16:54:35,878 [INFO   ] [CONTROLLER] market open
+2023-03-09 16:54:35,885 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 16:54:35,885 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 16:54:54,022 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 16:54:54,022 [INFO   ] [APP] closing event loop
+2023-03-09 16:58:40,270 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 16:58:40,270 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"TraderOne":"secret","TraderTwo":"secret"}}
+2023-03-09 16:58:40,271 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 16:58:40,271 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 16:58:40,271 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 16:58:40,291 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 16:58:40,291 [INFO   ] [INFORMATION] information channel established
+2023-03-09 16:58:40,308 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61121
+2023-03-09 16:58:40,309 [INFO   ] [EXECUTION] fd=25 'TraderOne' is ready!
+2023-03-09 16:58:40,331 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61122
+2023-03-09 16:58:40,331 [INFO   ] [EXECUTION] fd=26 'TraderTwo' is ready!
+2023-03-09 16:58:41,643 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61123
+2023-03-09 16:58:45,307 [INFO   ] [CONTROLLER] market open
+2023-03-09 16:58:45,315 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 16:58:45,315 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 16:59:08,466 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 16:59:08,471 [INFO   ] [APP] closing event loop
+2023-03-09 17:00:27,433 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:00:27,434 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"TraderOne":"secret","TraderTwo":"secret"}}
+2023-03-09 17:00:27,435 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:00:27,435 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:00:27,436 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:00:27,456 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:00:27,456 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:00:27,469 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61156
+2023-03-09 17:00:27,482 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61157
+2023-03-09 17:00:27,482 [INFO   ] [EXECUTION] fd=25 'TraderTwo' is ready!
+2023-03-09 17:00:27,482 [INFO   ] [EXECUTION] fd=26 'TraderOne' is ready!
+2023-03-09 17:00:28,619 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61159
+2023-03-09 17:00:32,464 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:00:32,471 [INFO   ] [CONNECTION] fd=26 connection lost
+2023-03-09 17:00:32,471 [WARNING] [EXECUTION] fd=26 lost connection to auto-trader:
+2023-03-09 17:01:03,500 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:01:03,501 [INFO   ] [APP] closing event loop
+2023-03-09 17:01:32,890 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:01:32,891 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"TraderOne":"secret","TraderTwo":"secret"}}
+2023-03-09 17:01:32,898 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:01:32,899 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:01:32,900 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:01:32,920 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:01:32,921 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:01:32,937 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61177
+2023-03-09 17:01:32,937 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61178
+2023-03-09 17:01:32,957 [INFO   ] [EXECUTION] fd=25 'TraderOne' is ready!
+2023-03-09 17:01:32,973 [INFO   ] [EXECUTION] fd=26 'TraderTwo' is ready!
+2023-03-09 17:01:34,119 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61179
+2023-03-09 17:01:37,927 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:01:37,934 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 17:01:37,934 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 17:02:09,235 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:02:09,236 [INFO   ] [APP] closing event loop
+2023-03-09 17:04:00,560 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:04:00,561 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"TraderOne":"secret","TraderTwo":"secret"}}
+2023-03-09 17:04:00,561 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:04:00,562 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:04:00,563 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:04:00,583 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:04:00,583 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:04:00,600 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61209
+2023-03-09 17:04:00,601 [INFO   ] [EXECUTION] fd=25 'TraderOne' is ready!
+2023-03-09 17:04:00,621 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61210
+2023-03-09 17:04:00,621 [INFO   ] [EXECUTION] fd=26 'TraderTwo' is ready!
+2023-03-09 17:04:01,807 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61212
+2023-03-09 17:04:05,601 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:04:05,608 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 17:04:05,609 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 17:04:23,719 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:04:23,719 [INFO   ] [APP] closing event loop
+2023-03-09 17:05:48,788 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:05:48,789 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:05:48,789 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:05:48,789 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:05:48,789 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:05:48,809 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:05:48,810 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:05:48,830 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61242
+2023-03-09 17:05:48,830 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61243
+2023-03-09 17:05:48,830 [INFO   ] [EXECUTION] fd=25 'Contender' is ready!
+2023-03-09 17:05:48,830 [INFO   ] [EXECUTION] fd=26 'LiquidBear' is ready!
+2023-03-09 17:05:50,033 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61245
+2023-03-09 17:05:53,830 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:05:53,838 [INFO   ] [CONNECTION] fd=26 connection lost
+2023-03-09 17:05:53,838 [WARNING] [EXECUTION] fd=26 lost connection to auto-trader:
+2023-03-09 17:06:05,500 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:06:05,500 [INFO   ] [APP] closing event loop
+2023-03-09 17:08:11,905 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:08:11,905 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:08:11,906 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:08:11,906 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:08:11,906 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:08:11,925 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:08:11,925 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:08:11,926 [INFO   ] [CONNECTION] fd=20 connection established: peer=127.0.0.1:61282
+2023-03-09 17:08:11,944 [INFO   ] [CONNECTION] fd=22 connection established: peer=127.0.0.1:61283
+2023-03-09 17:08:11,953 [INFO   ] [EXECUTION] fd=20 'Contender' is ready!
+2023-03-09 17:08:11,953 [INFO   ] [EXECUTION] fd=22 'LiquidBear' is ready!
+2023-03-09 17:08:13,172 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61285
+2023-03-09 17:08:16,954 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:08:16,962 [INFO   ] [CONNECTION] fd=22 connection lost
+2023-03-09 17:08:16,962 [WARNING] [EXECUTION] fd=22 lost connection to auto-trader:
+2023-03-09 17:08:22,931 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:08:22,932 [INFO   ] [APP] closing event loop
+2023-03-09 17:11:30,952 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:11:30,952 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:11:30,953 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:11:30,953 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:11:30,954 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:11:30,974 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:11:30,974 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:11:30,988 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61602
+2023-03-09 17:11:30,988 [INFO   ] [EXECUTION] fd=25 'Contender' is ready!
+2023-03-09 17:11:32,080 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61603
+2023-03-09 17:11:35,989 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:11:43,149 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:11:43,149 [INFO   ] [APP] closing event loop
+2023-03-09 17:12:10,145 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:12:10,145 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:12:10,148 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:12:10,148 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:12:10,149 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:12:10,169 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:12:10,169 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:12:10,197 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61621
+2023-03-09 17:12:10,198 [INFO   ] [EXECUTION] fd=25 'LiquidBear' is ready!
+2023-03-09 17:12:10,199 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61622
+2023-03-09 17:12:10,200 [INFO   ] [EXECUTION] fd=26 'Contender' is ready!
+2023-03-09 17:12:11,404 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61623
+2023-03-09 17:12:15,197 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:12:16,002 [ERROR  ] [CONNECTION] fd=25 connection lost:
+Traceback (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/selector_events.py", line 856, in _read_ready__data_received
+    data = self._sock.recv(self.max_size)
+ConnectionResetError: [Errno 54] Connection reset by peer
+2023-03-09 17:12:16,003 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+Traceback (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/selector_events.py", line 856, in _read_ready__data_received
+    data = self._sock.recv(self.max_size)
+ConnectionResetError: [Errno 54] Connection reset by peer
+2023-03-09 17:12:32,719 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:12:32,719 [INFO   ] [APP] closing event loop
+2023-03-09 17:13:35,160 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:13:35,161 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:13:35,161 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:13:35,161 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:13:35,162 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:13:35,181 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:13:35,181 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:13:35,202 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:61638
+2023-03-09 17:13:35,219 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61639
+2023-03-09 17:13:35,219 [INFO   ] [EXECUTION] fd=25 'LiquidBear' is ready!
+2023-03-09 17:13:35,219 [INFO   ] [EXECUTION] fd=26 'Contender' is ready!
+2023-03-09 17:13:36,451 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61641
+2023-03-09 17:13:40,203 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:13:40,212 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 17:13:40,212 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 17:13:45,146 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:13:45,146 [INFO   ] [APP] closing event loop
+2023-03-09 17:14:41,519 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:14:41,520 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:14:41,521 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:14:41,521 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:14:41,522 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:14:41,542 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:14:41,543 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:14:41,544 [INFO   ] [CONNECTION] fd=21 connection established: peer=127.0.0.1:61660
+2023-03-09 17:14:41,580 [INFO   ] [EXECUTION] fd=21 'LiquidBear' is ready!
+2023-03-09 17:14:41,580 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:61661
+2023-03-09 17:14:41,580 [INFO   ] [EXECUTION] fd=26 'Contender' is ready!
+2023-03-09 17:14:42,722 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:61662
+2023-03-09 17:14:46,581 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:15:14,900 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:15:14,901 [INFO   ] [APP] closing event loop
+2023-03-09 17:17:04,582 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:17:04,583 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:17:04,583 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:17:04,584 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:17:04,584 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:17:04,602 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:17:04,602 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:17:04,617 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62014
+2023-03-09 17:17:04,629 [INFO   ] [EXECUTION] fd=25 'LiquidBear' is ready!
+2023-03-09 17:17:04,631 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62015
+2023-03-09 17:17:04,632 [INFO   ] [EXECUTION] fd=26 'Contender' is ready!
+2023-03-09 17:17:05,914 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62016
+2023-03-09 17:17:09,613 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:17:09,624 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 17:17:09,624 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 17:17:14,255 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:17:14,256 [INFO   ] [APP] closing event loop
+2023-03-09 17:17:54,473 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:17:54,474 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:17:54,474 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:17:54,474 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:17:54,475 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:17:54,479 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:17:54,479 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:17:54,499 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62037
+2023-03-09 17:17:54,499 [INFO   ] [EXECUTION] fd=25 'LiquidBear' is ready!
+2023-03-09 17:17:54,499 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62038
+2023-03-09 17:17:54,500 [INFO   ] [EXECUTION] fd=26 'Contender' is ready!
+2023-03-09 17:17:55,735 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62039
+2023-03-09 17:17:59,498 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:17:59,507 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 17:17:59,507 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 17:18:04,832 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:18:04,833 [INFO   ] [APP] closing event loop
+2023-03-09 17:19:14,690 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:19:14,691 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:19:14,691 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:19:14,691 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:19:14,692 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:19:14,712 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:19:14,713 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:19:14,759 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62064
+2023-03-09 17:19:14,759 [INFO   ] [EXECUTION] fd=25 'Contender' is ready!
+2023-03-09 17:19:14,761 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62065
+2023-03-09 17:19:14,761 [INFO   ] [EXECUTION] fd=26 'LiquidBear' is ready!
+2023-03-09 17:19:15,801 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62066
+2023-03-09 17:19:19,760 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:19:20,017 [INFO   ] [CONNECTION] fd=26 connection lost
+2023-03-09 17:19:20,017 [WARNING] [EXECUTION] fd=26 lost connection to auto-trader:
+2023-03-09 17:19:24,431 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:19:24,431 [INFO   ] [APP] closing event loop
+2023-03-09 17:20:34,856 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:20:34,857 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:20:34,859 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:20:34,859 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:20:34,860 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:20:34,880 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:20:34,881 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:20:34,899 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62078
+2023-03-09 17:20:34,904 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62079
+2023-03-09 17:20:34,905 [INFO   ] [EXECUTION] fd=25 'Contender' is ready!
+2023-03-09 17:20:34,905 [INFO   ] [EXECUTION] fd=26 'LiquidBear' is ready!
+2023-03-09 17:20:36,011 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62080
+2023-03-09 17:20:39,899 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:20:40,142 [INFO   ] [CONNECTION] fd=26 connection lost
+2023-03-09 17:20:40,142 [WARNING] [EXECUTION] fd=26 lost connection to auto-trader:
+2023-03-09 17:20:48,279 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:20:48,280 [INFO   ] [APP] closing event loop
+2023-03-09 17:22:36,313 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:22:36,313 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:22:36,313 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:22:36,313 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:22:36,314 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:22:36,334 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:22:36,334 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:22:36,355 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62117
+2023-03-09 17:22:36,356 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62116
+2023-03-09 17:22:36,356 [INFO   ] [EXECUTION] fd=25 'Contender' is ready!
+2023-03-09 17:22:36,356 [INFO   ] [EXECUTION] fd=26 'LiquidBear' is ready!
+2023-03-09 17:22:37,639 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62119
+2023-03-09 17:22:41,356 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:22:41,364 [INFO   ] [CONNECTION] fd=26 connection lost
+2023-03-09 17:22:41,364 [WARNING] [EXECUTION] fd=26 lost connection to auto-trader:
+2023-03-09 17:22:46,768 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:22:46,768 [INFO   ] [APP] closing event loop
+2023-03-09 17:24:25,436 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:24:25,436 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:24:25,437 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:24:25,437 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:24:25,438 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:24:25,458 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:24:25,458 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:24:25,542 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62151
+2023-03-09 17:24:25,543 [INFO   ] [EXECUTION] fd=25 'LiquidBear' is ready!
+2023-03-09 17:24:25,543 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62152
+2023-03-09 17:24:25,561 [INFO   ] [EXECUTION] fd=26 'Contender' is ready!
+2023-03-09 17:24:26,744 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62154
+2023-03-09 17:24:30,471 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:24:30,745 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 17:24:30,745 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 17:24:37,333 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:24:37,333 [INFO   ] [APP] closing event loop
+2023-03-09 17:25:22,785 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:25:22,785 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:25:22,786 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:25:22,786 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:25:22,786 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:25:22,806 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:25:22,807 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:25:22,828 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62165
+2023-03-09 17:25:22,828 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62166
+2023-03-09 17:25:22,828 [INFO   ] [EXECUTION] fd=25 'Contender' is ready!
+2023-03-09 17:25:22,828 [INFO   ] [EXECUTION] fd=26 'LiquidBear' is ready!
+2023-03-09 17:25:24,047 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62167
+2023-03-09 17:25:27,829 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:25:28,059 [INFO   ] [CONNECTION] fd=26 connection lost
+2023-03-09 17:25:28,060 [WARNING] [EXECUTION] fd=26 lost connection to auto-trader:
+2023-03-09 17:25:41,117 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:25:41,118 [INFO   ] [APP] closing event loop
+2023-03-09 17:26:48,678 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:26:48,679 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:26:48,680 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:26:48,680 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:26:48,680 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:26:48,703 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:26:48,704 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:26:48,755 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62199
+2023-03-09 17:26:48,756 [INFO   ] [EXECUTION] fd=25 'LiquidBear' is ready!
+2023-03-09 17:26:48,776 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62200
+2023-03-09 17:26:48,777 [INFO   ] [EXECUTION] fd=26 'Contender' is ready!
+2023-03-09 17:26:50,119 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62201
+2023-03-09 17:26:53,720 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:26:53,968 [INFO   ] [CONNECTION] fd=25 connection lost
+2023-03-09 17:26:53,969 [WARNING] [EXECUTION] fd=25 lost connection to auto-trader:
+2023-03-09 17:26:58,222 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:26:58,222 [INFO   ] [APP] closing event loop
+2023-03-09 17:28:40,459 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:28:40,460 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:28:40,461 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:28:40,461 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:28:40,461 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:28:40,480 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:28:40,480 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:28:40,490 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62293
+2023-03-09 17:28:40,504 [INFO   ] [EXECUTION] fd=25 'LiquidBear' is ready!
+2023-03-09 17:28:40,506 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62294
+2023-03-09 17:28:40,506 [INFO   ] [EXECUTION] fd=26 'Contender' is ready!
+2023-03-09 17:28:41,748 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62295
+2023-03-09 17:28:45,490 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:28:45,722 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=0.229967 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:45,957 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=0.465538 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:45,957 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=0.465634 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:46,261 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=0.769343 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:46,261 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=0.769503 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:46,534 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.042065 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:46,534 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.042136 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:46,751 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.259438 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:46,751 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.259526 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:46,994 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.502177 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:46,994 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.502272 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:47,240 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.748088 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:47,240 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.748191 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:47,536 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.043832 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:47,536 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.043938 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:47,749 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.257087 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:47,749 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.257180 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:47,985 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.493177 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:47,985 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.493282 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:48,291 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.799644 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:48,291 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.799734 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:48,545 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.052620 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:48,545 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.053229 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:48,750 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.257944 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:48,750 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.258053 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:48,984 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.492289 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:48,984 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.492364 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:49,231 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.739144 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:49,231 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.739299 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:49,539 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.047263 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:49,539 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.047356 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:49,711 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.219147 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:49,711 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.219236 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,002 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.510150 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,002 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.510241 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,229 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.737220 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,229 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.737302 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,529 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.036776 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,529 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.036871 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,724 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.231705 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,724 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.231795 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,995 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.503192 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:50,995 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.503293 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:51,217 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.725441 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:51,217 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.725536 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:51,512 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.019836 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:51,512 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.019931 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:51,713 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.221554 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:51,714 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.221716 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:51,961 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.468861 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:51,961 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.469069 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:52,282 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.789800 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:52,282 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.789992 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:52,514 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.022317 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:52,514 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.022408 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:52,717 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.225326 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:52,717 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.225412 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:52,990 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.498388 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:52,990 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.498482 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:53,291 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.799080 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:53,291 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.799181 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:53,525 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.032407 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:53,525 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.032730 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:53,768 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.275758 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:53,768 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.275868 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:54,027 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.534950 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:54,027 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.535235 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:54,237 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.745023 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:54,237 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.745120 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:54,459 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.966550 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:54,459 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.966637 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:54,787 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=9.295327 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:54,787 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=9.295431 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:55,020 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=9.527952 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:55,020 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=9.528179 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:55,266 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=9.773861 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:55,266 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=9.774004 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:55,506 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.013913 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:55,506 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.014053 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:55,750 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.257988 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:55,750 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.258080 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:56,046 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.553669 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:56,046 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.553760 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:56,209 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.717435 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:56,210 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.717512 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:56,500 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.007552 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:56,500 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.007696 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:56,784 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.291530 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:56,784 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.291867 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,016 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.523491 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,016 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.523585 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,265 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.773319 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,265 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.773449 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,477 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.984489 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,477 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=11.984598 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,757 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.264634 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,757 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.264730 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,999 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.506710 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:57,999 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.506796 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:58,247 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.754724 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:58,247 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.754834 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:58,512 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.020142 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:58,512 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.020343 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:58,731 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.239077 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:58,732 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.239511 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:58,991 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.498719 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:58,991 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.498787 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:59,291 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.799390 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:59,292 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.799479 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:59,456 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.964006 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:59,456 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.964162 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:59,776 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.283441 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:59,776 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.283587 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:59,979 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.486489 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:28:59,979 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.486575 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:00,258 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.765375 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:00,258 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.765559 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:00,469 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.976675 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:00,469 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.976763 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:00,750 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.258171 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:00,750 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.258262 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,048 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.556165 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,048 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.556235 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,239 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.747063 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,239 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.747153 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,525 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.032455 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,525 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.032571 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,777 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.284703 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,777 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.284830 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,998 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.506311 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:01,999 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.506395 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:02,290 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.797914 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:02,290 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.798114 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:02,540 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.047907 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:02,540 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.047994 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:02,714 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.221530 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:02,714 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.221957 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,037 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.544782 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,037 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.544877 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,284 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.792083 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,284 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.792166 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,495 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.002726 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,495 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.002811 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,737 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.245146 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,737 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.245241 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,986 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.493324 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:03,986 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.493437 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:04,266 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.773639 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:04,266 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.773732 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:04,542 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.049211 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:04,542 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.049582 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:04,739 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.245607 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:04,739 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.246768 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:04,974 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.481763 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:04,974 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.481834 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:05,259 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.766766 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:05,259 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.767011 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:05,474 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.975922 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:05,474 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.981700 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:05,750 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.257964 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:05,750 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.258092 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:05,957 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.465196 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:05,958 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.465333 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:06,199 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.707127 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:06,199 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.707219 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:06,473 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.980472 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:06,473 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.980579 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:06,729 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.236639 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:06,729 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.236820 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:07,029 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.536293 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:07,029 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.536677 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:07,226 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.733177 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:07,226 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.733681 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:07,507 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.014397 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:07,507 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.014533 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:07,795 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.302751 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:07,795 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.302894 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:08,022 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.529367 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:08,022 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.529478 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:08,267 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.774420 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:08,267 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.774530 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:08,464 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.972215 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:08,465 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.972304 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:08,792 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.300005 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:08,793 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.300285 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,015 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.522478 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,015 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.522602 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,199 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.706747 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,199 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.706933 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,512 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.020027 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,512 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.020130 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,788 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.295718 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,788 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.295806 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,956 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.463311 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:09,956 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.463602 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:10,297 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.804396 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:10,297 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.804495 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:10,505 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.013128 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:10,505 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.013222 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:10,779 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.286638 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:10,779 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.286740 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,043 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.550589 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,044 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.551013 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,225 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.732615 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,225 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.732703 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,530 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.036327 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,530 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.037671 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,782 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.289851 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,782 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.289996 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,997 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.504594 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:11,997 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.504684 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:12,239 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.746332 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:12,239 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.746429 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:12,510 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.018157 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:12,511 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.018243 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:12,793 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.300555 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:12,793 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.300653 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:12,995 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.502943 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:12,995 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.503038 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:13,266 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.773272 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:13,266 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.773462 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:13,488 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.995918 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:13,488 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.996014 client_order_id=0 message='duplicate or out-of-order client_order_id'
+2023-03-09 17:29:13,550 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:29:13,551 [INFO   ] [APP] closing event loop
+2023-03-09 17:34:15,799 [INFO   ] [APP] exchange started with arguments={rtg.py, run, autotrader.py, provided_autotrader.py}
+2023-03-09 17:34:15,799 [INFO   ] [APP] configuration={"Engine":{"MarketDataFile":"data/market_data1.csv","MarketEventInterval":0.05,"MarketOpenDelay":5.0,"MatchEventsFile":"match_events.csv","ScoreBoardFile":"score_board.csv","Speed":1.0,"TickInterval":0.25},"Execution":{"Host":"127.0.0.1","Port":12345},"Fees":{"Maker":-0.0001,"Taker":0.0002},"Hud":{"Host":"127.0.0.1","Port":12347},"Information":{"Type":"mmap","Name":"info.dat"},"Instrument":{"EtfClamp":0.002,"TickSize":1.0},"Limits":{"ActiveOrderCountLimit":10,"ActiveVolumeLimit":200,"MessageFrequencyInterval":1.0,"MessageFrequencyLimit":50,"PositionLimit":100},"Traders":{"LiquidBear":"glush","Contender":"secret"}}
+2023-03-09 17:34:15,800 [INFO   ] [CONTROLLER] starting the match
+2023-03-09 17:34:15,800 [INFO   ] [EXECUTION] starting execution server: host=127.0.0.1 port=12345
+2023-03-09 17:34:15,801 [INFO   ] [INFORMATION] starting information publisher: type=mmap name=info.dat
+2023-03-09 17:34:15,820 [INFO   ] [HEADS_UP] starting heads-up display server: host=127.0.0.1 port=12347
+2023-03-09 17:34:15,821 [INFO   ] [INFORMATION] information channel established
+2023-03-09 17:34:15,860 [INFO   ] [CONNECTION] fd=25 connection established: peer=127.0.0.1:62432
+2023-03-09 17:34:15,877 [INFO   ] [EXECUTION] fd=25 'Contender' is ready!
+2023-03-09 17:34:15,880 [INFO   ] [CONNECTION] fd=26 connection established: peer=127.0.0.1:62433
+2023-03-09 17:34:15,880 [INFO   ] [EXECUTION] fd=26 'LiquidBear' is ready!
+2023-03-09 17:34:17,046 [INFO   ] [CONNECTION] fd=27 connection established: peer=127.0.0.1:62434
+2023-03-09 17:34:20,838 [INFO   ] [CONTROLLER] market open
+2023-03-09 17:34:22,594 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=1.755265 client_order_id=18 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:23,063 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.224178 client_order_id=22 message='order rejected: active order count limit breached'
+2023-03-09 17:34:23,063 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.224308 client_order_id=23 message='order rejected: active order count limit breached'
+2023-03-09 17:34:23,562 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=2.724047 client_order_id=34 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:23,850 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.011740 client_order_id=36 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:24,062 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=3.223818 client_order_id=38 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:25,576 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=4.737240 client_order_id=62 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:26,119 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=5.280722 client_order_id=68 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:27,140 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.301188 client_order_id=85 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:27,339 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=6.500796 client_order_id=87 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:27,865 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.026179 client_order_id=93 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:28,086 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.247370 client_order_id=94 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:28,308 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.469502 client_order_id=96 message='order rejected: active order count limit breached'
+2023-03-09 17:34:28,308 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.469599 client_order_id=97 message='order rejected: active order count limit breached'
+2023-03-09 17:34:28,572 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.733206 client_order_id=98 message='order rejected: active order count limit breached'
+2023-03-09 17:34:28,572 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=7.733352 client_order_id=99 message='order rejected: active order count limit breached'
+2023-03-09 17:34:28,868 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.029281 client_order_id=100 message='order rejected: active order count limit breached'
+2023-03-09 17:34:28,868 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.029568 client_order_id=101 message='order rejected: active order count limit breached'
+2023-03-09 17:34:29,106 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.267489 client_order_id=102 message='order rejected: active order count limit breached'
+2023-03-09 17:34:29,106 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.267582 client_order_id=103 message='order rejected: active order count limit breached'
+2023-03-09 17:34:29,390 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.549715 client_order_id=104 message='order rejected: active order count limit breached'
+2023-03-09 17:34:29,390 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.551238 client_order_id=105 message='order rejected: active order count limit breached'
+2023-03-09 17:34:29,580 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.741699 client_order_id=106 message='order rejected: active order count limit breached'
+2023-03-09 17:34:29,580 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=8.741793 client_order_id=107 message='order rejected: active order count limit breached'
+2023-03-09 17:34:31,357 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.518770 client_order_id=133 message='order rejected: active order count limit breached'
+2023-03-09 17:34:31,597 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.758621 client_order_id=135 message='order rejected: active order count limit breached'
+2023-03-09 17:34:31,597 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=10.758716 client_order_id=136 message='order rejected: active order count limit breached'
+2023-03-09 17:34:32,848 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.009545 client_order_id=155 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:33,065 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.226704 client_order_id=159 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:33,350 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.511255 client_order_id=160 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:33,583 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.744676 client_order_id=162 message='order rejected: active order count limit breached'
+2023-03-09 17:34:33,583 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=12.744819 client_order_id=163 message='order rejected: active order count limit breached'
+2023-03-09 17:34:33,841 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.002480 client_order_id=164 message='order rejected: active order count limit breached'
+2023-03-09 17:34:33,841 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.002600 client_order_id=165 message='order rejected: active order count limit breached'
+2023-03-09 17:34:34,049 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.210080 client_order_id=166 message='order rejected: active order count limit breached'
+2023-03-09 17:34:34,049 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.210164 client_order_id=167 message='order rejected: active order count limit breached'
+2023-03-09 17:34:34,378 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.537645 client_order_id=168 message='order rejected: active order count limit breached'
+2023-03-09 17:34:34,378 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.539555 client_order_id=169 message='order rejected: active order count limit breached'
+2023-03-09 17:34:34,569 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.730415 client_order_id=170 message='order rejected: active order count limit breached'
+2023-03-09 17:34:34,569 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.730495 client_order_id=171 message='order rejected: active order count limit breached'
+2023-03-09 17:34:34,813 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.974179 client_order_id=172 message='order rejected: active order count limit breached'
+2023-03-09 17:34:34,813 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=13.974273 client_order_id=173 message='order rejected: active order count limit breached'
+2023-03-09 17:34:35,129 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.290471 client_order_id=174 message='order rejected: active order count limit breached'
+2023-03-09 17:34:35,129 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.290557 client_order_id=175 message='order rejected: active order count limit breached'
+2023-03-09 17:34:35,372 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.533657 client_order_id=176 message='order rejected: active order count limit breached'
+2023-03-09 17:34:35,372 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.533750 client_order_id=177 message='order rejected: active order count limit breached'
+2023-03-09 17:34:35,583 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.744562 client_order_id=178 message='order rejected: active order count limit breached'
+2023-03-09 17:34:35,583 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.744682 client_order_id=179 message='order rejected: active order count limit breached'
+2023-03-09 17:34:35,830 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.991791 client_order_id=180 message='order rejected: active order count limit breached'
+2023-03-09 17:34:35,830 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=14.991883 client_order_id=181 message='order rejected: active order count limit breached'
+2023-03-09 17:34:36,122 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.283873 client_order_id=182 message='order rejected: active order count limit breached'
+2023-03-09 17:34:36,122 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.283965 client_order_id=183 message='order rejected: active order count limit breached'
+2023-03-09 17:34:36,632 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.792666 client_order_id=188 message='order rejected: active order count limit breached'
+2023-03-09 17:34:36,633 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=15.794148 client_order_id=189 message='order rejected: active order count limit breached'
+2023-03-09 17:34:36,890 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.051751 client_order_id=190 message='order rejected: active order count limit breached'
+2023-03-09 17:34:36,890 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.051929 client_order_id=191 message='order rejected: active order count limit breached'
+2023-03-09 17:34:37,135 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.296350 client_order_id=192 message='order rejected: active order count limit breached'
+2023-03-09 17:34:37,135 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.296452 client_order_id=193 message='order rejected: active order count limit breached'
+2023-03-09 17:34:37,344 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.505658 client_order_id=194 message='order rejected: active order count limit breached'
+2023-03-09 17:34:37,344 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.505756 client_order_id=195 message='order rejected: active order count limit breached'
+2023-03-09 17:34:37,639 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.799895 client_order_id=196 message='order rejected: active order count limit breached'
+2023-03-09 17:34:37,639 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=16.800408 client_order_id=197 message='order rejected: active order count limit breached'
+2023-03-09 17:34:37,863 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.024327 client_order_id=198 message='order rejected: active order count limit breached'
+2023-03-09 17:34:37,863 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.024766 client_order_id=199 message='order rejected: active order count limit breached'
+2023-03-09 17:34:38,115 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.276917 client_order_id=200 message='order rejected: active order count limit breached'
+2023-03-09 17:34:38,115 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.277013 client_order_id=201 message='order rejected: active order count limit breached'
+2023-03-09 17:34:38,344 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.505403 client_order_id=202 message='order rejected: active order count limit breached'
+2023-03-09 17:34:38,344 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.505503 client_order_id=203 message='order rejected: active order count limit breached'
+2023-03-09 17:34:38,629 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.790779 client_order_id=204 message='order rejected: active order count limit breached'
+2023-03-09 17:34:38,629 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=17.790880 client_order_id=205 message='order rejected: active order count limit breached'
+2023-03-09 17:34:38,852 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.013170 client_order_id=206 message='order rejected: active order count limit breached'
+2023-03-09 17:34:38,852 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.013338 client_order_id=207 message='order rejected: active order count limit breached'
+2023-03-09 17:34:39,050 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.210979 client_order_id=208 message='order rejected: active order count limit breached'
+2023-03-09 17:34:39,050 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.211306 client_order_id=209 message='order rejected: active order count limit breached'
+2023-03-09 17:34:39,299 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.460104 client_order_id=210 message='order rejected: active order count limit breached'
+2023-03-09 17:34:39,299 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.460251 client_order_id=211 message='order rejected: active order count limit breached'
+2023-03-09 17:34:39,633 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.793946 client_order_id=212 message='order rejected: active order count limit breached'
+2023-03-09 17:34:39,633 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.794497 client_order_id=213 message='order rejected: active order count limit breached'
+2023-03-09 17:34:39,837 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.998511 client_order_id=214 message='order rejected: active order count limit breached'
+2023-03-09 17:34:39,837 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=18.998605 client_order_id=215 message='order rejected: active order count limit breached'
+2023-03-09 17:34:40,137 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.298795 client_order_id=216 message='order rejected: active order count limit breached'
+2023-03-09 17:34:40,137 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.298881 client_order_id=217 message='order rejected: active order count limit breached'
+2023-03-09 17:34:40,320 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.481302 client_order_id=218 message='order rejected: active order count limit breached'
+2023-03-09 17:34:40,320 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.481418 client_order_id=219 message='order rejected: active order count limit breached'
+2023-03-09 17:34:40,594 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.754839 client_order_id=220 message='order rejected: active order count limit breached'
+2023-03-09 17:34:40,594 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=19.755463 client_order_id=221 message='order rejected: active order count limit breached'
+2023-03-09 17:34:40,872 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.033892 client_order_id=222 message='order rejected: active order count limit breached'
+2023-03-09 17:34:40,872 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.034015 client_order_id=223 message='order rejected: active order count limit breached'
+2023-03-09 17:34:41,123 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.284895 client_order_id=224 message='order rejected: active order count limit breached'
+2023-03-09 17:34:41,123 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.284981 client_order_id=225 message='order rejected: active order count limit breached'
+2023-03-09 17:34:41,608 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.769866 client_order_id=232 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:41,827 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=20.988188 client_order_id=235 message='order rejected: active order count limit breached'
+2023-03-09 17:34:42,136 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.297671 client_order_id=236 message='order rejected: active order count limit breached'
+2023-03-09 17:34:42,136 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.297761 client_order_id=237 message='order rejected: active order count limit breached'
+2023-03-09 17:34:42,319 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.479547 client_order_id=238 message='order rejected: active order count limit breached'
+2023-03-09 17:34:42,319 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.480628 client_order_id=239 message='order rejected: active order count limit breached'
+2023-03-09 17:34:42,557 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.718116 client_order_id=240 message='order rejected: active order count limit breached'
+2023-03-09 17:34:42,557 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=21.718414 client_order_id=241 message='order rejected: active order count limit breached'
+2023-03-09 17:34:42,876 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.037472 client_order_id=242 message='order rejected: active order count limit breached'
+2023-03-09 17:34:42,876 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.037570 client_order_id=243 message='order rejected: active order count limit breached'
+2023-03-09 17:34:43,068 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.229138 client_order_id=244 message='order rejected: active order count limit breached'
+2023-03-09 17:34:43,068 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.229464 client_order_id=245 message='order rejected: active order count limit breached'
+2023-03-09 17:34:43,354 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.515672 client_order_id=246 message='order rejected: active order count limit breached'
+2023-03-09 17:34:43,354 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.515768 client_order_id=247 message='order rejected: active order count limit breached'
+2023-03-09 17:34:43,604 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.765558 client_order_id=248 message='order rejected: active order count limit breached'
+2023-03-09 17:34:43,604 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=22.765656 client_order_id=249 message='order rejected: active order count limit breached'
+2023-03-09 17:34:43,887 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.049019 client_order_id=250 message='order rejected: active order count limit breached'
+2023-03-09 17:34:43,888 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.049118 client_order_id=251 message='order rejected: active order count limit breached'
+2023-03-09 17:34:44,141 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.302852 client_order_id=252 message='order rejected: active order count limit breached'
+2023-03-09 17:34:44,142 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.302996 client_order_id=253 message='order rejected: active order count limit breached'
+2023-03-09 17:34:44,310 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.470642 client_order_id=254 message='order rejected: active order count limit breached'
+2023-03-09 17:34:44,310 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.471205 client_order_id=255 message='order rejected: active order count limit breached'
+2023-03-09 17:34:44,563 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.724878 client_order_id=256 message='order rejected: active order count limit breached'
+2023-03-09 17:34:44,564 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=23.725332 client_order_id=257 message='order rejected: active order count limit breached'
+2023-03-09 17:34:44,845 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.006523 client_order_id=258 message='order rejected: active order count limit breached'
+2023-03-09 17:34:44,845 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.006618 client_order_id=259 message='order rejected: active order count limit breached'
+2023-03-09 17:34:45,056 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.217359 client_order_id=260 message='order rejected: active order count limit breached'
+2023-03-09 17:34:45,056 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.217814 client_order_id=261 message='order rejected: active order count limit breached'
+2023-03-09 17:34:45,316 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.477624 client_order_id=262 message='order rejected: active order count limit breached'
+2023-03-09 17:34:45,316 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.477719 client_order_id=263 message='order rejected: active order count limit breached'
+2023-03-09 17:34:45,595 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.756385 client_order_id=264 message='order rejected: active order count limit breached'
+2023-03-09 17:34:45,595 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=24.756488 client_order_id=265 message='order rejected: active order count limit breached'
+2023-03-09 17:34:45,865 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.026843 client_order_id=266 message='order rejected: in cross with an existing order'
+2023-03-09 17:34:46,126 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.287461 client_order_id=269 message='order rejected: active order count limit breached'
+2023-03-09 17:34:46,126 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.287552 client_order_id=270 message='order rejected: active order count limit breached'
+2023-03-09 17:34:46,339 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.500658 client_order_id=271 message='order rejected: active order count limit breached'
+2023-03-09 17:34:46,339 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.500774 client_order_id=272 message='order rejected: active order count limit breached'
+2023-03-09 17:34:46,546 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.707638 client_order_id=273 message='order rejected: active order count limit breached'
+2023-03-09 17:34:46,546 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=25.707773 client_order_id=274 message='order rejected: active order count limit breached'
+2023-03-09 17:34:46,857 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.017693 client_order_id=275 message='order rejected: active order count limit breached'
+2023-03-09 17:34:46,857 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.018472 client_order_id=276 message='order rejected: active order count limit breached'
+2023-03-09 17:34:47,141 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.302907 client_order_id=277 message='order rejected: active order count limit breached'
+2023-03-09 17:34:47,141 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.302996 client_order_id=278 message='order rejected: active order count limit breached'
+2023-03-09 17:34:47,346 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.507593 client_order_id=279 message='order rejected: active order count limit breached'
+2023-03-09 17:34:47,346 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.507695 client_order_id=280 message='order rejected: active order count limit breached'
+2023-03-09 17:34:47,599 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.760804 client_order_id=281 message='order rejected: active order count limit breached'
+2023-03-09 17:34:47,599 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.760904 client_order_id=282 message='order rejected: active order count limit breached'
+2023-03-09 17:34:47,823 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.984443 client_order_id=283 message='order rejected: active order count limit breached'
+2023-03-09 17:34:47,823 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=26.984749 client_order_id=284 message='order rejected: active order count limit breached'
+2023-03-09 17:34:48,058 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.219112 client_order_id=285 message='order rejected: active order count limit breached'
+2023-03-09 17:34:48,058 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.219203 client_order_id=286 message='order rejected: active order count limit breached'
+2023-03-09 17:34:48,311 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.472064 client_order_id=287 message='order rejected: active order count limit breached'
+2023-03-09 17:34:48,311 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.472163 client_order_id=288 message='order rejected: active order count limit breached'
+2023-03-09 17:34:48,595 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.756742 client_order_id=289 message='order rejected: active order count limit breached'
+2023-03-09 17:34:48,595 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.756834 client_order_id=290 message='order rejected: active order count limit breached'
+2023-03-09 17:34:48,799 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.960299 client_order_id=292 message='order rejected: active order count limit breached'
+2023-03-09 17:34:48,799 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=27.960390 client_order_id=293 message='order rejected: active order count limit breached'
+2023-03-09 17:34:49,102 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=28.263902 client_order_id=295 message='order rejected: active order count limit breached'
+2023-03-09 17:34:49,333 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=28.494817 client_order_id=297 message='order rejected: active order count limit breached'
+2023-03-09 17:34:49,333 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=28.494935 client_order_id=298 message='order rejected: active order count limit breached'
+2023-03-09 17:34:49,591 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=28.752084 client_order_id=299 message='order rejected: active order count limit breached'
+2023-03-09 17:34:49,591 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=28.752197 client_order_id=300 message='order rejected: active order count limit breached'
+2023-03-09 17:34:49,869 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=29.030179 client_order_id=301 message='order rejected: active order count limit breached'
+2023-03-09 17:34:49,869 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=29.030340 client_order_id=302 message='order rejected: active order count limit breached'
+2023-03-09 17:34:50,082 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=29.243326 client_order_id=303 message='order rejected: active order count limit breached'
+2023-03-09 17:34:50,082 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=29.243428 client_order_id=304 message='order rejected: active order count limit breached'
+2023-03-09 17:34:50,365 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=29.526179 client_order_id=306 message='order rejected: active order count limit breached'
+2023-03-09 17:34:51,076 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=30.237834 client_order_id=316 message='order rejected: active order count limit breached'
+2023-03-09 17:34:51,076 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=30.237932 client_order_id=317 message='order rejected: active order count limit breached'
+2023-03-09 17:34:51,352 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=30.513099 client_order_id=318 message='order rejected: active order count limit breached'
+2023-03-09 17:34:51,352 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=30.513450 client_order_id=319 message='order rejected: active order count limit breached'
+2023-03-09 17:34:51,597 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=30.758201 client_order_id=320 message='order rejected: active order count limit breached'
+2023-03-09 17:34:51,597 [INFO   ] [COMPETITOR] 'LiquidBear' sent error message: time=30.758310 client_order_id=321 message='order rejected: active order count limit breached'
+2023-03-09 17:34:51,705 [INFO   ] [APP] SIGTERM signal received - shutting down...
+2023-03-09 17:34:51,705 [INFO   ] [APP] closing event loop
