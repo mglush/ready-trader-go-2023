@@ -50,8 +50,72 @@ class AutoTrader(BaseAutoTrader):
         self.bids = set()
         self.asks = set()
         self.ask_id = self.ask_price = self.bid_id = self.bid_price = self.position = 0
+
+        self.current_orders = dict() # order_id -> info about order. 
+        self.executed_orders = dict() # order_id -> info about order.
+        self.cancelled_orders = dict() # order_id -> info about order.
         
+        self.orderbook_volumes = list() # for average volume.
+        self.last_orders = list() # last order ids chronologically ordered.
         
+        # self.average_time_to_fill = 0 # TBD.
+        self.window_size = 20 # manually set? should this be computed?
+        
+    def average_fill_ratio(self) -> float:
+        '''
+        returns: portion of our orders that gets filled, on average.
+        '''
+        fill_ratios = list()
+        # for each id in the last however many orders orders
+        for id in self.fill_ratios:
+            # order is either current or executed or cancelled orders, filled ratio still applies!
+            if id in self.current_orders:
+                # calc the actual ratio = filled/volume.
+                ratio = self.current_orders[id]['filled'] / self.current_orders[id]['volume']
+            elif id in self.executed_orders:
+                # calc the actual ratio = filled/volume.
+                ratio = self.executed_orders[id]['filled'] / self.executed_orders[id]['volume']
+            elif id in self.cancelled_orders:
+                # calc the actual ratio = filled/volume.
+                ratio = self.cancelled_orders[id]['filled'] / self.cancelled_orders[id]['volume']                
+            # append that thang to the end of ratios.
+            fill_ratios.append(ratio)
+
+        return sum(fill_ratios) / len(fill_ratios)
+
+
+    def average_volume(self) -> float:
+        '''
+        returns: average volume in the orderbook over the past n snapshots.
+        '''
+        return sum(self.orderbook_volumes) / len(self.orderbook_volumes)
+
+    def curr_order_volume_to_avg_volume_ratio(self, order_id) -> float:
+        '''
+        returns: ratio of given order volume to average_volume().
+        '''
+        return self.current_orders[order_id]['volume'] / self.average_volume()
+
+    def record_order(self, order_id, order_type, price, volume, lifespan) -> None:
+        '''
+        records order into current_orders.
+        returns nothing.
+        '''
+        self.current_orders[order_id] = {
+            'id' : order_id,            # order id.
+            'type' : order_type,        # sell or buy.
+            'price' : price,            # price of order.
+            'filled' : 0,               # amount of shares in order that were filled.
+            'volume' : volume,          # total size of the order.
+            'lifespan' : lifespan,      # good for day vs fill and kill
+        }
+
+    def is_volume_trending_up(self):
+        '''
+        return: true if volume is trending up.
+                false otherwise.
+        '''
+        pass # vasyl's work will go here.
 
     def on_error_message(self, client_order_id: int, error_message: bytes) -> None:
         """Called when the exchange detects an error.
@@ -84,11 +148,17 @@ class AutoTrader(BaseAutoTrader):
         """
         self.logger.info("received order book for instrument %d with sequence number %d", instrument,
                          sequence_number)
-        # MG ADDITIONS THURSDAY 03/09/2023.
+        
         if bid_prices[0] == 0 or ask_prices[0] == 0 or ask_volumes[0] == 0 or bid_volumes[0] == 0:
             self.logger.info("LOOKS LIKE DA FIRST ITERATION! DOING NOTHING!")
         elif instrument == Instrument.ETF:
-            pass
+            # first, we need to aggregate the volumes and append it to the orderbook_volumes list.
+            self.orderbook_volumes.append(sum(ask_volumes) + sum(bid_volumes))
+            # check if we now have too many volumes stored.
+            if len(self.orderbook_volumes) > self.window_size:
+                self.orderbook_volumes.pop(0) # remove least reacent volume.
+
+            
 
     def on_order_filled_message(self, client_order_id: int, price: int, volume: int) -> None:
         """Called when one of your orders is filled, partially or fully.
@@ -106,6 +176,13 @@ class AutoTrader(BaseAutoTrader):
         elif client_order_id in self.asks:
             self.position -= volume
             self.send_hedge_order(next(self.order_ids), Side.BID, MAX_ASK_NEAREST_TICK, volume)
+
+        # place order into executed_orders.
+        self.executed_orders[client_order_id] = self.current_orders[client_order_id]
+        # remove order from current orders.
+        del self.current_orders[client_order_id]
+        # set its fill raito of this order to be 1.
+        self.executed_orders[client_order_id]['filled'] = volume
         
 
     def on_order_status_message(self, client_order_id: int, fill_volume: int, remaining_volume: int,
@@ -125,6 +202,11 @@ class AutoTrader(BaseAutoTrader):
 
         self.logger.info("received order status for order %d with fill volume %d remaining %d and fees %d",
                          client_order_id, fill_volume, remaining_volume, fees)
+        
+        # first, we must update the order's filled amount.
+        self.current_orders[client_order_id]['filled'] = fill_volume
+
+        # this code block happens if the order was cancelled, per function description.
         if remaining_volume == 0:
             if client_order_id == self.bid_id:
                 self.bid_id = 0
@@ -134,6 +216,12 @@ class AutoTrader(BaseAutoTrader):
             # It could be either a bid or an ask
             self.bids.discard(client_order_id)
             self.asks.discard(client_order_id)
+
+            # place order into cancelled.
+            self.cancelled_orders[client_order_id] = self.current_orders[client_order_id]
+            # remove order from current orders.
+            del self.current_orders[client_order_id]
+        
 
     def on_trade_ticks_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
                                ask_volumes: List[int], bid_prices: List[int], bid_volumes: List[int]) -> None:
