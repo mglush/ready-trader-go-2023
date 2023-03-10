@@ -1,9 +1,7 @@
-py/bin/
-py/lib/
-cpp/bin/
-cpp/lib/
-py/pyvenv.cfg
-cpp/pyvenv.cfg
+bin/
+lib/
+pyvenv.cfg
+pyvenv.cfg
 autotrader.log
 provided_autotrader.log
 exchange.log
