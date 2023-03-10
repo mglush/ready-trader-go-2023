@@ -63,6 +63,13 @@ class AutoTrader(BaseAutoTrader):
         
         # self.average_time_to_fill = 0 # TBD.
         self.window_size = 20 # manually set? should this be computed?
+
+        # we want to discard old orderbook snapshots when we get them.
+        # for this, we keep a last_sequence_processed variable.
+        self.last_sequence_processed = 0
+
+        # need a mapping from a current order to a hedged order.
+        self.current_to_hedged = dict() # maps current_order_id => hedged_order_id associated with it.
         
     def average_fill_ratio(self) -> float:
         '''
@@ -77,7 +84,10 @@ class AutoTrader(BaseAutoTrader):
                 ratio = self.executed_orders[id]['filled'] / self.executed_orders[id]['volume']
             elif id in self.cancelled_orders:
                 # calc the actual ratio = filled/volume.
-                ratio = self.cancelled_orders[id]['filled'] / self.cancelled_orders[id]['volume'] 
+                if self.cancelled_orders[id]['filled'] != 0:
+                    ratio = self.cancelled_orders[id]['filled'] / self.cancelled_orders[id]['volume'] 
+                else:
+                    continue
             elif id in self.current_orders:
                 # calc the actual ratio = filled/volume.
                 ratio = self.current_orders[id]['filled'] / self.current_orders[id]['volume']               
@@ -191,6 +201,7 @@ class AutoTrader(BaseAutoTrader):
         self.logger.info("received hedge filled for order %d with average price %d and volume %d", client_order_id,
                          price, volume)
         self.logger.info(f'ENTERING CURRENT POSITION IS {self.position} AND HEDGED POSITION IS {self.hedged_position}')
+
         self.hedged_current_orders[client_order_id]['filled'] += volume
         
         if self.hedged_current_orders[client_order_id]['type'] == Side.BID:
@@ -203,11 +214,13 @@ class AutoTrader(BaseAutoTrader):
         if self.hedged_current_orders[client_order_id]['filled'] == self.hedged_current_orders[client_order_id]['volume']:
             del self.hedged_current_orders[client_order_id]
 
+        self.logger.info(f'EXITING CURRENT POSITION IS {self.position} AND HEDGED POSITION IS {self.hedged_position}')
+
     def check_hedged_orders_status(self) -> None:
         '''
         checks if we have hedged orders that have not been filled fully.
         '''
-        self.logger.info('CHECKING HEDGED ORDERS AVAILABILITY BABY.')
+        self.logger.info(f'ENTER CHECKING HEDGED ORDERS AVAILABILITY, THERE ARE {len(self.hedged_current_orders)} HEDGED ORDERS CURRENTLY.')
         for order_id, order in self.hedged_current_orders.items():
             if order['filled'] != 0 and order['filled'] != order['volume']:
                 # the hedged order was only partially filled! must place new hedge order.
@@ -260,11 +273,18 @@ class AutoTrader(BaseAutoTrader):
         # TO DO CREATE CSV WITH ORDER BOOOK SNAPSHOTS FROM THE SIMULATION.
         self.logger.info("received order book for instrument %d with sequence number %d", instrument,
                          sequence_number)
+
+        # check if we received an out-of-order sequence!
+        if sequence_number < self.last_sequence_processed:
+            self.logger.info("OLD INFORMATION RECEIVED, SKIPPING!")
+            self.check_hedged_orders_status()
+            return
+        self.last_sequence_processed = sequence_number # set the sequence number since we are now processing it.
         
         if bid_prices[0] == 0 or ask_prices[0] == 0:
             self.logger.info("LOOKS LIKE DA FIRST ITERATION! DOING NOTHING!")
         elif instrument == Instrument.ETF:
-            self.logger.info("RECEIVED ETF ORDER BOOK!")
+            # self.logger.info("RECEIVED ETF ORDER BOOK!")
             # next, we need to aggregate the volumes and append it to the orderbook_volumes list.
             self.orderbook_volumes.append(sum(ask_volumes) + sum(bid_volumes))
             # check if we now have too many volumes stored.
@@ -278,7 +298,7 @@ class AutoTrader(BaseAutoTrader):
             theoretical_price = np.dot(np.array(ask_prices), ask_volume_ratios) \
                        + np.dot(np.array(bid_prices), bid_volume_ratios)
             # theoretical_price = (bid_prices[0] + ask_prices[0]) / 2
-            self.logger.info(f'THEORETICAL PRICE CALCULATED TO BE {theoretical_price}.') 
+            # self.logger.info(f'THEORETICAL PRICE CALCULATED TO BE {theoretical_price}.') 
 
             # standard deviation to use for spread.
             spread = np.sqrt(np.std(np.array(ask_prices + bid_prices)))*2
@@ -361,16 +381,17 @@ class AutoTrader(BaseAutoTrader):
                     # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
                     self.logger.info("our interval perfectly MATCHES the actual market interval")
                     # self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
-            
+                
+                # if we now have too many current orders, we should cancel some old ones.
+                # this logic should be rewritten to cancel orders when they're no longer optimal!
+                self.check_current_orders_optimality(new_bid_by_tick, new_ask_by_tick)
+                
             else:
                 # we have information, so modify the theoretical_price and spread and execution duration of the orders.
                 # we want to asymetrically change the spread we have based on the current order book spread.
                 # after that, we want to determine our order size via a ratio of the average volume, since we now have data.
                 pass
-
-            # if we now have too many current orders, we should cancel some old ones.
-            # this logic should be rewritten to cancel orders when they're no longer optimal!
-            self.check_current_orders_optimality(new_bid_by_tick, new_ask_by_tick)
+        else:
             self.check_hedged_orders_status()
 
     def order_status_update_helper(self, id, volume) -> None:
@@ -455,7 +476,6 @@ class AutoTrader(BaseAutoTrader):
             return
         
         # some shares were bought, this is our reaction to that.
-        self.logger.info(f'HEDGING {client_order_id}, IT WAS PARTIALLY FILLED WITH {fill_volume} SHARES!')
         self.order_status_update_helper(client_order_id, fill_volume)
         
 
