@@ -2,7 +2,7 @@ bin/
 lib/
 pyvenv.cfg
 autotrader.log
-provided_autotrader.log
+provided_autotrader*.*
 exchange.log
 temp.txt
 match_events.csv
