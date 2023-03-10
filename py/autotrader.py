@@ -32,6 +32,8 @@ MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS 
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 TRADES_NEEDED_TO_TRAIN_FEATURES = 25
 
+SPREAD_SCALE_FACTOR = 0.2
+
 
 class AutoTrader(BaseAutoTrader):
     """Example Auto-trader.
@@ -103,7 +105,7 @@ class AutoTrader(BaseAutoTrader):
         '''
         self.current_orders[order_id] = {
             'id' : order_id,            # order id.
-            'type' : order_type,        # sell or buy.
+            'type' : order_type,        # Side.BID or Side.ASK.
             'price' : price,            # price of order.
             'filled' : 0,               # amount of shares in order that were filled.
             'volume' : volume,          # total size of the order.
@@ -158,7 +160,23 @@ class AutoTrader(BaseAutoTrader):
             if len(self.orderbook_volumes) > self.window_size:
                 self.orderbook_volumes.pop(0) # remove least reacent volume.
 
-            
+    def order_status_update_helper(self, id, volume) -> None:
+        '''
+        finds amount of shares filled,
+        hedges the filled position,
+        updates filled attribute current_orders[id].
+        '''
+        # first, must hedge whatever partial amount was just filled,
+        # as well as update our mPosition variable properly.
+        value_filled = volume - self.current_orders[id]['filled']
+        if self.current_orders[id]['type'] == Side.BID:
+            self.position += value_filled
+            self.send_hedge_order(next(self.order_ids), Side.ASK, MIN_BID_NEAREST_TICK, value_filled)
+        elif self.current_orders[id]['type'] == Side.ASK:
+            self.position -= value_filled
+            self.send_hedge_order(next(self.order_ids), Side.BID, MAX_ASK_NEAREST_TICK, value_filled)
+        # next, we must update the order's filled amount.
+        self.current_orders[id]['filled'] = volume
 
     def on_order_filled_message(self, client_order_id: int, price: int, volume: int) -> None:
         """Called when one of your orders is filled, partially or fully.
@@ -170,12 +188,8 @@ class AutoTrader(BaseAutoTrader):
         self.logger.info("received order filled for order %d with price %d and volume %d", client_order_id,
                          price, volume)
 
-        if client_order_id in self.bids:
-            self.position += volume
-            self.send_hedge_order(next(self.order_ids), Side.ASK, MIN_BID_NEAREST_TICK, volume)
-        elif client_order_id in self.asks:
-            self.position -= volume
-            self.send_hedge_order(next(self.order_ids), Side.BID, MAX_ASK_NEAREST_TICK, volume)
+        # some shares were bought, this is our reaction to that.
+        self.order_status_update_helper(client_order_id, volume)
 
         # place order into executed_orders.
         self.executed_orders[client_order_id] = self.current_orders[client_order_id]
@@ -196,17 +210,13 @@ class AutoTrader(BaseAutoTrader):
 
         If an order is cancelled its remaining volume will be zero.
         """
-
-        # WE CAN DO SHIT HERE TO WORK WITH PARTIALLY-FILELD ORDERS,
-        # TRY TO THINK OF WHAT WE CAN RECOMPUTE OR DO WITHIN THIS THANG!!!
-
         self.logger.info("received order status for order %d with fill volume %d remaining %d and fees %d",
                          client_order_id, fill_volume, remaining_volume, fees)
         
-        # first, we must update the order's filled amount.
-        self.current_orders[client_order_id]['filled'] = fill_volume
+        # some shares were bought, this is our reaction to that.
+        self.order_status_update_helper(client_order_id, fill_volume)
 
-        # this code block happens if the order was cancelled, per function description.
+        # this code block happens if the order was CANCELLED, per function description.
         if remaining_volume == 0:
             if client_order_id == self.bid_id:
                 self.bid_id = 0
