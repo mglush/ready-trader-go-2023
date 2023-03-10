@@ -227,7 +227,7 @@ class AutoTrader(BaseAutoTrader):
             self.logger.info(f'THEORETICAL PRICE CALCULATED TO BE {theoretical_price}.') 
 
             # standard deviation to use for spread.
-            spread = np.sqrt(np.std(np.array(ask_prices + bid_prices)))
+            spread = np.sqrt(np.std(np.array(ask_prices + bid_prices)))*2
 
             # check if we are just starting up and have no current information.
             # below should be if len(self.last_orders) < self.window_size but for now im running this strat
@@ -302,7 +302,7 @@ class AutoTrader(BaseAutoTrader):
                 elif new_ask_by_tick > ask_prices[0] and new_bid_by_tick < bid_prices[0]:
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     self.logger.info("our interval CONTAINS the actual market interval")
-                    # self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
                 elif new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
                     # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
                     self.logger.info("our interval perfectly MATCHES the actual market interval")

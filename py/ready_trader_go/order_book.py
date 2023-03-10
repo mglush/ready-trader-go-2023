@@ -115,6 +115,14 @@ class OrderBook(object):
             if order.listener:
                 order.listener.on_order_amended(now, order, diff)
 
+    def best_ask(self) -> Optional[int]:
+        """Return the current best ask price, or None if there are no ask orders."""
+        return -self.__ask_prices[-1] if self.__ask_prices else None
+
+    def best_bid(self) -> Optional[int]:
+        """Return the current best ask price, or None if there are no ask orders."""
+        return self.__bid_prices[-1] if self.__bid_prices else None
+
     def cancel(self, now: float, order: Order) -> None:
         """Cancel an order in this order book."""
         if order.remaining_volume > 0:

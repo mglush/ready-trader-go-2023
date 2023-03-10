@@ -207,9 +207,20 @@ class Competitor(ICompetitor, IOrderListener):
         side_: Side = Side(side)
         volume_traded, average_price = self.future_book.try_trade(side_, price, volume)
         if volume_traded == 0:
-            average_price = self.future_book.last_traded_price()
-            if average_price is None:
-                self.send_error(now, client_order_id, b"order rejected: cannot determine future price")
+            # The trade could have failed because there were no orders on the opposite side
+            best: Optional[int] = self.future_book.best_ask() if side_ == Side.BID else self.future_book.best_bid()
+            if best is None:
+                last_traded = self.future_book.last_traded_price()
+                if last_traded is None:
+                    self.send_error(now, client_order_id, b"order rejected: cannot determine future price")
+                    return
+                if (side_ == Side.ASK and last_traded >= price) or (side_ == Side.BID and last_traded <= price):
+                    average_price = last_traded
+
+        if average_price == 0:
+            if self.exec_connection is not None:
+                self.exec_connection.send_hedge_filled(client_order_id, 0, 0)
+            return
 
         self.unhedged_etf_lots.apply_position_delta(volume if side_ == Side.BID else -volume)
         self.match_events.hedge(now, self.name, client_order_id, Instrument.FUTURE, side_, average_price,
