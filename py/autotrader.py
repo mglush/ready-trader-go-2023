@@ -33,7 +33,6 @@ TICK_SIZE_IN_CENTS = 100
 MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 
-
 class AutoTrader(BaseAutoTrader):
     '''
     -_- LiquidBears Awesome Autotrader -_-
@@ -63,6 +62,12 @@ class AutoTrader(BaseAutoTrader):
         # we want to discard old orderbook snapshots when we get them.
         # for this, we keep a last_sequence_processed variable.
         self.last_sequence_processed = 0
+
+        # we want to keep track of time to determine how long it takes for orders to fill.
+        # this variable is incremented every orderbook snapshot, and 1 of this variable corresponds
+        # to 0.25 seconds directly.
+        self.timer = 0 # time during execution of the simulation.
+        self.order_ttl = 50 # num seconds an order can live for.
     
     def total_volume_of_current_orders(self) -> int:
         '''
@@ -81,10 +86,8 @@ class AutoTrader(BaseAutoTrader):
         for order_id, order in self.current_orders.items():
             if order['type'] == Side.BID:
                 total_bids += (order['volume'] - order['filled'])
-                self.logger.info(f'ITERATION: FOUND BID, TOTAL BIDS {total_bids}')
             elif order['type'] == Side.ASK:
                 total_asks += (order['volume'] - order['filled'])
-                self.logger.info(f'ITERATION: FOUND ASK, TOTAL ASKS {total_asks}')
    
         return {
             'bid' : total_bids,
@@ -141,12 +144,13 @@ class AutoTrader(BaseAutoTrader):
         '''
         self.logger.info(f'LOGGING ORDER {order_id}')
         self.current_orders[order_id] = {
-            'id' : order_id,            # order id.
-            'type' : order_type,        # Side.BID or Side.ASK.
-            'price' : price,            # price of order.
-            'filled' : 0,               # amount of shares in order that were filled.
-            'volume' : volume,          # total size of the order.
-            'lifespan' : lifespan,      # good for day vs fill and kill
+            'id' : order_id,                # order id.
+            'type' : order_type,            # Side.BID or Side.ASK.
+            'price' : price,                # price of order.
+            'filled' : 0,                   # amount of shares in order that were filled.
+            'volume' : volume,              # total size of the order.
+            'lifespan' : lifespan,          # good for day vs fill and kill
+            'placed_at' : self.timer    # to keep track of how long the order has been active for.
         }
 
     def hedge_record_order(self, order_id, order_type, price, volume, lifespan) -> None:
@@ -224,8 +228,7 @@ class AutoTrader(BaseAutoTrader):
         """
         # self.logger.info("received hedge filled for order %d with average price %d and volume %d", client_order_id,
                         #  price, volume)
-        self.logger.info(f'HEDGE POSITION FILLED, ID = {client_order_id}, price = {price}, volume = {volume}')
-        self.logger.info(f'ENTERING CURRENT POSITION IS {self.position} AND HEDGED POSITION IS {self.hedged_position}')
+        # self.logger.info(f'HEDGE {self.position} AND HEDGED POSITION IS {self.hedged_position}')
 
         self.hedged_current_orders[client_order_id]['filled'] += volume
         
@@ -239,13 +242,13 @@ class AutoTrader(BaseAutoTrader):
         if self.hedged_current_orders[client_order_id]['filled'] == self.hedged_current_orders[client_order_id]['volume']:
             del self.hedged_current_orders[client_order_id]
 
-        self.logger.info(f'EXITING CURRENT POSITION IS {self.position} AND HEDGED POSITION IS {self.hedged_position}')
+        # self.logger.info(f'EXITING CURRENT POSITION IS {self.position} AND HEDGED POSITION IS {self.hedged_position}')
 
     def check_hedged_orders_status(self) -> None:
         '''
         checks if we have hedged orders that have not been filled fully.
         '''
-        self.logger.info(f'ENTER CHECKING HEDGED ORDERS AVAILABILITY, THERE ARE {len(self.hedged_current_orders)} HEDGED ORDERS CURRENTLY.')
+        self.logger.info(f'CHECKING HEDGED ORDERS FUNCTION.')
         for order_id, order in self.hedged_current_orders.items():
             if order['filled'] != 0 and order['filled'] != order['volume']:
                 # the hedged order was only partially filled! must place new hedge order.
@@ -266,18 +269,29 @@ class AutoTrader(BaseAutoTrader):
                 self.send_hedge_order(next_id, trade_type, price, volume)
 
 
-    def check_current_orders_optimality(self, bid, ask) -> None:
+    def check_current_orders_out_of_bounds(self, bid, ask) -> None:
         '''
-        checks every current order to make sure its within the current optimal interval.
-        returns: nothing.
+        checks if a current order is priced outside the interval we like.
+        if so, we modify this order's price to the optimal bid or ask accordingly.
         '''
-        self.logger.info(f'CURRENT ORDERS BEING CHECKED HERE!')
-        temp_bid_total = self.total_volume_of_current_orders()['bid']
-        temp_ask_total = self.total_volume_of_current_orders()['ask']
-        self.logger.info(f'TOTAL OF CURRENT BUY ORDERS IS {temp_bid_total}, TOTAL OF CURRENT SELL ORDERS IS {temp_ask_total}')
-        cancelled_ids = list()
+        self.logger.info(f'CHECKING CURRENT ORDERS OUT OF BOUNDS!')
         for order_id, order in self.current_orders.items():
             if order['price'] < bid or order['price'] > ask:
+                self.logger.info(f'UPDATING ORDER {order_id} TO OPTIMAL PRICE')
+
+    def check_current_orders_optimality(self) -> None:
+        '''
+        checks every current order to make sure its ttl has not yet burnt out.
+        '''
+        self.logger.info(f'CHECKING CURRENT ORDERS TIME TO LIVE!')
+        temp_bid_total = self.total_volume_of_current_orders()['bid']
+        temp_ask_total = self.total_volume_of_current_orders()['ask']
+
+        cancelled_ids = list()
+        for order_id, order in self.current_orders.items():
+            # I MODIFIED THIS TO ONLY USE TIME, FOR NOW. 'POOR' ORDERS ARE PLACED IN THEIR OWN LIST,
+            # AND WE CAN USE AMMEND THEM WHEN WE NEED TO ACTUALLY PLACE AN ORDER TO AT SOME PRICE.
+            if self.timer - order['placed_at'] >= self.order_ttl:
                 self.logger.info(f'CANCELLING ORDER {order_id}')
                 cancelled_ids.append(order_id)
             else:
@@ -296,19 +310,20 @@ class AutoTrader(BaseAutoTrader):
         prices are reported along with the volume available at each of those
         price levels.
         """
+        self.timer += 1 # increment time counter.
+
         # TO DO CREATE CSV WITH ORDER BOOOK SNAPSHOTS FROM THE SIMULATION.
         self.logger.info("received order book for instrument %d with sequence number %d", instrument,
                          sequence_number)
-        self.logger.info(f'RECEIVED ORDERBOOK SNAPSHOT, POSITION = {self.position} AND HEDGE = {self.hedged_position}')
 
         # check if we received an out-of-order sequence!
         if sequence_number < self.last_sequence_processed:
-            self.logger.info("OLD INFORMATION RECEIVED, SKIPPING!")
+            self.logger.info(">>>OLD INFORMATION RECEIVED, SKIPPING!")
             return
         self.last_sequence_processed = sequence_number # set the sequence number since we are now processing it.
         
         if bid_prices[0] == 0 or ask_prices[0] == 0:
-            self.logger.info("LOOKS LIKE DA FIRST ITERATION! DOING NOTHING!")
+            self.logger.info(">>>LOOKS LIKE DA FIRST ITERATION! DOING NOTHING!")
         elif instrument == Instrument.ETF:
             # self.logger.info("RECEIVED ETF ORDER BOOK!")
             # next, we need to aggregate the volumes and append it to the orderbook_volumes list.
@@ -397,21 +412,22 @@ class AutoTrader(BaseAutoTrader):
                     # => just place orders at the bid and ask we calculated, ba-da-bing ba-da-bang.
                     # must be a better way than just using LOT_SIZE here!!!
                     self.logger.info("our interval is WITHIN the actual market interval")
-                    # if (new_ask_by_tick - new_bid_by_tick != TICK_SIZE_IN_CENTS and new_ask_by_tick - new_bid_by_tick != 0):
-                    #     self.place_orders_at_two_levels(bid_prices[0] + TICK_SIZE_IN_CENTS, LOT_SIZE, new_ask_by_tick - TICK_SIZE_IN_CENTS, LOT_SIZE)
+                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    
                 elif new_ask_by_tick > ask_prices[0] and new_bid_by_tick < bid_prices[0]:
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     self.logger.info("our interval CONTAINS the actual market interval")
-                    self.place_orders_at_two_levels(new_bid_by_tick, 2*LOT_SIZE, new_ask_by_tick, 2*LOT_SIZE)
+                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+
                 elif new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
                     # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
+                    # self.logger.info("THIS BRACNH IS IMPLEMENTED!")
                     self.logger.info("our interval perfectly MATCHES the actual market interval")
-                    # self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
-                
-                # if we now have too many current orders, we should cancel some old ones.
-                # this logic should be rewritten to cancel orders when they're no longer optimal!
-                self.check_current_orders_optimality(new_bid_by_tick, new_ask_by_tick)
-                self.check_hedged_orders_status()
+                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                else:
+                    # i don't think there are more cases, but should handle all branches of execution just in case.
+                    # self.logger.info(f'THIS LINE SHOULD NEVER APPEAR!!! new ask = {new_ask_by_tick} real ask = {ask_prices[0]} new_bid = {new_bid_by_tick} real bid = {bid_prices[0]}')
+                    pass
                 
             else:
                 # we have information, so modify the theoretical_price and spread and execution duration of the orders.
@@ -420,6 +436,12 @@ class AutoTrader(BaseAutoTrader):
                 pass
         else:
             pass
+
+        if self.timer % 2 == 0:
+            # if we now have too many current orders, we should cancel some old ones.
+            # this logic should be rewritten to cancel orders when they're no longer optimal!
+            self.check_current_orders_optimality()
+            self.check_hedged_orders_status()
                 
 
     def on_order_filled_message(self, client_order_id: int, price: int, volume: int) -> None:
@@ -447,12 +469,16 @@ class AutoTrader(BaseAutoTrader):
         fill_volume -= self.current_orders[client_order_id]['filled']
         if remaining_volume == 0 and fill_volume > 0:
             self.logger.info(f'THE ORDER {client_order_id} HAS BEEN FILLED FULLY AND EXECUTED!')
+            time = self.timer - self.current_orders[client_order_id]['placed_at']
+            self.logger.info(f'THE ORDER TOOK {time} SECONDS TO GET FULLY FILLED!')
             # order has been filled and executed!!!
             self.executed_orders[client_order_id] = self.current_orders[client_order_id]
             del self.current_orders[client_order_id]
             order = self.executed_orders[client_order_id]
         elif remaining_volume == 0 and fill_volume == 0:
             self.logger.info(f'THE ORDER {client_order_id} HAS BEEN CANCELLED!')
+            time = self.timer - self.current_orders[client_order_id]['placed_at']
+            self.logger.info(f'THE ORDER TOOK {time} SECONDS TO GET CANCELLED!')
             # order has been cancelled!!!
             self.cancelled_orders[client_order_id] = self.current_orders[client_order_id]
             del self.current_orders[client_order_id]
@@ -468,15 +494,12 @@ class AutoTrader(BaseAutoTrader):
 
         # some shares were bought, this is our reaction to that.        
         if fill_volume > 0:
-            self.logger.info(f'FILL VOLUME WAS {fill_volume}, NOT HEDGING HERE ANYMORE!')
             next_id = next(self.order_ids)
             if order['type'] == Side.BID:
-                self.logger.info(f'OUR POSITION IS CHANGIN HERE! {self.position} => {self.position + fill_volume}')
                 self.position += fill_volume
                 self.hedge_record_order(next_id, Side.ASK, MIN_BID_NEAREST_TICK, fill_volume, Lifespan.FILL_AND_KILL)
                 self.send_hedge_order(next_id, Side.ASK, MIN_BID_NEAREST_TICK, fill_volume)
             elif order['type'] == Side.ASK:
-                self.logger.info(f'OUR POSITION IS CHANGIN HERE! {self.position} => {self.position - fill_volume}')
                 self.position -= fill_volume
                 self.hedge_record_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, fill_volume, Lifespan.FILL_AND_KILL)
                 self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, fill_volume)
