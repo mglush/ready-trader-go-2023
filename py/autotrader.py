@@ -61,18 +61,19 @@ class AutoTrader(BaseAutoTrader):
 
         # we want to discard old orderbook snapshots when we get them.
         # for this, we keep a last_sequence_processed variable.
-        self.last_sequence_processed = 0
+        self.last_sequence_processed = -1
 
         # we want to keep track of time to determine how long it takes for orders to fill.
         # this variable is incremented every orderbook snapshot, and 1 of this variable corresponds
         # to 0.25 seconds directly.
         self.timer = 0 # time during execution of the simulation.
-        self.order_ttl = 50 # num seconds an order can live for.
+        self.order_ttl = 50 # num odrderbook snapshots.
     
     def total_volume_of_current_orders(self) -> int:
         '''
         need to keep track of total volume within our current orders,
         so it never exceeds some value.
+
         returns: dict with total bid and total ask volume of current orders.
         '''
         if len(self.current_orders) == 0:
@@ -140,6 +141,7 @@ class AutoTrader(BaseAutoTrader):
     def record_order(self, order_id, order_type, price, volume, lifespan) -> None:
         '''
         records order into current_orders.
+
         returns nothing.
         '''
         self.logger.info(f'LOGGING ORDER {order_id}')
@@ -156,6 +158,7 @@ class AutoTrader(BaseAutoTrader):
     def hedge_record_order(self, order_id, order_type, price, volume, lifespan) -> None:
         '''
         records order into hedged_current_orders.
+
         returns nothing.
         '''
         self.logger.info(f'LOGGING HEDGE ORDER {order_id}')
@@ -183,6 +186,9 @@ class AutoTrader(BaseAutoTrader):
         '''
         places two orders at the given bid and ask with given volumes,
         inserts order into current_orders data structure.
+        in the function, bid total temp and ask total temp are the
+        total volumes of current bids and asks we have placed.
+
         returns: nothing.
         '''
         bid_total_temp = self.total_volume_of_current_orders()['bid'] + self.position + bid_volume
@@ -250,7 +256,7 @@ class AutoTrader(BaseAutoTrader):
         elif self.hedged_current_orders[client_order_id]['type'] == Side.ASK:
             self.hedged_position -= volume
         else:
-            self.logger.info(f'FOR SOME REASON IT IS NEITHER A BID NOR AN ASK???')
+            self.logger.info(f'THIS BRANCH OF EXECUTION SHOULD NEVER HAPPEN')
 
         if self.hedged_current_orders[client_order_id]['filled'] == self.hedged_current_orders[client_order_id]['volume']:
             del self.hedged_current_orders[client_order_id]
@@ -285,32 +291,27 @@ class AutoTrader(BaseAutoTrader):
         '''
         checks if a current order is priced outside the interval we like.
         if so, we modify this order's volume to decrease its significance but keep its priority.
+
+        returns: nothing.
         '''
         self.logger.info(f'CHECKING CURRENT ORDERS OUT OF BOUNDS!')
         for order_id, order in self.current_orders.items():
             spread = ask - bid
             if order['price'] < bid:
-                # if bid - order['price'] > spread:
-                    # cancel this thang.
-                    self.logger.info(f'CANCELLING FAR OUT ORDER {order_id}')
-                    self.send_cancel_order(order_id)
-                # else:
-                #     # order out of bounds, decrease its significance.
-                #     self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
-                #     self.send_amend_order(order_id, int(order['volume'] / 2))
+                # order out of bounds, decrease its significance.
+                self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
+                self.current_orders[order_id]['volume'] = int(order['volume'] / 3)
+                self.send_amend_order(order_id, int(order['volume'] / 3))
             elif order['price'] > ask:
-                # if order['price'] - ask > spread:
-                    # cancel this thang.
-                    self.logger.info(f'CANCELLING FAR OUT ORDER {order_id}')
-                    self.send_cancel_order(order_id)
-                # else:
-                #     # order out of bounds, decrease its significance.
-                #     self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
-                #     self.send_amend_order(order_id, int(order['volume'] / 2))
+                # order out of bounds, decrease its significance.
+                self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
+                self.current_orders[order_id]['volume'] = int(order['volume'] / 3)
+                self.send_amend_order(order_id, int(order['volume'] / 3))
             else:
                 # order within bounds, check if we can increase its significance.
                 self.logger.info(f'UPDATING ORDER {order_id} TO FULL VOLUME ASAP ROCKY')
                 if order['volume'] < int(LOT_SIZE / 2):
+                    self.current_orders[order_id]['volume'] = LOT_SIZE
                     self.send_amend_order(order_id, LOT_SIZE)
 
     def check_current_orders_optimality(self) -> None:
@@ -323,15 +324,13 @@ class AutoTrader(BaseAutoTrader):
 
         cancelled_ids = list()
         for order_id, order in self.current_orders.items():
-            # I MODIFIED THIS TO ONLY USE TIME, FOR NOW. 'POOR' ORDERS ARE PLACED IN THEIR OWN LIST,
-            # AND WE CAN USE AMMEND THEM WHEN WE NEED TO ACTUALLY PLACE AN ORDER TO AT SOME PRICE.
+            # I MODIFIED THIS TO ONLY USE TIME, FOR NOW.
             if self.timer - order['placed_at'] >= self.order_ttl:
-                self.logger.info(f'CANCELLING ORDER {order_id}')
+                self.logger.info(f'ORDER {order_id} TIMED OUT, CANCELLING')
                 cancelled_ids.append(order_id)
             else:
                 self.logger.info(f'ORDER {order_id} IS STILL GUCCI')
 
-        # block other processes until we cancel all orders here.
         for id in cancelled_ids:
             self.send_cancel_order(id)
 
@@ -345,20 +344,18 @@ class AutoTrader(BaseAutoTrader):
         price levels.
         """
         self.timer += 1 # increment time counter.
-
-        # TO DO CREATE CSV WITH ORDER BOOOK SNAPSHOTS FROM THE SIMULATION.
         self.logger.info("received order book for instrument %d with sequence number %d", instrument,
                          sequence_number)
-
-        # check if we received an out-of-order sequence!
-        if sequence_number < self.last_sequence_processed:
-            self.logger.info(">>>OLD INFORMATION RECEIVED, SKIPPING!")
-            return
-        self.last_sequence_processed = sequence_number # set the sequence number since we are now processing it.
         
         if bid_prices[0] == 0 or ask_prices[0] == 0:
             self.logger.info(">>>LOOKS LIKE DA FIRST ITERATION! DOING NOTHING!")
         elif instrument == Instrument.ETF:
+            # check if we received an out-of-order sequence!
+            if sequence_number <= self.last_sequence_processed:
+                self.logger.info(">>>OLD INFORMATION RECEIVED, SKIPPING!")
+                return
+            self.last_sequence_processed = sequence_number # set the sequence number since we are now processing it.
+
             # self.logger.info("RECEIVED ETF ORDER BOOK!")
             # next, we need to aggregate the volumes and append it to the orderbook_volumes list.
             self.orderbook_volumes.append(sum(ask_volumes) + sum(bid_volumes))
@@ -374,68 +371,69 @@ class AutoTrader(BaseAutoTrader):
                        + np.dot(np.array(bid_prices), bid_volume_ratios)
             # theoretical_price = (bid_prices[0] + ask_prices[0]) / 2
             # self.logger.info(f'THEORETICAL PRICE CALCULATED TO BE {theoretical_price}.') 
-
             # standard deviation to use for spread.
-            spread1 = 0.5 * np.sqrt(np.std(np.array(ask_prices + bid_prices))) # sum here is list concatenation.
-            spread2 = 2 * spread1
-            spread3 = 2 * spread2
-
+            spread = np.sqrt(np.std(np.array(ask_prices + bid_prices)))*2
             # check if we are just starting up and have no current information.
             # below should be if len(self.last_orders) < self.window_size but for now im running this strat
             # without using any statistical variables. this is the baseline P/L strategy IMO.
             if True:
-                # beginning simple estimate.
-                # if our position is too positive or too negative we can skew the interval.
-                new_bid1 = theoretical_price - spread1 / 2
-                new_bid2 = theoretical_price - spread2 / 2
-                new_bid3 = theoretical_price - spread3 / 2
-                new_ask1 = theoretical_price + spread1 / 2
-                new_ask2 = theoretical_price + spread2 / 2
-                new_ask3 = theoretical_price + spread3 / 2
+                # need to find fair price using JUST weighted average,
+                # calculate the spread with variance,
+                # start placing orders and collecting info,
+                # calculate newBid and newAsk based on our fair price and spread.
+                new_bid = theoretical_price - spread / 2
+                new_ask = theoretical_price + spread / 2
+                # new_ask and new_bid are probably not to the tick_size_in_cents correct.
+                # two appraoches here.
+                # can either round up new_ask and new_bid to their nearest tick mark
+                # or we can keep them there and place orders around
+                # the new_ask at nearest ticks on both sides.
+                # need to think about how to round here.
+                new_bid_by_tick = int(new_bid - new_bid % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
+                new_ask_by_tick = int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
+                # we want to asymetrically "change" the spread we have based on the current order book spread.
+                # within the cases, we change the spread by inserting two orders at our spread (no information on what better to do yet).
+                # the order size should be determined by the depth of the book.
+                # the order timing should be full lot in one order (for each side), because we don't
+                # yet have information on how to break up the order properly.
+                # in every single case, we MUST check if we have existing orders outside our calculated interval, and CANCEL them.
+                # perhaps not the best solution once we do time-weighted execution, but if the interval we have does not contain
+                # the price of a current order, it should not be a current order in my opinion.
+                # 7 cases:
+                if new_bid_by_tick > bid_prices[0] and new_ask_by_tick < ask_prices[0]:
+                    # our interval is WITHIN the actual market interval, GREAT!
+                    self.logger.info("our interval is WITHIN the actual market interval")
+                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                elif new_ask_by_tick > ask_prices[0] and new_bid_by_tick < bid_prices[0]:
+                    # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
+                    self.logger.info("our interval CONTAINS the actual market interval")
+                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                elif new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
+                    # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
+                    # self.logger.info("THIS BRACNH IS IMPLEMENTED!")
+                    self.logger.info("our interval perfectly MATCHES the actual market interval")
+                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                elif new_bid_by_tick > ask_prices[0]:
+                    # our interval is completely ABOVE current market interval.
 
-                # new_ask and new_bid are probably not to the
-                # tick_size_in_cents correct, need to round em up/down.
-                new_bid_by_tick1 = int(new_bid1 - new_bid1 % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
-                new_bid_by_tick2 = int(new_bid2 - new_bid2 % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
-                new_bid_by_tick3 = int(new_bid3 - new_bid3 % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
-                new_ask_by_tick1 = int(new_ask1 + TICK_SIZE_IN_CENTS - new_ask1 % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
-                new_ask_by_tick2 = int(new_ask2 + TICK_SIZE_IN_CENTS - new_ask2 % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
-                new_ask_by_tick3 = int(new_ask3 + TICK_SIZE_IN_CENTS - new_ask3 % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
+                    self.logger.info("our interval is completely ABOVE current market interval")
+                elif new_bid_by_tick > bid_prices[0] and new_ask_by_tick > ask_prices[0]:
+                    # our interval OVERLAPS actual market interval on the right side.
 
-                intervals = [(new_bid_by_tick1, new_ask_by_tick1),\
-                             (new_bid_by_tick2, new_ask_by_tick2),\
-                             (new_bid_by_tick3, new_ask_by_tick3)]
-                
-                for interval in intervals:
-                    new_bid_by_tick = interval[0]
-                    new_ask_by_tick = interval[1]
-                    # we begin trading via these 3 cases only!
-                    if new_bid_by_tick > bid_prices[0] and new_ask_by_tick < ask_prices[0]:
-                        # our interval is WITHIN the actual market interval, GREAT!
-                        # => just place orders at the bid and ask we calculated, ba-da-bing ba-da-bang.
-                        # must be a better way than just using LOT_SIZE here!!!
-                        self.logger.info("our interval is WITHIN the actual market interval")
-                        self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
-                    elif new_ask_by_tick > ask_prices[0] and new_bid_by_tick < bid_prices[0]:
-                        # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
-                        self.logger.info("our interval CONTAINS the actual market interval")
-                        self.place_orders_at_two_levels(new_bid_by_tick, 2*LOT_SIZE, new_ask_by_tick, 2*LOT_SIZE)
-                    elif new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
-                        # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
-                        # self.logger.info("THIS BRACNH IS IMPLEMENTED!")
-                        self.logger.info("our interval perfectly MATCHES the actual market interval")
-                        # we don't really want to trade a super tight spread for now.
-                        if ask_prices[0] - bid_prices[0] > 2 * TICK_SIZE_IN_CENTS:
-                            self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
-                    else:
-                        pass
+                    self.logger.info("our interval OVERLAPS actual market interval on the right side")
+                elif new_ask_by_tick < bid_prices[0]:
+                    # our interval is completely BELOW current market interval.
 
-                if self.timer % 50 == 0:
-                    # if we now have too many current orders, we should cancel some old ones.
-                    # this logic should be rewritten to cancel orders when they're no longer optimal!
-                    self.check_current_orders_optimality()
-                    self.check_hedged_orders_status()
-                    self.check_current_orders_out_of_bounds(new_bid_by_tick3, new_ask_by_tick3)
+                    self.logger.info("our interval is completely BELOW current market interval")
+                elif new_bid_by_tick < bid_prices[0] and new_ask_by_tick < ask_prices[0]:
+                    # our interval OVERLAPS actual market interval on the left side.
+                    # => we want to decrease trading activity
+                    self.logger.info("our interval OVERLAPS actual market interval on the left side")
+                else:
+                    # i don't think there are more cases, but should handle all branches of execution just in case.
+                    self.logger.info(f'THIS BRANCH SHOULD NEVER GET EXECUTED!!!')
+                    pass
+
             else:
                 # we have information, so modify the theoretical_price and spread and execution duration of the orders.
                 # we want to asymetrically change the spread we have based on the current order book spread.
