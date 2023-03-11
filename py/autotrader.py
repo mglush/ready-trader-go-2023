@@ -168,6 +168,17 @@ class AutoTrader(BaseAutoTrader):
             'lifespan' : lifespan,      # good for day vs fill and kill
         }
 
+    def check_wash_order(self, order_type, order_price) -> bool:
+        '''
+        checks whether the order we are about to place is a wash order.
+        '''
+        for order_id, order in self.current_orders.items():
+            if order['type'] == order_type and order['price'] == order_price:
+                return True
+        
+        return False
+
+
     def place_orders_at_two_levels(self, bid, bid_volume, ask, ask_volume) -> None:
         '''
         places two orders at the given bid and ask with given volumes,
@@ -175,7 +186,8 @@ class AutoTrader(BaseAutoTrader):
         returns: nothing.
         '''
         bid_total_temp = self.total_volume_of_current_orders()['bid'] + self.position + bid_volume
-        if bid_volume > 0 and len(self.current_orders) < LIVE_ORDER_LIMIT and bid_total_temp < POSITION_LIMIT:
+        flag = self.check_wash_order(Side.BID, bid)
+        if bid_volume > 0 and len(self.current_orders) < LIVE_ORDER_LIMIT and bid_total_temp < POSITION_LIMIT and not flag:
             self.logger.info(f'PLACING ORDER AT BID {bid} VOLUME {bid_volume}!')
             # placing the bid order here.
             # size could be based on other factors than just lot LOT_SIZE variable!!!
@@ -189,7 +201,8 @@ class AutoTrader(BaseAutoTrader):
             self.bids.add(self.bid_id)
     
         ask_total_temp = -self.total_volume_of_current_orders()['ask'] + self.position - ask_volume
-        if ask_volume > 0 and len(self.current_orders) < LIVE_ORDER_LIMIT and ask_total_temp > -POSITION_LIMIT:
+        flag = self.check_wash_order(Side.ASK, ask)
+        if ask_volume > 0 and len(self.current_orders) < LIVE_ORDER_LIMIT and ask_total_temp > -POSITION_LIMIT and not flag:
             self.logger.info(f'PLACING ORDER AT ASK {ask} VOLUME {ask_volume}!')
             # placing the ask order here.
             # size could be based on other factors than just lot LOT_SIZE variable!!!
@@ -268,16 +281,22 @@ class AutoTrader(BaseAutoTrader):
                 volume = self.hedged_current_orders[next_id]['volume']
                 self.send_hedge_order(next_id, trade_type, price, volume)
 
-
     def check_current_orders_out_of_bounds(self, bid, ask) -> None:
         '''
         checks if a current order is priced outside the interval we like.
-        if so, we modify this order's price to the optimal bid or ask accordingly.
+        if so, we modify this order's volume to decrease its significance but keep its priority.
         '''
         self.logger.info(f'CHECKING CURRENT ORDERS OUT OF BOUNDS!')
         for order_id, order in self.current_orders.items():
             if order['price'] < bid or order['price'] > ask:
-                self.logger.info(f'UPDATING ORDER {order_id} TO OPTIMAL PRICE')
+                # order out of bounds, decrease its significance.
+                self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
+                self.send_amend_order(order_id, int(order['volume'] / 2))
+            else:
+                # order within bounds, check if we can increase its significance.
+                self.logger.info(f'UPDATING ORDER {order_id} TO FULL VOLUME ASAP ROCKY')
+                if order['volume'] < int(LOT_SIZE / 2):
+                    self.send_amend_order(order_id, LOT_SIZE)
 
     def check_current_orders_optimality(self) -> None:
         '''
@@ -417,18 +436,26 @@ class AutoTrader(BaseAutoTrader):
                 elif new_ask_by_tick > ask_prices[0] and new_bid_by_tick < bid_prices[0]:
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     self.logger.info("our interval CONTAINS the actual market interval")
-                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    self.place_orders_at_two_levels(new_bid_by_tick, 2*LOT_SIZE, new_ask_by_tick, 2*LOT_SIZE)
 
                 elif new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
                     # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
                     # self.logger.info("THIS BRACNH IS IMPLEMENTED!")
                     self.logger.info("our interval perfectly MATCHES the actual market interval")
-                    self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    # we don't really want to trade a super tight spread for now.
+                    if ask_prices[0] - bid_prices[0] != TICK_SIZE_IN_CENTS:
+                        self.place_orders_at_two_levels(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
                 else:
                     # i don't think there are more cases, but should handle all branches of execution just in case.
                     # self.logger.info(f'THIS LINE SHOULD NEVER APPEAR!!! new ask = {new_ask_by_tick} real ask = {ask_prices[0]} new_bid = {new_bid_by_tick} real bid = {bid_prices[0]}')
                     pass
-                
+
+                if self.timer % 20 == 0:
+                    # if we now have too many current orders, we should cancel some old ones.
+                    # this logic should be rewritten to cancel orders when they're no longer optimal!
+                    self.check_current_orders_optimality()
+                    self.check_hedged_orders_status()
+                    self.check_current_orders_out_of_bounds(new_bid_by_tick, new_ask_by_tick)
             else:
                 # we have information, so modify the theoretical_price and spread and execution duration of the orders.
                 # we want to asymetrically change the spread we have based on the current order book spread.
@@ -436,13 +463,6 @@ class AutoTrader(BaseAutoTrader):
                 pass
         else:
             pass
-
-        if self.timer % 2 == 0:
-            # if we now have too many current orders, we should cancel some old ones.
-            # this logic should be rewritten to cancel orders when they're no longer optimal!
-            self.check_current_orders_optimality()
-            self.check_hedged_orders_status()
-                
 
     def on_order_filled_message(self, client_order_id: int, price: int, volume: int) -> None:
         """Called when one of your orders is filled, partially or fully.
