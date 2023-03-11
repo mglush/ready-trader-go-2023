@@ -7,3 +7,4 @@ exchange.log
 temp.txt
 match_events.csv
 score_board.csv
+__pycache__
