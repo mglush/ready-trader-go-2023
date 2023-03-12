@@ -45,6 +45,8 @@ TICK_SIZE_IN_CENTS = 100        # tick size of the ETF market.
 MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 
+ALPHA = 0.5 # scale error bars
+
 class AutoTrader(BaseAutoTrader):
     '''
     -_- LiquidBears Awesome Autotrader -_-
@@ -641,10 +643,16 @@ class AutoTrader(BaseAutoTrader):
             self.orderbook_volumes['bid_volumes'].append(sum(bid_volumes))
             self.orderbook_volumes['ask_volumes'].append(sum(ask_volumes))
 
+            # simple average to compute true-ish price
+            regular = (bid_prices[0] + ask_prices[0]) / 2
+            err = abs(bid_prices[0] - ask_prices[0]) // 2
+
             # weighted average to compute theoretical_price.
-            total_volume = ask_volumes[0] + bid_volumes[0]
-            theoretical_price = bid_prices[0]*(ask_volumes[0] / total_volume) \
-                                    + ask_prices[0]*(bid_volumes[0] / total_volume)
+            theo = (bid_volumes[0]*ask_prices[0] + ask_volumes[0]*bid_prices[0]) / (bid_volumes[0]+ask_volumes[0])
+            
+            var_theo = sum([ask_volumes[i] * (ask_prices[i] - theo)**2 for i in range(len(ask_prices))])
+            var_theo += sum([bid_volumes[i] * (bid_prices[i] - theo)**2 for i in range(len(bid_prices))])
+            var_theo = var_theo / (sum(ask_volumes) + sum(bid_volumes))
 
             # weighted average to compute theoretical_price, to be modified later.
             # total_volume = sum(ask_volumes) + sum(bid_volumes)
@@ -654,7 +662,7 @@ class AutoTrader(BaseAutoTrader):
 
             # standard deviation to use for spread.
             
-            spread = 2 * abs(self.latest_volume_signal) * np.sqrt(np.std(np.array(ask_prices + bid_prices)))
+            #spread = 2 * abs(self.latest_volume_signal) * np.sqrt(np.std(np.array(ask_prices + bid_prices)))
             # spread = ask_prices[0] - bid_prices[0]
 
             # scale = 1 / (self.average_time_to_fill() / (ORDER_TTL / 2))
@@ -663,48 +671,31 @@ class AutoTrader(BaseAutoTrader):
             # if we are just starting without information, we have a very simplistic trading approach.
             if True: # this will be changed to "if we don't have enough information yet"
                 # need to find fair price using JUST weighted average,
-                new_bid = theoretical_price - spread / 2
-                new_ask = theoretical_price + spread / 2
+                new_bid = theo - ALPHA * np.sqrt(var_theo)
+                new_ask = theo + ALPHA * np.sqrt(var_theo)
                 # new_ask and new_bid are probably not to the
                 # tick_size_in_cents correct, need to round them up.
                 new_bid_by_tick = int(new_bid - new_bid % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
                 new_ask_by_tick = int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
                 
                 self.logger.critical(f'REAL INTERVAL [{bid_prices[0]}, {ask_prices[0]}] OUR INTERVAL [{new_bid_by_tick}, {new_ask_by_tick}]')
-                # 7 cases, 2 types of aciton:
-                if new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
-                    # our interval perfectly MATCHES the actual market interval.
-                    self.logger.info("our interval perfectly MATCHES the actual market interval, NOT TRADING IT")
-                    # if the spread is large enough, we can decrease it.
-                    # if spread > 6 * TICK_SIZE_IN_CENTS:
-                    #     self.place_two_orders_or_none(new_bid_by_tick + TICK_SIZE_IN_CENTS, LOT_SIZE, new_ask_by_tick - TICK_SIZE_IN_CENTS, LOT_SIZE)
-                elif new_bid_by_tick >= bid_prices[0] and new_ask_by_tick <= ask_prices[0]:
+                # 4 cases:
+                if (new_bid > regular-err) and (new_ask < regular+err):
                     # our interval is WITHIN the actual market interval.
                     # we want to trade in this condition of the actual market interval is wide enough.
                     # i.e., if market interval is 65-67 and ours is 65-66 we don't really want to trade that.
                     self.logger.info("our interval is WITHIN the actual market interval, TRYING TO TRADE")
-                    if ask_prices[0] - bid_prices[0] > 6 * TICK_SIZE_IN_CENTS: # this value can be changed but we basically want enough space to insert our order in.
-                        self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
-                elif new_ask_by_tick >= ask_prices[0] and new_bid_by_tick <= bid_prices[0]:
+                    #if ask_prices[0] - bid_prices[0] > 6 * TICK_SIZE_IN_CENTS: # this value can be changed but we basically want enough space to insert our order in.
+                    self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                
+                elif (new_bid < regular-err) and (new_ask > regular+err):
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     self.logger.info("our interval CONTAINS the actual market interval, TRYING TO TRADE")
                     self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
-                elif new_bid_by_tick >= ask_prices[0]:
-                    # our interval is completely ABOVE current market interval.
-                    # self.decrease_trading_activity()
-                    self.logger.info("our interval is completely ABOVE current market interval, NOT TRADING")
-                elif new_bid_by_tick > bid_prices[0] and new_ask_by_tick > ask_prices[0]:
-                    # our interval OVERLAPS actual market interval on the right side.
-                    # self.decrease_trading_activity()
-                    self.logger.info("our interval OVERLAPS actual market interval on the right side, NOT TRADING")
-                elif new_ask_by_tick <= bid_prices[0]:
-                    # our interval is completely BELOW current market interval.
-                    # self.decrease_trading_activity()
-                    self.logger.info("our interval is completely BELOW current market interval")
-                elif new_bid_by_tick < bid_prices[0] and new_ask_by_tick < ask_prices[0]:
-                    # our interval OVERLAPS actual market interval on the left side.
-                    # self.decrease_trading_activity()
-                    self.logger.info("our interval OVERLAPS actual market interval on the left side, NOT TRADING")
+                # elif:
+                #     pass
+                # elif:
+                #     pass
                 else:
                     pass
 
@@ -781,9 +772,12 @@ class AutoTrader(BaseAutoTrader):
             time = self.timer - self.current_orders[client_order_id]['placed_at']
             self.fill_times.append(time) # record how long it took for this to happen.
             self.logger.info(f'THE ORDER TOOK {time} TICKS TO GET FULLY FILLED')
-            
+            order = self.executed_orders[client_order_id] = self.current_orders[client_order_id]
+            del self.current_orders[client_order_id]
+        elif remaining_volume == 0 and fill_volume == 0:
+            # order has been cancelled.    
             self.fill_times.append(time) # record how long it took for this to happen.
-            self.logger.info(f'THE ORDER TOOK {time} SECONDS TO GET CANCELLED!')
+            self.logger.info(f'THE ORDER TOOK {time} TICKS TO GET CANCELLED!')
             order = self.cancelled_orders[client_order_id] = self.current_orders[client_order_id]
             del self.current_orders[client_order_id]
         else:
