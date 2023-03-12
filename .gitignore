@@ -6,9 +6,8 @@ lib/
 analysis/
 
 pyvenv.cfg
-autotrader.log
 provided_autotrader*.*
-exchange.log
+*.log
 temp.txt
 
 match_events.csv

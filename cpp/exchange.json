@@ -36,9 +36,9 @@
     "PositionLimit": 100
   },
   "Traders": {
-    "LiquidBears": "glush",
-    "TraderTwo": "secret",
-    "TraderThree": "secret",
-    "TraderFour": "secret"
+    "LiquidBear": "glush",
+    "Bruh1": "glush",
+    "Bruh2": "glush",
+    "Bruh3": "glush"
   }
 }
