@@ -31,8 +31,8 @@ LOT_SIZE = 10
 POSITION_LIMIT = 100
 
 OUR_POSITION_LIMIT = 75
-DESIRED_AVG_TIME_TO_FILL = 25
-ORDER_TTL = 50
+DESIRED_AVG_TIME_TO_FILL = 20
+ORDER_TTL = 40
 
 LIVE_ORDER_LIMIT = 10
 TICK_SIZE_IN_CENTS = 100
@@ -66,7 +66,7 @@ class AutoTrader(BaseAutoTrader):
         
         self.hedged_position = 0            # keeps track of hedged position.
         self.position = 0                   # keeps track of regular position.
-        self.window_size = 20               # manually set? should this be computed?
+        self.window_size = 10               # manually set? should this be computed?
         self.last_sequence_processed = -1   # helps detect old and out-of-order information.
         self.timer = 0                      # helps track time during execution
     
@@ -103,7 +103,7 @@ class AutoTrader(BaseAutoTrader):
         '''
         if len(self.fill_times) < self.window_size:
             return DESIRED_AVG_TIME_TO_FILL
-        return sum(self.fill_times[:-self.window_size]) / len(self.fill_times[:-self.window_size])
+        return sum(self.fill_times[-self.window_size:]) / len(self.fill_times[-self.window_size:])
 
     def average_fill_ratio(self) -> float:
         '''
@@ -111,7 +111,7 @@ class AutoTrader(BaseAutoTrader):
         '''
         fill_ratios = list()
         # for each id in the last however many orders orders
-        for id in self.last_orders[:-self.window_size]:
+        for id in self.last_orders[-self.window_size:]:
             # order is either current or executed or cancelled orders, filled ratio still applies!
             if id in self.executed_orders:
                 # calc the actual ratio = filled/volume.
@@ -136,7 +136,7 @@ class AutoTrader(BaseAutoTrader):
         returns: average volume in the orderbook over the past window_size snapshots.
         '''
         if order_type == Side.BID or order_type == Side.ASK:
-            return sum(self.orderbook_volumes[order_type][:-self.window_size]) / len(self.orderbook_volumes[order_type][:-self.window_size])
+            return sum(self.orderbook_volumes[order_type][-self.window_size:]) / len(self.orderbook_volumes[order_type][-self.window_size:])
         else:
             self.logger.warning(f'THIS BRANCH SHOULD NEVER BE EXECUTED!')
 
@@ -475,8 +475,10 @@ class AutoTrader(BaseAutoTrader):
             theoretical_price = np.dot(np.array(ask_prices), ask_volume_ratios) + np.dot(np.array(bid_prices), bid_volume_ratios)
 
             # standard deviation to use for spread.
-            spread = np.sqrt(np.std(np.array(ask_prices + bid_prices)))   # i don't really know what the best spread is man.
-                                                                          # it should be calibrated based on average_time_to_fill_order value
+            # i don't really know what the best spread is man.
+            spread = 0.5 * np.sqrt(np.std(np.array(ask_prices + bid_prices))) 
+            scale = 1 / (self.average_time_to_fill() / (ORDER_TTL / 2))
+            spread = scale * spread if scale > 0 else spread
 
             # if we are just starting without information, we have a very simplistic trading approach.
             if True:
@@ -487,6 +489,8 @@ class AutoTrader(BaseAutoTrader):
                 # tick_size_in_cents correct, need to round them up.
                 new_bid_by_tick = int(new_bid - new_bid % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
                 new_ask_by_tick = int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
+                
+                self.logger.warning(f'REAL INTERVAL [{bid_prices[0]}, {ask_prices[0]}] OUR INTERVAL [{new_bid_by_tick}, {new_ask_by_tick}]')
                 # 7 cases, 2 types of aciton:
                 if new_bid_by_tick >= bid_prices[0] and new_ask_by_tick <= ask_prices[0]:
                     # our interval is WITHIN the actual market interval, GREAT!
@@ -499,7 +503,7 @@ class AutoTrader(BaseAutoTrader):
                 elif new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
                     # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
                     self.logger.info("our interval perfectly MATCHES the actual market interval")
-                    self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    # self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
                 else:
                     # otherwise we need to decrease trading activity because the interval we have
                     # is on the right or left of the actual interval. I propose we calculate the order
@@ -551,7 +555,8 @@ class AutoTrader(BaseAutoTrader):
         # and we place a fill and kill at the price we just got filled at, in the opposite direction.
         if self.current_orders[client_order_id]['type'] == Side.ASK:
             # bid just got executed, must look at bid volume
-            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['ask_volumes'] < self.average_volume(Side.ASK) / 2:
+            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['ask_volumes'] < self.average_volume(Side.ASK):
+                self.logger.info(f'IMPULSE ORDER SMACKING THAT THANG HERE')
                 # cancel the order, place a new one with a fill or kill method.
                 corresponding_order_id = self.current_orders[client_order_id]['corresponding_trade_id']
                 volume_to_trade = self.current_orders[corresponding_order_id]['volume']
@@ -562,7 +567,8 @@ class AutoTrader(BaseAutoTrader):
                 pass # safe to keep the other order, it is likely gonna get hit.
         elif self.current_orders[client_order_id]['type'] == Side.BID:
             # bid just got executed, must look at bid volume
-            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['bid_volumes'] < self.average_volume(Side.BID) / 2:
+            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['bid_volumes'] < self.average_volume(Side.BID):
+                self.logger.info(f'IMPULSE ORDER SMACKING THAT THANG HERE')
                 # cancel the order, place a new one with a fill or kill method.
                 corresponding_order_id = self.current_orders[client_order_id]['corresponding_trade_id']
                 volume_to_trade = self.current_orders[corresponding_order_id]['volume']
