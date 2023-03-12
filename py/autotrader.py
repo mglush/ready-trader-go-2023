@@ -46,6 +46,7 @@ MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS 
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 
 ALPHA = 0.5 # scale error bars
+BETA = 0.40 # hitting the opposite side after getting lifted
 
 class AutoTrader(BaseAutoTrader):
     '''
@@ -57,6 +58,8 @@ class AutoTrader(BaseAutoTrader):
         super().__init__(loop, team_name, secret)
         self.order_ids = itertools.count(1)
 
+        self.curr_order_book = dict() # keep latest order book
+        
         self.hedged_current_orders = dict()     # keeps track of orders we just tried to hedge.
         self.current_orders = dict()            # order_id -> info about order. 
         self.executed_orders = dict()           # order_id -> info about order.
@@ -78,7 +81,7 @@ class AutoTrader(BaseAutoTrader):
 
         self.hedged_position = 0                # keeps track of hedged position.
         self.position = 0                       # keeps track of regular position.
-        self.window_size = 10                   # manually set? should this be computed?
+        self.window_size = 30                   # manually set? should this be computed?
         self.last_sequence_processed = -1       # helps detect old and out-of-order orderbook snapshots.
         self.last_sequence_processed_ticks = -1 # same as last_sequence_processed but for ticks.
         self.timer = 0                          # helps track time during execution
@@ -203,7 +206,7 @@ class AutoTrader(BaseAutoTrader):
     #     elif order_id in self.current_orders:
     #         return self.current_orders[order_id]['volume'] / self.average_volume(order_type)
 
-    def record_order(self, order_id, order_type, price, volume, lifespan) -> None:
+    def record_order(self, order_id, order_type, price, volume, lifespan, corresponding_order_id) -> None:
         '''
         records order into current_orders.
 
@@ -218,7 +221,8 @@ class AutoTrader(BaseAutoTrader):
             'volume' : volume,                                  # total size of the order.
             'lifespan' : lifespan,                              # good for day vs fill and kill
             'placed_at' : self.timer,                           # to keep track of how long the order has been active for.
-            'should_hedge' : abs(self.latest_volume_signal) > VOLUME_SIGNAL_THRESHOLD
+            'should_hedge' : abs(self.latest_volume_signal) > VOLUME_SIGNAL_THRESHOLD,
+            'corresponding_order_id' : corresponding_order_id
         }
 
     def hedge_record_order(self, order_id, order_type, volume) -> None:
@@ -277,7 +281,7 @@ class AutoTrader(BaseAutoTrader):
             and not flag:
                 self.logger.info(f'PLACING SINGLE ORDER AT BID {price} VOLUME {volume}!') 
                 bid_id = next(self.order_ids)
-                self.record_order(bid_id, Side.BID, price, volume, Lifespan.GOOD_FOR_DAY)
+                self.record_order(bid_id, Side.BID, price, volume, Lifespan.GOOD_FOR_DAY, None)
                 self.last_orders.append(bid_id)
                 self.send_insert_order(bid_id, Side.BID, price, volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
         elif type == Side.ASK:
@@ -286,7 +290,7 @@ class AutoTrader(BaseAutoTrader):
             and not flag:
                 self.logger.info(f'PLACING ORDER AT ASK {price} VOLUME {volume}!')
                 ask_id = next(self.order_ids)
-                self.record_order(ask_id, Side.ASK, price, volume, Lifespan.GOOD_FOR_DAY)
+                self.record_order(ask_id, Side.ASK, price, volume, Lifespan.GOOD_FOR_DAY, None)
                 self.last_orders.append(ask_id)
                 self.send_insert_order(ask_id, Side.ASK, price, volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
 
@@ -317,8 +321,8 @@ class AutoTrader(BaseAutoTrader):
             bid_id = next(self.order_ids)
             ask_id = next(self.order_ids)
             
-            self.record_order(bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
-            self.record_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
+            self.record_order(bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY, ask_id)
+            self.record_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY, bid_id)
             
             self.last_orders.append(bid_id)
             self.last_orders.append(ask_id)
@@ -332,7 +336,7 @@ class AutoTrader(BaseAutoTrader):
 
             self.logger.info(f'PLACING ORDER AT BID {bid} VOLUME {bid_volume}!') 
             bid_id = next(self.order_ids)
-            self.record_order(bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
+            self.record_order(bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY, None)
             self.last_orders.append(bid_id)
             self.send_insert_order(bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
         elif ask_volume > 0 \
@@ -342,7 +346,7 @@ class AutoTrader(BaseAutoTrader):
 
             self.logger.info(f'PLACING ORDER AT ASK {ask} VOLUME {ask_volume}!')
             ask_id = next(self.order_ids)
-            self.record_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
+            self.record_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY, None)
             self.last_orders.append(ask_id)
             self.send_insert_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
         else:
@@ -374,8 +378,8 @@ class AutoTrader(BaseAutoTrader):
             bid_id = next(self.order_ids)
             ask_id = next(self.order_ids)
             
-            self.record_order(bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
-            self.record_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
+            self.record_order(bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY, ask_id)
+            self.record_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY, bid_id)
             
             self.last_orders.append(bid_id)
             self.last_orders.append(ask_id)
@@ -639,6 +643,10 @@ class AutoTrader(BaseAutoTrader):
                 return
             self.last_sequence_processed = sequence_number # set the sequence number since we are now processing it.
 
+            # aggregate order book
+            self.curr_order_book['A'] = dict(zip(ask_prices, ask_volumes))
+            self.curr_order_book['B'] = dict(zip(bid_prices, bid_volumes))
+
             # next, we need to aggregate the volumes and append it to the orderbook_volumes list.
             self.orderbook_volumes['bid_volumes'].append(sum(bid_volumes))
             self.orderbook_volumes['ask_volumes'].append(sum(ask_volumes))
@@ -715,6 +723,31 @@ class AutoTrader(BaseAutoTrader):
         which may be better than the order's limit price. The volume is
         the number of lots filled at that price.
         """
+        #vol_remain_at_price_level = self.current_orders[client_order_id]['volume'] - volume
+        
+        if self.current_orders[client_order_id]['type'] == Side.ASK:
+            order_side, opposite_side = 'A', Side.BID
+        elif self.current_orders[client_order_id]['type'] == Side.BID:
+            order_side, opposite_side = 'B', Side.ASK
+
+        if price in self.curr_order_book[order_side].keys():
+            total_vol_at_price = self.curr_order_book[order_side][price]
+            vol_ratio_stat = volume / total_vol_at_price
+            if vol_ratio_stat >= BETA:
+                corresponding_order_id = self.current_orders[client_order_id]['corresponding_order_id']
+                if corresponding_order_id is not None:
+                    remaining_volume = self.current_orders[corresponding_order_id]['volume'] \
+                                        - self.current_orders[corresponding_order_id]['filled']
+
+                    self.place_immediate_single_order(type=opposite_side, price=price, volume=remaining_volume)
+                else:
+                    # there is no order to offset, should we hedge or try a market order?
+                    pass
+        else:
+            pass
+
+
+
         # any time an order gets filled,
         # check what the latest orderbook volume is,
         # compare it to average orderbook volume,
@@ -774,6 +807,7 @@ class AutoTrader(BaseAutoTrader):
             self.logger.info(f'THE ORDER TOOK {time} TICKS TO GET FULLY FILLED')
             order = self.executed_orders[client_order_id] = self.current_orders[client_order_id]
             del self.current_orders[client_order_id]
+
         elif remaining_volume == 0 and fill_volume == 0:
             # order has been cancelled.    
             self.fill_times.append(time) # record how long it took for this to happen.
