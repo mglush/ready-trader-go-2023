@@ -453,6 +453,20 @@ class AutoTrader(BaseAutoTrader):
         del self.hedged_current_orders[client_order_id]
         self.logger.info(f'EXITING HEDGE FILLED FUNCTION, POSITION {self.position} HEDGE {self.hedged_position}')
 
+    # # THIS FUNCTION SHOULD BE CALLED ON EVENT TO HEDGE A GIVEN POSITION.
+    # def place_given_hedge(self, type, position):
+    #     '''
+    #     '''
+    #     volume = self.total_volume_of_hedge_orders()
+    #     bid_volume_in_book = volume['bid']
+    #     ask_volume_in_book = volume['ask']
+    #     self.logger.critical(f'FOUND DIFF {diff} AND BID VOLUME {bid_volume_in_book} AND ASK VOLUME {ask_volume_in_book}')
+
+    #     next_id = next(self.order_ids)
+    #     self.hedge_record_order(next_id, Side.BID, diff)
+    #     self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, diff)
+
+    # THIS FUNCTION SHOULD BE PERIODICALLY CALLED TO CHECK OVERALL HEDGED STATUS.
     def hedge(self) -> None:
         '''
         Function to hedge as a last resort.
@@ -461,7 +475,7 @@ class AutoTrader(BaseAutoTrader):
         '''
         if self.position != -self.hedged_position and self.check_num_operations():
             diff = abs(self.position + self.hedged_position)
-            volume = self.total_volume_of_hedge_orders()
+            volume = self.total_volume_of_hedge_orders() # MUST CHECK IF HEDGED POSITION + TOTAL VOLUME OF HEDGED ORDERS + WHAT WE WANT TO HEDGE < HEDGE_POSITION_LIMIT, i.e. 100
             bid_volume_in_book = volume['bid']
             ask_volume_in_book = volume['ask']
             self.logger.critical(f'FOUND DIFF {diff} AND BID VOLUME {bid_volume_in_book} AND ASK VOLUME {ask_volume_in_book}')
@@ -807,15 +821,21 @@ class AutoTrader(BaseAutoTrader):
                                                                         # we thus need to difference in status, not the fill_volume on its own.
         if self.current_orders[client_order_id]['lifespan'] == Lifespan.GOOD_FOR_DAY:
             if remaining_volume > 0 and fill_volume == 0:
-                # order has just been created!!!
-                self.logger.info(f'THE ORDER {client_order_id} WAS JUST CREATED!')
+                if client_order_id in self.current_orders:
+                    # this means order was updated.
+                    self.logger.info(f'THE ORDER {client_order_id} WAS JUST UPDATED TO VOLUME {remaining_volume}!')
+                    self.current_orders[client_order_id]['filled'] = 0
+                    self.current_orders[client_order_id]['volume'] = remaining_volume
+                else:
+                    # this means the order is brand new.
+                    self.logger.info(f'THE ORDER {client_order_id} WAS JUST CREATED VOLUME {remaining_volume}!')
                 return
             elif remaining_volume == 0 and fill_volume > 0:
                 # order has been filled and executed!!!
                 self.logger.info(f'THE ORDER {client_order_id} HAS BEEN FILLED FULLY AND EXECUTED!')
-                time = self.timer - self.current_orders[client_order_id]['placed_at']
-                self.fill_times.append(time) # record how long it took for this to happen.
-                self.logger.info(f'THE ORDER TOOK {time} TICKS TO GET FULLY FILLED')
+                time_passed = self.timer - self.current_orders[client_order_id]['placed_at']
+                self.fill_times.append(time_passed) # record how long it took for this to happen.
+                self.logger.info(f'THE ORDER TOOK {time_passed} TICKS TO GET FULLY FILLED')
                 order = self.executed_orders[client_order_id] = self.current_orders[client_order_id]
                 del self.current_orders[client_order_id]
 
@@ -826,13 +846,15 @@ class AutoTrader(BaseAutoTrader):
                     else:
                         self.position -= fill_volume
                     
-                    self.hedge()
+                    if remaining_volume > 0:
+                        self.hedge(remaining_volume)
                     return
 
             elif remaining_volume == 0 and fill_volume == 0:
                 # order has been cancelled.    
-                self.fill_times.append(time) # record how long it took for this to happen.
-                self.logger.info(f'THE ORDER TOOK {time} TICKS TO GET CANCELLED!')
+                time_passed = self.timer - self.current_orders[client_order_id]['placed_at']
+                self.fill_times.append(time_passed) # record how long it took for this to happen.
+                self.logger.info(f'THE ORDER TOOK {time_passed} TICKS TO GET CANCELLED!')
                 order = self.cancelled_orders[client_order_id] = self.current_orders[client_order_id]
                 del self.current_orders[client_order_id]
             else:
