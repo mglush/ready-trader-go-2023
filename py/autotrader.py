@@ -27,15 +27,16 @@ from typing import List
 from ready_trader_go import BaseAutoTrader, Instrument, Lifespan, MAXIMUM_ASK, MINIMUM_BID, Side
 
 
-LOT_SIZE = 10
-POSITION_LIMIT = 100
+LOT_SIZE = 10                   # size of each order we make.
+POSITION_LIMIT = 100            # hard position cap.
 
-OUR_POSITION_LIMIT = 75
-DESIRED_AVG_TIME_TO_FILL = 20
-ORDER_TTL = 40
+OUR_POSITION_LIMIT = 50         # position size we prefer to stay under.
+ORDER_TTL = 50                  # number of orderbook snapshots an order lives for.
+DESIRED_AVG_TIME_TO_FILL = 25   # desired amount of orderbook snapshots for an order to live for.
+ORDER_CEILING = 0               # number of orders we limit ourselves to during directional moves.
 
-LIVE_ORDER_LIMIT = 10
-TICK_SIZE_IN_CENTS = 100
+LIVE_ORDER_LIMIT = 10           # hard cap on live orders.
+TICK_SIZE_IN_CENTS = 100        # tick size of the ETF market.
 MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 
@@ -221,10 +222,6 @@ class AutoTrader(BaseAutoTrader):
 
         returns: nothing.
         '''
-        # make sure we are not placing orders that can potentially exceed our position limit.
-        bid_total_temp = self.total_volume_of_current_orders()['bid'] + self.position + bid_volume
-        ask_total_temp = -self.total_volume_of_current_orders()['ask'] + self.position - ask_volume
-        
         # make sure we are not placing orders that are potential wash trades.
         # this function could be made more specific, but for now it's kept general as it works.
         bid_wash_flag = self.check_wash_order(Side.BID, bid)
@@ -235,8 +232,8 @@ class AutoTrader(BaseAutoTrader):
         # so that we can avoid accumulating a directional position.
         if bid_volume > 0 and ask_volume > 0 \
             and len(self.current_orders) + 2 <= LIVE_ORDER_LIMIT \
-            and bid_total_temp < POSITION_LIMIT \
-            and ask_total_temp > -POSITION_LIMIT \
+            and self.total_volume_of_current_orders()['bid'] + self.position + bid_volume < POSITION_LIMIT \
+            and -self.total_volume_of_current_orders()['ask'] + self.position - ask_volume > -POSITION_LIMIT \
             and not bid_wash_flag \
             and not asK_wash_flag:
 
@@ -258,6 +255,20 @@ class AutoTrader(BaseAutoTrader):
             # send the orders out!
             self.send_insert_order(bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
             self.send_insert_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
+        elif bid_volume > 0 \
+            and len(self.current_orders) < LIVE_ORDER_LIMIT \
+            and self.total_volume_of_current_orders()['bid'] + self.position + bid_volume < POSITION_LIMIT \
+            and not bid_wash_flag:
+            # if we couldn't place both orders, let's try to place at least one of them!
+            # HAVEN'T IMPLEMENTED BECAUSE WE HAVEN"T YET IMPLEMENTED LOGIC OF HOW TO UNLOAD.
+            pass
+        elif ask_volume > 0 \
+            and len(self.current_orders) < LIVE_ORDER_LIMIT \
+            and -self.total_volume_of_current_orders()['ask'] + self.position - ask_volume > -POSITION_LIMIT \
+            and not asK_wash_flag:
+            # if we couldn't place both orders, let's try to place at least one of them!
+            # HAVEN'T IMPLEMENTED BECAUSE WE HAVEN"T YET IMPLEMENTED LOGIC OF HOW TO UNLOAD.
+            pass
         else:
             self.logger.info(f'CANNOT PLACE PAIR OF ORDERS AT THIS MOMENT, RISK PARAMETERS DO NOT ALLOW FOR THIS.')
 
@@ -454,10 +465,9 @@ class AutoTrader(BaseAutoTrader):
         # and the actions are made on one based on what happens to the other.
         # self.check_current_orders_out_of_bounds(theoretical_bid, theoretical_ask)
 
-        if bid_prices[0] == 0 or ask_prices[0] == 0 or self.theoretical_price == 0:
+        if bid_prices[0] == 0 or ask_prices[0] == 0:
             pass # first couple iterations, do nothing.
         elif instrument == Instrument.ETF:
-            
             # check if we received an out-of-order sequence!
             if sequence_number < 0 or sequence_number <= self.last_sequence_processed:
                 self.logger.info(">>>OLD INFORMATION RECEIVED, SKIPPING!")
@@ -470,21 +480,21 @@ class AutoTrader(BaseAutoTrader):
 
             # weighted average to compute theoretical_price.
             total_volume = ask_volumes[0] + bid_volumes[0]
-            self.theoretical_price = bid_prices[0]*(ask_volumes[0] / total_volume) \
+            theoretical_price = bid_prices[0]*(ask_volumes[0] / total_volume) \
                                     + ask_prices[0]*(bid_volumes[0] / total_volume)
 
             # standard deviation to use for spread.
             # i don't really know what the best spread is man.
             # gonna try to use without scaling first.
-            self.spread = 2 * np.sqrt(np.std(np.array(ask_prices + bid_prices))) 
+            spread = 2 * np.sqrt(np.std(np.array(ask_prices + bid_prices))) 
             # scale = 1 / (self.average_time_to_fill() / (ORDER_TTL / 2))
             # spread = scale * spread if scale > 0 else spread
 
             # if we are just starting without information, we have a very simplistic trading approach.
             if True: # this will be changed to "if we don't have enough information yet"
                 # need to find fair price using JUST weighted average,
-                new_bid = self.theoretical_price - self.spread / 2
-                new_ask = self.theoretical_price + self.spread / 2
+                new_bid = theoretical_price - spread / 2
+                new_ask = theoretical_price + spread / 2
                 # new_ask and new_bid are probably not to the
                 # tick_size_in_cents correct, need to round them up.
                 new_bid_by_tick = int(new_bid - new_bid % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
@@ -492,10 +502,13 @@ class AutoTrader(BaseAutoTrader):
                 
                 self.logger.warning(f'REAL INTERVAL [{bid_prices[0]}, {ask_prices[0]}] OUR INTERVAL [{new_bid_by_tick}, {new_ask_by_tick}]')
                 # 7 cases, 2 types of aciton:
-                if new_bid_by_tick >= bid_prices[0] and new_ask_by_tick <= ask_prices[0]:
-                    # our interval is WITHIN the actual market interval, GREAT!
+                if new_bid_by_tick > bid_prices[0] and new_ask_by_tick < ask_prices[0]:
+                    # our interval is WITHIN the actual market interval.
+                    # we want to trade in this condition of the actual market interval is wide enough.
+                    # i.e., if market interval is 65-67 and ours is 65-66 we don't really want to trade that.
                     self.logger.info("our interval is WITHIN the actual market interval")
-                    self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    if ask_prices[0] - bid_prices[0] > 8 * TICK_SIZE_IN_CENTS: # this value can be changed but we basically want enough space to insert our order in.
+                        self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
                 elif new_ask_by_tick >= ask_prices[0] and new_bid_by_tick <= bid_prices[0]:
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     self.logger.info("our interval CONTAINS the actual market interval")
@@ -509,22 +522,21 @@ class AutoTrader(BaseAutoTrader):
                     # is on the right or left of the actual interval. I propose we calculate the order
                     # ceiling we want based on each case and decrease trading activity.
                     # basically, we DO NOT want to get caught lacking.
-                    order_ceiling = 0 # for now, i am literally deleting all of them if we are in these cases.
                     if new_bid_by_tick >= ask_prices[0]:
                         # our interval is completely ABOVE current market interval.
-                        self.decrease_trading_activity(order_ceiling)
+                        self.decrease_trading_activity(ORDER_CEILING)
                         self.logger.info("our interval is completely ABOVE current market interval")
                     elif new_bid_by_tick > bid_prices[0] and new_ask_by_tick > ask_prices[0]:
                         # our interval OVERLAPS actual market interval on the right side.
-                        self.decrease_trading_activity(order_ceiling)
+                        self.decrease_trading_activity(ORDER_CEILING)
                         self.logger.info("our interval OVERLAPS actual market interval on the right side")
                     elif new_ask_by_tick <= bid_prices[0]:
                         # our interval is completely BELOW current market interval.
-                        self.decrease_trading_activity(order_ceiling)
+                        self.decrease_trading_activity(ORDER_CEILING)
                         self.logger.info("our interval is completely BELOW current market interval")
                     elif new_bid_by_tick < bid_prices[0] and new_ask_by_tick < ask_prices[0]:
                         # our interval OVERLAPS actual market interval on the left side.
-                        self.decrease_trading_activity(order_ceiling)
+                        self.decrease_trading_activity(ORDER_CEILING)
                         self.logger.info("our interval OVERLAPS actual market interval on the left side")
                     else:
                         # i don't think there are more cases, but should handle all branches of execution just in case.
@@ -553,32 +565,32 @@ class AutoTrader(BaseAutoTrader):
         # and if the volume is below half the average,
         # we cancel the corresponding bid or ask order of the executed clinet_order_id,
         # and we place a fill and kill at the price we just got filled at, in the opposite direction.
-        if self.current_orders[client_order_id]['type'] == Side.ASK:
-            # bid just got executed, must look at bid volume
-            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['ask_volumes'] < self.average_volume(Side.ASK) / 2:
-                self.logger.info(f'IMPULSE ORDER SMACKING THAT THANG HERE')
-                # cancel the order, place a new one with a fill or kill method.
-                corresponding_order_id = self.current_orders[client_order_id]['corresponding_trade_id']
-                volume_to_trade = self.current_orders[corresponding_order_id]['volume']
-                self.send_cancel_order(corresponding_order_id)
-                # place immediate fill or kill for the volume of the order we just cancelled.
-                self.place_immediate_single_order(Side.BID, price, volume_to_trade)
-            else:
-                pass # safe to keep the other order, it is likely gonna get hit.
-        elif self.current_orders[client_order_id]['type'] == Side.BID:
-            # bid just got executed, must look at bid volume
-            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['bid_volumes'] < self.average_volume(Side.BID) / 2:
-                self.logger.info(f'IMPULSE ORDER SMACKING THAT THANG HERE')
-                # cancel the order, place a new one with a fill or kill method.
-                corresponding_order_id = self.current_orders[client_order_id]['corresponding_trade_id']
-                volume_to_trade = self.current_orders[corresponding_order_id]['volume']
-                self.send_cancel_order(corresponding_order_id)
-                # place immediate fill or kill for the volume of the order we just cancelled.
-                self.place_immediate_single_order(Side.ASK, price, volume_to_trade)
-            else:
-                pass # safe to keep the other order, it is likely gonna get hit.
-        else:
-            self.logger.warning(f'THIS BRANCH SHOULD NEVER BE EXECUTED!!!')
+        # if self.current_orders[client_order_id]['type'] == Side.ASK:
+        #     # bid just got executed, must look at bid volume
+        #     if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['ask_volumes'] < self.average_volume(Side.ASK) / 2:
+        #         self.logger.info(f'IMPULSE ORDER SMACKING THAT THANG HERE')
+        #         # cancel the order, place a new one with a fill or kill method.
+        #         corresponding_order_id = self.current_orders[client_order_id]['corresponding_trade_id']
+        #         volume_to_trade = self.current_orders[corresponding_order_id]['volume']
+        #         self.send_cancel_order(corresponding_order_id)
+        #         # place immediate fill or kill for the volume of the order we just cancelled.
+        #         self.place_immediate_single_order(Side.BID, price, volume_to_trade)
+        #     else:
+        #         pass # safe to keep the other order, it is likely gonna get hit.
+        # elif self.current_orders[client_order_id]['type'] == Side.BID:
+        #     # bid just got executed, must look at bid volume
+        #     if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['bid_volumes'] < self.average_volume(Side.BID) / 2:
+        #         self.logger.info(f'IMPULSE ORDER SMACKING THAT THANG HERE')
+        #         # cancel the order, place a new one with a fill or kill method.
+        #         corresponding_order_id = self.current_orders[client_order_id]['corresponding_trade_id']
+        #         volume_to_trade = self.current_orders[corresponding_order_id]['volume']
+        #         self.send_cancel_order(corresponding_order_id)
+        #         # place immediate fill or kill for the volume of the order we just cancelled.
+        #         self.place_immediate_single_order(Side.ASK, price, volume_to_trade)
+        #     else:
+        #         pass # safe to keep the other order, it is likely gonna get hit.
+        # else:
+        #     self.logger.warning(f'THIS BRANCH SHOULD NEVER BE EXECUTED!!!')
 
     def on_order_status_message(self, client_order_id: int, fill_volume: int, remaining_volume: int,
                                 fees: int) -> None:
