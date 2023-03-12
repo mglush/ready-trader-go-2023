@@ -483,11 +483,11 @@ class AutoTrader(BaseAutoTrader):
                 if new_bid_by_tick >= bid_prices[0] and new_ask_by_tick <= ask_prices[0]:
                     # our interval is WITHIN the actual market interval, GREAT!
                     self.logger.info("our interval is WITHIN the actual market interval")
-                    self.place_two_orders(new_bid_by_tick, int(LOT_SIZE/2), new_ask_by_tick, int(LOT_SIZE/2))
+                    self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
                 elif new_ask_by_tick >= ask_prices[0] and new_bid_by_tick <= bid_prices[0]:
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     self.logger.info("our interval CONTAINS the actual market interval")
-                    self.place_two_orders(new_bid_by_tick, int(LOT_SIZE/2), new_ask_by_tick, int(LOT_SIZE/2))
+                    self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
                 elif new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
                     # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
                     self.logger.info("our interval perfectly MATCHES the actual market interval")
