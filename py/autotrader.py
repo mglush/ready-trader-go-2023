@@ -62,6 +62,8 @@ class AutoTrader(BaseAutoTrader):
         self.orderbook_volumes['bid_volumes'] = list()
         self.orderbook_volumes['ask_volumes'] = list()
 
+        self.traded_volumes = list()        # a traded volume is sum(traded asks + traded bids) from ticks msg. used for avg. traded volume and volume pressure
+
         self.last_orders = list()           # last order ids chronologically ordered.
         self.fill_times = list()            # records the time it took for an order to fully fill or get cancelled.
 
@@ -69,7 +71,15 @@ class AutoTrader(BaseAutoTrader):
         self.position = 0                   # keeps track of regular position.
         self.window_size = 10               # manually set? should this be computed?
         self.last_sequence_processed = -1   # helps detect old and out-of-order orderbook snapshots.
+        self.last_sequence_processed_ticks = -1 # same as last_sequence_processed but for ticks.
         self.timer = 0                      # helps track time during execution
+    
+    def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
+        '''Compute volume pressure magnitude and side based on newest ticks update message.
+        If positive, asks are getting knocked out and price should be rising. If negative,
+        bids are getting cleared and price should be falling. We could reverse this.
+        '''
+        return (ask_vol - bid_vol) / (sum(self.traded_volumes) / len(self.traded_volumes))
     
     def total_volume_of_current_orders(self) -> int:
         '''
@@ -658,3 +668,23 @@ class AutoTrader(BaseAutoTrader):
         If there are less than five prices on a side, then zeros will appear at
         the end of both the prices and volumes arrays.
         """
+        # sum up traded ask volumes and traded bid volumes
+        sum_ask, sum_bid = sum(ask_volumes), sum(bid_volumes)
+        if sum_ask == 0 and sum_bid == 0:
+            # nothing got traded
+            pass
+        elif instrument == Instrument.ETF:
+            # check if we received an out-of-order sequence!
+            if sequence_number < 0 or sequence_number <= self.last_sequence_processed_ticks:
+                self.logger.info(">>>OLD INFORMATION RECEIVED, SKIPPING!")
+                return
+            self.last_sequence_processed_ticks = sequence_number # set the sequence number since we are now processing it.
+
+            # add traded volume to container list for average traded volume computation
+            if len(self.traded_volumes) == self.window_size:
+                self.traded_volumes.pop(0)
+            self.traded_volumes.append(sum_ask+sum_bid)
+
+            # compute signal
+            volume_signal = self.compute_volume_signal(ask_vol=sum_ask, bid_vol=sum_bid)
+            self.logger.info(f'Volume pressure signal is: {volume_signal}')

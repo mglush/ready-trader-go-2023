@@ -1,9 +1,16 @@
+__pycache__
+.ipynb_checkpoints
+
 bin/
 lib/
+analysis/
+
 pyvenv.cfg
 provided_autotrader*.*
 *.log
 temp.txt
+
 match_events.csv
 score_board.csv
-__pycache__
+
+.DS_Store
