@@ -22,6 +22,7 @@ import itertools
 from textwrap import fill
 from tkinter import E
 from turtle import pos, position
+
 import numpy as np
 
 from typing import List
@@ -79,6 +80,9 @@ class AutoTrader(BaseAutoTrader):
         self.last_sequence_processed = -1       # helps detect old and out-of-order orderbook snapshots.
         self.last_sequence_processed_ticks = -1 # same as last_sequence_processed but for ticks.
         self.timer = 0                          # helps track time during execution
+
+        self.requests_sent_last_second = 0      # keeps track of the number of requests we have made in the last second.
+        # STEP ONE ABOVE
 
     def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
         '''
@@ -638,15 +642,15 @@ class AutoTrader(BaseAutoTrader):
             self.orderbook_volumes['ask_volumes'].append(sum(ask_volumes))
 
             # weighted average to compute theoretical_price.
-            # total_volume = ask_volumes[0] + bid_volumes[0]
-            # theoretical_price = bid_prices[0]*(ask_volumes[0] / total_volume) \
-            #                         + ask_prices[0]*(bid_volumes[0] / total_volume)
+            total_volume = ask_volumes[0] + bid_volumes[0]
+            theoretical_price = bid_prices[0]*(ask_volumes[0] / total_volume) \
+                                    + ask_prices[0]*(bid_volumes[0] / total_volume)
 
             # weighted average to compute theoretical_price, to be modified later.
-            total_volume = sum(ask_volumes) + sum(bid_volumes)
-            ask_volume_ratios = np.array(np.array(ask_volumes)/total_volume)
-            bid_volume_ratios = np.array(np.array(bid_volumes)/total_volume)
-            theoretical_price = np.dot(np.array(ask_prices), ask_volume_ratios) + np.dot(np.array(bid_prices), bid_volume_ratios)
+            # total_volume = sum(ask_volumes) + sum(bid_volumes)
+            # ask_volume_ratios = np.array(np.array(ask_volumes)/total_volume)
+            # bid_volume_ratios = np.array(np.array(bid_volumes)/total_volume)
+            # theoretical_price = np.dot(np.array(ask_prices), ask_volume_ratios) + np.dot(np.array(bid_prices), bid_volume_ratios)
 
             # standard deviation to use for spread.
             
