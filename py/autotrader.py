@@ -33,11 +33,11 @@ LOT_SIZE = 10                   # size of each order we make.
 POSITION_LIMIT = 100            # hard position cap.
 
 OUR_POSITION_LIMIT = 75         # position size we prefer to stay under.
-ORDER_TTL = 30                  # number of orderbook snapshots an order lives for.
-DESIRED_AVG_TIME_TO_FILL = 15   # desired amount of orderbook snapshots for an order to live for.
+ORDER_TTL = 40                  # number of orderbook snapshots an order lives for.
+DESIRED_AVG_TIME_TO_FILL = 20   # desired amount of orderbook snapshots for an order to live for.
 ORDER_CEILING = 0               # number of orders we limit ourselves to during directional moves.
-CANCEL_ALL_ORDERS = 1.2         # point after which we call the market volatile + scary.
-VOLUME_SIGNAL_THRESHOLD = 1.9   # point after which we call the market volatile + scary.
+VOLUME_SIGNAL_THRESHOLD = 2     # point after which we call the market volatile + scary.
+CANCEL_ALL_ORDERS = 1           # point after which we call the market volatile + scary.
 
 LIVE_ORDER_LIMIT = 10           # hard cap on live orders.
 TICK_SIZE_IN_CENTS = 100        # tick size of the ETF market.
@@ -260,8 +260,31 @@ class AutoTrader(BaseAutoTrader):
 
     def place_one_order(self, type, volume, price) -> None:
         '''
-        
+        Places a single order with given volume and price, as a limit order.
+
+        Returns: nothing.
         '''
+        if volume == 0: return # base case, don't do anything on 0 volume orders.
+        
+        flag = self.check_wash_order(type, price)
+        if type == Side.BID:
+            if len(self.current_orders) < LIVE_ORDER_LIMIT \
+            and self.total_volume_of_current_orders()['bid'] + self.position + volume < POSITION_LIMIT \
+            and not flag:
+                self.logger.info(f'PLACING SINGLE ORDER AT BID {price} VOLUME {volume}!') 
+                bid_id = next(self.order_ids)
+                self.record_order(bid_id, Side.BID, price, volume, Lifespan.GOOD_FOR_DAY)
+                self.last_orders.append(bid_id)
+                self.send_insert_order(bid_id, Side.BID, price, volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
+        elif type == Side.ASK:
+            if len(self.current_orders) < LIVE_ORDER_LIMIT \
+            and -self.total_volume_of_current_orders()['ask'] + self.position - volume > -POSITION_LIMIT \
+            and not flag:
+                self.logger.info(f'PLACING ORDER AT ASK {price} VOLUME {volume}!')
+                ask_id = next(self.order_ids)
+                self.record_order(ask_id, Side.ASK, price, volume, Lifespan.GOOD_FOR_DAY)
+                self.last_orders.append(ask_id)
+                self.send_insert_order(ask_id, Side.ASK, price, volume, Lifespan.GOOD_FOR_DAY) # LIMIT ORDER = GOOD FOR DAY ORDER
 
     def place_two_orders(self, bid, bid_volume, ask, ask_volume) -> None:
         '''
@@ -436,7 +459,7 @@ class AutoTrader(BaseAutoTrader):
         self.logger.info(f'CHECKING HEDGED ORDERS FUNCTION.')
 
         for order_id, order in self.hedged_current_orders.items():
-            if order['filled'] != 0 and order['filled'] != order['volume'] and abs(self.latest_volume_signal) >= 1:
+            if order['filled'] != 0 and order['filled'] != order['volume']:
                 # the hedged order was only partially filled! must place new hedge order.
                 next_id = next(self.order_ids)
                 # copy mapping to new id
@@ -534,11 +557,8 @@ class AutoTrader(BaseAutoTrader):
         if len(self.current_orders) - active_order_ceiling <= 0 \
             or active_order_ceiling < 0:
             return
-        
-        # otherwise, we will go ahead and remove the oldest orders we have on record.
-        # this is probably not a good idea, we lose our time priority when cancelling like this.
-        
-        if abs(self.latest_volume_signal) >= CANCEL_ALL_ORDERS: # THEN IT"S VOLATILE OUT THERE, MUST CANCEL SOME ORDERS.
+
+        if abs(self.latest_volume_signal) >= CANCEL_ALL_ORDERS:
             # process: get the current order's placed at times.
             times_by_id = list()
             for order_id, order in self.current_orders.items():
@@ -568,7 +588,7 @@ class AutoTrader(BaseAutoTrader):
                          sequence_number)
         self.logger.info(f'SNAPSHOT POSTION {self.position} HEDGE {self.hedged_position}')        
         
-        if self.timer % 20 == 0:
+        if self.timer % 80 == 0:
             self.check_hedged_status()
 
         # next, we MUST make sure any order that is timed out gets canceled and
@@ -630,7 +650,7 @@ class AutoTrader(BaseAutoTrader):
                     # our interval perfectly MATCHES the actual market interval.
                     self.logger.info("our interval perfectly MATCHES the actual market interval")
                     # if the spread is large enough, we can decrease it.
-                    if spread > 6 * TICK_SIZE_IN_CENTS:
+                    if spread > 8 * TICK_SIZE_IN_CENTS:
                         self.place_two_orders_or_none(new_bid_by_tick + TICK_SIZE_IN_CENTS, LOT_SIZE, new_ask_by_tick - TICK_SIZE_IN_CENTS, LOT_SIZE)
                 elif (new_bid_by_tick >= bid_prices[0] and new_ask_by_tick < ask_prices[0]) \
                     or (new_bid_by_tick > bid_prices[0] and new_ask_by_tick <=ask_prices[0]):
@@ -638,37 +658,33 @@ class AutoTrader(BaseAutoTrader):
                     # we want to trade in this condition of the actual market interval is wide enough.
                     # i.e., if market interval is 65-67 and ours is 65-66 we don't really want to trade that.
                     self.logger.info("our interval is WITHIN the actual market interval")
-                    if ask_prices[0] - bid_prices[0] > 4 * TICK_SIZE_IN_CENTS: # this value can be changed but we basically want enough space to insert our order in.
+                    if ask_prices[0] - bid_prices[0] > 8 * TICK_SIZE_IN_CENTS: # this value can be changed but we basically want enough space to insert our order in.
                         self.place_two_orders_or_none(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
                 elif (new_ask_by_tick >= ask_prices[0] and new_bid_by_tick < bid_prices[0]) \
                     or (new_ask_by_tick > ask_prices[0] and new_bid_by_tick <= bid_prices[0]):
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     self.logger.info("our interval CONTAINS the actual market interval")
-                    self.place_two_orders_or_none(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                elif new_bid_by_tick >= ask_prices[0]:
+                    # our interval is completely ABOVE current market interval.
+                    # self.place_one_order(Side.ASK, LOT_SIZE, new_ask_by_tick)
+                    # self.decrease_trading_activity()
+                    self.logger.info("our interval is completely ABOVE current market interval")
+                elif new_bid_by_tick > bid_prices[0] and new_ask_by_tick > ask_prices[0]:
+                    # our interval OVERLAPS actual market interval on the right side.
+                    # self.place_one_order(Side.ASK, LOT_SIZE, new_ask_by_tick)
+                    self.logger.info("our interval OVERLAPS actual market interval on the right side")
+                elif new_ask_by_tick <= bid_prices[0]:
+                    # our interval is completely BELOW current market interval.
+                    # self.place_one_order(Side.BID, LOT_SIZE, new_bid_by_tick)
+                    # self.decrease_trading_activity()
+                    self.logger.info("our interval is completely BELOW current market interval")
+                elif new_bid_by_tick < bid_prices[0] and new_ask_by_tick < ask_prices[0]:
+                    # our interval OVERLAPS actual market interval on the left side.
+                    # self.place_one_order(Side.BID, LOT_SIZE, new_bid_by_tick)
+                    self.logger.info("our interval OVERLAPS actual market interval on the left side")
                 else:
-                    # otherwise we need to decrease trading activity because the interval we have
-                    # is on the right or left of the actual interval. I propose we calculate the order
-                    # ceiling we want based on each case and decrease trading activity.
-                    # basically, we DO NOT want to get caught lacking.
-                    if new_bid_by_tick >= ask_prices[0]:
-                        # our interval is completely ABOVE current market interval.
-                        self.decrease_trading_activity()
-                        self.logger.info("our interval is completely ABOVE current market interval")
-                    elif new_bid_by_tick > bid_prices[0] and new_ask_by_tick > ask_prices[0]:
-                        # our interval OVERLAPS actual market interval on the right side.
-                        self.decrease_trading_activity()
-                        self.logger.info("our interval OVERLAPS actual market interval on the right side")
-                    elif new_ask_by_tick <= bid_prices[0]:
-                        # our interval is completely BELOW current market interval.
-                        self.decrease_trading_activity()
-                        self.logger.info("our interval is completely BELOW current market interval")
-                    elif new_bid_by_tick < bid_prices[0] and new_ask_by_tick < ask_prices[0]:
-                        # our interval OVERLAPS actual market interval on the left side.
-                        self.decrease_trading_activity()
-                        self.logger.info("our interval OVERLAPS actual market interval on the left side")
-                    else:
-                        # i don't think there are more cases, but should handle all branches of execution just in case.
-                        pass
+                    pass
 
             else:
                 # we have information, so modify the theoretical_price and spread and execution duration of the orders.
@@ -810,13 +826,12 @@ class AutoTrader(BaseAutoTrader):
             self.logger.info(f'Volume pressure signal is: {self.latest_volume_signal}')
 
             # we do this here because we should react to the signal as fast as we can.
+            self.decrease_trading_activity() # only does so if we are above threshold.
             if abs(self.latest_volume_signal) >= VOLUME_SIGNAL_THRESHOLD:
                 self.logger.info(f'SCARY TIMES SCARY TIMES MUST CANCEL ALL ORDERS ASAP')
                 # VOLATILE TIMES HAPPENING HOMBRE,
-                # MUST CANCEL ALL ORDERS,
                 # CHECK THAT WE ARE HEDGED,
                 # UNLOAD POSITION AFTER VOLATILE MOVE IS OVER.
-                self.decrease_trading_activity()
                 self.check_hedged_orders_status()
         else:
             pass # do nothing in this branch of execution!!!
