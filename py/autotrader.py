@@ -796,13 +796,13 @@ class AutoTrader(BaseAutoTrader):
         if fill_volume > 0:
             if order['type'] == Side.BID:
                 self.position += fill_volume # adjust our position here based on what type of order was exceuted.
-                if order['should_hedge'] is True:
+                if order['should_hedge'] is True: # removing this line will allow for auto-hedging every micro-change in position.
                     next_id = next(self.order_ids)
                     self.hedge_record_order(next_id, Side.ASK, fill_volume)
                     self.send_hedge_order(next_id, Side.ASK, order['price'], fill_volume)
             elif order['type'] == Side.ASK:
                 self.position -= fill_volume # adjust our position here based on what type of order was exceuted.
-                if order['should_hedge'] is True:
+                if order['should_hedge'] is True: # removing this line will allow for auto-hedging every micro-change in position.
                     next_id = next(self.order_ids)
                     self.hedge_record_order(next_id, Side.BID, fill_volume)
                     self.send_hedge_order(next_id, Side.BID, order['price'], fill_volume)
