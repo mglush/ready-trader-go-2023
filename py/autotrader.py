@@ -50,26 +50,39 @@ class AutoTrader(BaseAutoTrader):
         super().__init__(loop, team_name, secret)
         self.order_ids = itertools.count(1)
         
-        self.hedged_current_orders = dict() # keeps track of orders we just tried to hedge.
-        self.current_orders = dict()        # order_id -> info about order. 
-        self.executed_orders = dict()       # order_id -> info about order.
-        self.cancelled_orders = dict()      # order_id -> info about order.
-        self.orderbook_volumes = dict()     # is of the following form:
-                                            # {
-                                            #   'ask_volumes' : list() 
-                                            #   'bid_volumes' : list()
-                                            # }
+        self.hedged_current_orders = dict()     # keeps track of orders we just tried to hedge.
+        self.current_orders = dict()            # order_id -> info about order. 
+        self.executed_orders = dict()           # order_id -> info about order.
+        self.cancelled_orders = dict()          # order_id -> info about order.
+        self.orderbook_volumes = dict()         # is of the following form:
+                                                # {
+                                                #   'ask_volumes' : list() 
+                                                #   'bid_volumes' : list()
+                                                # }
         self.orderbook_volumes['bid_volumes'] = list()
         self.orderbook_volumes['ask_volumes'] = list()
+        self.traded_volumes = list()            # an entry is sum(traded asks + traded bids) from ticks
+                                                # msg. used for avg. traded volume and volume pressure.
 
-        self.last_orders = list()           # last order ids chronologically ordered.
-        self.fill_times = list()            # records the time it took for an order to fully fill or get cancelled.
+        self.last_orders = list()               # last order ids chronologically ordered.
+        self.fill_times = list()                # records the time it took for an order to fully fill or get cancelled.
 
-        self.hedged_position = 0            # keeps track of hedged position.
-        self.position = 0                   # keeps track of regular position.
-        self.window_size = 10               # manually set? should this be computed?
-        self.last_sequence_processed = -1   # helps detect old and out-of-order orderbook snapshots.
-        self.timer = 0                      # helps track time during execution
+        self.hedged_position = 0                # keeps track of hedged position.
+        self.position = 0                       # keeps track of regular position.
+        self.window_size = 10                   # manually set? should this be computed?
+        self.last_sequence_processed = -1       # helps detect old and out-of-order orderbook snapshots.
+        self.last_sequence_processed_ticks = -1 # same as last_sequence_processed but for ticks.
+        self.timer = 0                          # helps track time during execution
+
+    def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
+        '''
+        Compute volume pressure magnitude and side based on newest ticks update message.
+        If positive, asks are getting knocked out and price should be rising.
+        If negative, bids are getting cleared and price should be falling. We could reverse this.
+
+        Returns: the indicator as a float.
+        '''
+        return (ask_vol - bid_vol) / (sum(self.traded_volumes) / len(self.traded_volumes))
     
     def total_volume_of_current_orders(self) -> int:
         '''
@@ -106,30 +119,30 @@ class AutoTrader(BaseAutoTrader):
             return DESIRED_AVG_TIME_TO_FILL
         return sum(self.fill_times[-self.window_size:]) / len(self.fill_times[-self.window_size:])
 
-    def average_fill_ratio(self) -> float:
-        '''
-        returns: portion of our orders that gets filled, on average.
-        '''
-        fill_ratios = list()
-        # for each id in the last however many orders orders
-        for id in self.last_orders[-self.window_size:]:
-            # order is either current or executed or cancelled orders, filled ratio still applies!
-            if id in self.executed_orders:
-                # calc the actual ratio = filled/volume.
-                ratio = self.executed_orders[id]['filled'] / self.executed_orders[id]['volume']
-            elif id in self.cancelled_orders:
-                # calc the actual ratio = filled/volume.
-                if self.cancelled_orders[id]['filled'] != 0:
-                    ratio = self.cancelled_orders[id]['filled'] / self.cancelled_orders[id]['volume'] 
-                else:
-                    continue
-            elif id in self.current_orders:
-                # calc the actual ratio = filled/volume.
-                ratio = self.current_orders[id]['filled'] / self.current_orders[id]['volume']               
-            # append that thang to the end of ratios.
-            fill_ratios.append(ratio)
+    # def average_fill_ratio(self) -> float:
+    #     '''
+    #     returns: portion of our orders that gets filled, on average.
+    #     '''
+    #     fill_ratios = list()
+    #     # for each id in the last however many orders orders
+    #     for id in self.last_orders[-self.window_size:]:
+    #         # order is either current or executed or cancelled orders, filled ratio still applies!
+    #         if id in self.executed_orders:
+    #             # calc the actual ratio = filled/volume.
+    #             ratio = self.executed_orders[id]['filled'] / self.executed_orders[id]['volume']
+    #         elif id in self.cancelled_orders:
+    #             # calc the actual ratio = filled/volume.
+    #             if self.cancelled_orders[id]['filled'] != 0:
+    #                 ratio = self.cancelled_orders[id]['filled'] / self.cancelled_orders[id]['volume'] 
+    #             else:
+    #                 continue
+    #         elif id in self.current_orders:
+    #             # calc the actual ratio = filled/volume.
+    #             ratio = self.current_orders[id]['filled'] / self.current_orders[id]['volume']               
+    #         # append that thang to the end of ratios.
+    #         fill_ratios.append(ratio)
 
-        return sum(fill_ratios) / len(fill_ratios)
+    #     return sum(fill_ratios) / len(fill_ratios)
 
 
     def average_volume(self, order_type) -> float:
@@ -141,16 +154,16 @@ class AutoTrader(BaseAutoTrader):
         else:
             self.logger.warning(f'THIS BRANCH SHOULD NEVER BE EXECUTED!')
 
-    def order_volume_to_avg_volume_ratio(self, order_id, order_type) -> float:
-        '''
-        returns: ratio of given order volume to average_volume().
-        '''
-        if order_id in self.executed_orders:
-            return self.executed_orders[order_id]['volume'] / self.average_volume(order_type)
-        elif order_id in self.cancelled_orders:
-            return self.cancelled_orders[order_id]['volume'] / self.average_volume(order_type)
-        elif order_id in self.current_orders:
-            return self.current_orders[order_id]['volume'] / self.average_volume(order_type)
+    # def order_volume_to_avg_volume_ratio(self, order_id, order_type) -> float:
+    #     '''
+    #     returns: ratio of given order volume to average_volume().
+    #     '''
+    #     if order_id in self.executed_orders:
+    #         return self.executed_orders[order_id]['volume'] / self.average_volume(order_type)
+    #     elif order_id in self.cancelled_orders:
+    #         return self.cancelled_orders[order_id]['volume'] / self.average_volume(order_type)
+    #     elif order_id in self.current_orders:
+    #         return self.current_orders[order_id]['volume'] / self.average_volume(order_type)
 
     def record_order(self, order_id, order_type, price, volume, lifespan, corresponding_trade_id) -> None:
         '''
@@ -212,6 +225,11 @@ class AutoTrader(BaseAutoTrader):
             next_id = next(self.order_ids)
             self.record_order(next_id, type, price, volume, Lifespan.FILL_AND_KILL, None)
             self.send_insert_order(next_id, type, price, volume, Lifespan.FILL_AND_KILL)
+
+    def place_one_order(self, type, volume, price) -> None:
+        '''
+        
+        '''
 
     def place_two_orders(self, bid, bid_volume, ask, ask_volume) -> None:
         '''
@@ -334,33 +352,33 @@ class AutoTrader(BaseAutoTrader):
                 volume = self.hedged_current_orders[next_id]['volume']
                 self.send_hedge_order(next_id, trade_type, price, volume)
 
-    # THIS FUNCTION IS NOT IN USE, BUT DON't GET RID OF IT JUST YET.
-    def check_current_orders_out_of_bounds(self, bid, ask) -> None:
-        '''
-        checks if a current order is priced outside the interval we like.
-        if so, we modify this order's volume to decrease its significance but keep its priority.
+    # # THIS FUNCTION IS NOT IN USE, BUT DON't GET RID OF IT JUST YET.
+    # def check_current_orders_out_of_bounds(self, bid, ask) -> None:
+    #     '''
+    #     checks if a current order is priced outside the interval we like.
+    #     if so, we modify this order's volume to decrease its significance but keep its priority.
 
-        returns: nothing.
-        '''
-        self.logger.info(f'CHECKING CURRENT ORDERS OUT OF BOUNDS!')
-        for order_id, order in self.current_orders.items():
-            spread = ask - bid
-            if order['price'] < bid:
-                # order out of bounds, decrease its significance.
-                self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
-                self.current_orders[order_id]['volume'] = int(order['volume'] / 3)
-                self.send_amend_order(order_id, int(order['volume'] / 3))
-            elif order['price'] > ask:
-                # order out of bounds, decrease its significance.
-                self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
-                self.current_orders[order_id]['volume'] = int(order['volume'] / 3)
-                self.send_amend_order(order_id, int(order['volume'] / 3))
-            else:
-                # order within bounds, check if we can increase its significance.
-                self.logger.info(f'UPDATING ORDER {order_id} TO FULL VOLUME ASAP ROCKY')
-                if order['volume'] < int(LOT_SIZE / 2):
-                    self.current_orders[order_id]['volume'] = LOT_SIZE
-                    self.send_amend_order(order_id, LOT_SIZE)
+    #     returns: nothing.
+    #     '''
+    #     self.logger.info(f'CHECKING CURRENT ORDERS OUT OF BOUNDS!')
+    #     for order_id, order in self.current_orders.items():
+    #         spread = ask - bid
+    #         if order['price'] < bid:
+    #             # order out of bounds, decrease its significance.
+    #             self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
+    #             self.current_orders[order_id]['volume'] = int(order['volume'] / 3)
+    #             self.send_amend_order(order_id, int(order['volume'] / 3))
+    #         elif order['price'] > ask:
+    #             # order out of bounds, decrease its significance.
+    #             self.logger.info(f'UPDATING ORDER {order_id} TO HALF VOLUME')
+    #             self.current_orders[order_id]['volume'] = int(order['volume'] / 3)
+    #             self.send_amend_order(order_id, int(order['volume'] / 3))
+    #         else:
+    #             # order within bounds, check if we can increase its significance.
+    #             self.logger.info(f'UPDATING ORDER {order_id} TO FULL VOLUME ASAP ROCKY')
+    #             if order['volume'] < int(LOT_SIZE / 2):
+    #                 self.current_orders[order_id]['volume'] = LOT_SIZE
+    #                 self.send_amend_order(order_id, LOT_SIZE)
 
     def check_current_orders_ttl(self) -> None:
         '''
@@ -380,27 +398,27 @@ class AutoTrader(BaseAutoTrader):
         for id in cancelled_ids:
             self.send_cancel_order(id)
     
-    def is_orderbook_symmetric(self, bid_volumes, ask_volumes) -> bool:
-        '''
-        Returns: true if orderbook bid and ask volumes are similar.
-                 false otherwise.
-        '''
-        # here is a rough implementation that looks at the average volume of each side and compares
-        # that to the current volume.
-        # If both sides are larger, that's okay.
-        # If one side is below average and one side is above, orderbook is asymmetric.
-        # If both sides are below, that's also okay.
+    # def is_orderbook_symmetric(self, bid_volumes, ask_volumes) -> bool:
+    #     '''
+    #     Returns: true if orderbook bid and ask volumes are similar.
+    #              false otherwise.
+    #     '''
+    #     # here is a rough implementation that looks at the average volume of each side and compares
+    #     # that to the current volume.
+    #     # If both sides are larger, that's okay.
+    #     # If one side is below average and one side is above, orderbook is asymmetric.
+    #     # If both sides are below, that's also okay.
         
-        avg_bid_volume = self.average_volume(Side.BID) # average volume in a rolling window of size self.window_size.
-        avg_ask_volume = self.average_volume(Side.ASK) # average volume in a rolling window of size self.window_size.
-        if sum(bid_volumes) / len(bid_volumes) > avg_bid_volume \
-            and sum(ask_volumes) / len(ask_volumes) > avg_ask_volume:
-            return True # BALANCED.
-        elif sum(bid_volumes) / len(bid_volumes) < avg_bid_volume \
-            and sum(ask_volumes) / len(ask_volumes) < avg_ask_volume:
-            return True # BALANCED.
-        else:
-            return False # UNBALANCED
+    #     avg_bid_volume = self.average_volume(Side.BID) # average volume in a rolling window of size self.window_size.
+    #     avg_ask_volume = self.average_volume(Side.ASK) # average volume in a rolling window of size self.window_size.
+    #     if sum(bid_volumes) / len(bid_volumes) > avg_bid_volume \
+    #         and sum(ask_volumes) / len(ask_volumes) > avg_ask_volume:
+    #         return True # BALANCED.
+    #     elif sum(bid_volumes) / len(bid_volumes) < avg_bid_volume \
+    #         and sum(ask_volumes) / len(ask_volumes) < avg_ask_volume:
+    #         return True # BALANCED.
+    #     else:
+    #         return False # UNBALANCED
 
     def decrease_trading_activity(self, active_order_ceiling) -> None:
         '''
@@ -658,3 +676,24 @@ class AutoTrader(BaseAutoTrader):
         If there are less than five prices on a side, then zeros will appear at
         the end of both the prices and volumes arrays.
         """
+
+        # sum up traded ask volumes and traded bid volumes
+        sum_ask, sum_bid = sum(ask_volumes), sum(bid_volumes)
+        if sum_ask == 0 and sum_bid == 0:
+            # nothing got traded
+            pass
+        elif instrument == Instrument.ETF:
+            # check if we received an out-of-order sequence!
+            if sequence_number < 0 or sequence_number <= self.last_sequence_processed_ticks:
+                self.logger.info(">>>OLD INFORMATION RECEIVED, SKIPPING!")
+                return
+            self.last_sequence_processed_ticks = sequence_number # set the sequence number since we are now processing it.
+
+            # add traded volume to container list for average traded volume computation
+            if len(self.traded_volumes) == self.window_size:
+                self.traded_volumes.pop(0)
+            self.traded_volumes.append(sum_ask+sum_bid)
+
+            # compute signal
+            volume_signal = self.compute_volume_signal(ask_vol=sum_ask, bid_vol=sum_bid)
+            self.logger.critical(f'Volume pressure signal is: {volume_signal}')
