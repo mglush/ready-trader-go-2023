@@ -64,10 +64,14 @@ class AutoTrader(BaseAutoTrader):
         self.last_orders = list()           # last order ids chronologically ordered.
         self.fill_times = list()            # records the time it took for an order to fully fill or get cancelled.
         
+        self.theoretical_price = 0          # current fair price.
+        self.spread = 0                     # current spread.
+
         self.hedged_position = 0            # keeps track of hedged position.
         self.position = 0                   # keeps track of regular position.
         self.window_size = 10               # manually set? should this be computed?
-        self.last_sequence_processed = -1   # helps detect old and out-of-order information.
+        self.last_orderbook_processed = -1  # helps detect old and out-of-order orderbook snapshots.
+        self.last_ticks_processed = -1      # helps detect old and out-of-order tick snapshots.
         self.timer = 0                      # helps track time during execution
     
     def total_volume_of_current_orders(self) -> int:
@@ -454,37 +458,21 @@ class AutoTrader(BaseAutoTrader):
         # and the actions are made on one based on what happens to the other.
         # self.check_current_orders_out_of_bounds(theoretical_bid, theoretical_ask)
 
-        if bid_prices[0] == 0 or ask_prices[0] == 0:
-            pass # this is the first iteration of the exchange orderbook, do nothing until we get the actual orderbook!
+        if bid_prices[0] == 0 or ask_prices[0] == 0 or self.theoretical_price == 0:
+            pass # first couple iterations, do nothing.
         elif instrument == Instrument.ETF:
+            
             # check if we received an out-of-order sequence!
-            if sequence_number < 0 or sequence_number <= self.last_sequence_processed:
+            if sequence_number < 0 or sequence_number <= self.last_orderbook_processed:
                 self.logger.info(">>>OLD INFORMATION RECEIVED, SKIPPING!")
                 return
-
-            self.last_sequence_processed = sequence_number # set the sequence number since we are now processing it.
-
-            # next, we need to aggregate the volumes and append it to the orderbook_volumes list.
-            self.orderbook_volumes['bid_volumes'].append(sum(bid_volumes))
-            self.orderbook_volumes['ask_volumes'].append(sum(ask_volumes))
-
-            # weighted average to compute theoretical_price, to be modified later.
-            total_volume = sum(ask_volumes) + sum(bid_volumes)
-            ask_volume_ratios = np.array(np.array(ask_volumes)/total_volume)
-            bid_volume_ratios = np.array(np.array(bid_volumes)/total_volume)
-            theoretical_price = np.dot(np.array(ask_prices), ask_volume_ratios) + np.dot(np.array(bid_prices), bid_volume_ratios)
-
-            # standard deviation to use for spread.
-            # i don't really know what the best spread is man.
-            spread = 0.5 * np.sqrt(np.std(np.array(ask_prices + bid_prices))) 
-            scale = 1 / (self.average_time_to_fill() / (ORDER_TTL / 2))
-            spread = scale * spread if scale > 0 else spread
+            self.last_orderbook_processed = sequence_number # set the sequence number since we are now processing it.
 
             # if we are just starting without information, we have a very simplistic trading approach.
             if True:
                 # need to find fair price using JUST weighted average,
-                new_bid = theoretical_price - spread / 2
-                new_ask = theoretical_price + spread / 2
+                new_bid = self.theoretical_price - self.spread / 2
+                new_ask = self.theoretical_price + self.spread / 2
                 # new_ask and new_bid are probably not to the
                 # tick_size_in_cents correct, need to round them up.
                 new_bid_by_tick = int(new_bid - new_bid % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
@@ -495,11 +483,11 @@ class AutoTrader(BaseAutoTrader):
                 if new_bid_by_tick >= bid_prices[0] and new_ask_by_tick <= ask_prices[0]:
                     # our interval is WITHIN the actual market interval, GREAT!
                     self.logger.info("our interval is WITHIN the actual market interval")
-                    self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    self.place_two_orders(new_bid_by_tick, int(LOT_SIZE/2), new_ask_by_tick, int(LOT_SIZE/2))
                 elif new_ask_by_tick >= ask_prices[0] and new_bid_by_tick <= bid_prices[0]:
                     # our interval CONTAINS the actual market interval, this is a little interesting, needs some thought.
                     self.logger.info("our interval CONTAINS the actual market interval")
-                    self.place_two_orders(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                    self.place_two_orders(new_bid_by_tick, int(LOT_SIZE/2), new_ask_by_tick, int(LOT_SIZE/2))
                 elif new_ask_by_tick == ask_prices[0] and new_bid_by_tick == bid_prices[0]:
                     # our interval perfectly MATCHES the actual market interval, also a little interesting, needs some thought.
                     self.logger.info("our interval perfectly MATCHES the actual market interval")
@@ -555,7 +543,7 @@ class AutoTrader(BaseAutoTrader):
         # and we place a fill and kill at the price we just got filled at, in the opposite direction.
         if self.current_orders[client_order_id]['type'] == Side.ASK:
             # bid just got executed, must look at bid volume
-            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['ask_volumes'] < self.average_volume(Side.ASK):
+            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['ask_volumes'] < self.average_volume(Side.ASK) / 2:
                 self.logger.info(f'IMPULSE ORDER SMACKING THAT THANG HERE')
                 # cancel the order, place a new one with a fill or kill method.
                 corresponding_order_id = self.current_orders[client_order_id]['corresponding_trade_id']
@@ -567,7 +555,7 @@ class AutoTrader(BaseAutoTrader):
                 pass # safe to keep the other order, it is likely gonna get hit.
         elif self.current_orders[client_order_id]['type'] == Side.BID:
             # bid just got executed, must look at bid volume
-            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['bid_volumes'] < self.average_volume(Side.BID):
+            if self.position > OUR_POSITION_LIMIT and self.orderbook_volumes['bid_volumes'] < self.average_volume(Side.BID) / 2:
                 self.logger.info(f'IMPULSE ORDER SMACKING THAT THANG HERE')
                 # cancel the order, place a new one with a fill or kill method.
                 corresponding_order_id = self.current_orders[client_order_id]['corresponding_trade_id']
@@ -646,3 +634,26 @@ class AutoTrader(BaseAutoTrader):
         If there are less than five prices on a side, then zeros will appear at
         the end of both the prices and volumes arrays.
         """
+        # DO NOT ACT ON OLD INFORMATION.
+        # check if we received an out-of-order sequence!
+        if sequence_number < 0 or sequence_number <= self.last_ticks_processed:
+            self.logger.info(">>>OLD INFORMATION RECEIVED, SKIPPING!")
+            return
+        self.last_ticks_processed = sequence_number # set the sequence number since we are now processing it.
+
+        # next, we need to aggregate the volumes and append it to the orderbook_volumes list.
+        self.orderbook_volumes['bid_volumes'].append(sum(bid_volumes))
+        self.orderbook_volumes['ask_volumes'].append(sum(ask_volumes))
+
+        # weighted average to compute theoretical_price, to be modified later.
+        total_volume = sum(ask_volumes) + sum(bid_volumes)
+        ask_volume_ratios = np.array(np.array(ask_volumes)/total_volume)
+        bid_volume_ratios = np.array(np.array(bid_volumes)/total_volume)
+        self.theoretical_price = np.dot(np.array(ask_prices), ask_volume_ratios) + np.dot(np.array(bid_prices), bid_volume_ratios)
+
+        # standard deviation to use for spread.
+        # i don't really know what the best spread is man.
+        # gonna try to use without scaling first.
+        self.spread = 2 * np.sqrt(np.std(np.array(ask_prices + bid_prices))) 
+        # scale = 1 / (self.average_time_to_fill() / (ORDER_TTL / 2))
+        # spread = scale * spread if scale > 0 else spread
