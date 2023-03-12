@@ -776,13 +776,8 @@ class AutoTrader(BaseAutoTrader):
             self.logger.info(f'THE ORDER {client_order_id} HAS BEEN FILLED FULLY AND EXECUTED!')
             time = self.timer - self.current_orders[client_order_id]['placed_at']
             self.fill_times.append(time) # record how long it took for this to happen.
-            self.logger.info(f'THE ORDER TOOK {time} SECONDS TO GET FULLY FILLED!')
-            order = self.executed_orders[client_order_id] = self.current_orders[client_order_id]
-            del self.current_orders[client_order_id]
-        elif remaining_volume == 0 and fill_volume == 0:
-            # order has been cancelled!!!
-            self.logger.info(f'THE ORDER {client_order_id} HAS BEEN CANCELLED!')
-            time = self.timer - self.current_orders[client_order_id]['placed_at']
+            self.logger.info(f'THE ORDER TOOK {time} TICKS TO GET FULLY FILLED')
+            
             self.fill_times.append(time) # record how long it took for this to happen.
             self.logger.info(f'THE ORDER TOOK {time} SECONDS TO GET CANCELLED!')
             order = self.cancelled_orders[client_order_id] = self.current_orders[client_order_id]
