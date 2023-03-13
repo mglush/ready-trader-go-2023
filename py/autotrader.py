@@ -35,12 +35,13 @@ LOT_SIZE = 10                   # size of each order we make.
 POSITION_LIMIT = 100            # hard position cap.
 
 ALPHA = 0.5                     # scale error bars
-BETA = 0.40                     # hitting the opposite side after getting lifted
+BETA = 0.5                     # hitting the opposite side after getting lifted
 
 OUR_POSITION_LIMIT = 75         # position size we prefer to stay under.
 ORDER_TTL = 40                  # number of orderbook snapshots an order lives for.
-VOLUME_SIGNAL_THRESHOLD = 2     # point after which we call the market volatile + scary.
+VOLUME_SIGNAL_THRESHOLD = 1     # point after which we call the market volatile + scary.
 MAX_OPERATIONS_PER_SECOND = 46  # out operations per second limit is a little lower than the rules say.
+PERIODICAL_HEDGE_PERIOD = 20    # how often (in terms of orderbook snapshots) we check hedged positions.
 
 LIVE_ORDER_LIMIT = 10           # hard cap on live orders.
 TICK_SIZE_IN_CENTS = 100        # tick size of the ETF market.
@@ -84,6 +85,8 @@ class AutoTrader(BaseAutoTrader):
         self.timer = 0                          # helps track time during execution
 
         self.times_of_events = list()           # keeps track of the number of requests we have made in the last second.
+        self.look_for_liquidity_pockets = False # true means we should be unwinding a positon toward 0 by looking
+                                                # for liquidity pockets, false means we should be market making.
 
     def check_num_operations(self) -> bool:
         '''
@@ -97,6 +100,7 @@ class AutoTrader(BaseAutoTrader):
             else:
                 self.times_of_events = self.times_of_events[:counter+1] # we can delete everything from this point onward.
 
+        self.logger.info(f'NUMBER OPERATIONS IN THE LAST SECOND = {counter}!')
         return (counter < MAX_OPERATIONS_PER_SECOND)
 
     def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
@@ -299,17 +303,39 @@ class AutoTrader(BaseAutoTrader):
         # remove record of order if it has been fully filled.
         del self.hedged_current_orders[client_order_id]
 
-    def manual_hedge(self, price, volume) -> None:
+    def hedge(self, type, volume) -> None:
         '''        
-        Function to hedge given a price and volume we want to hedge.
+        Function to hedge given a volume we want to hedge.
         This differs from the function below, as this one is usually used
-        to hedge an order that we could not impulse clear.
+        to hedge when an impulse did not work, the function below is used
+        periodically to check hedged position status for deviations.
 
-        @TODO need to fill function out to place a hedge at a manually-set price and volume
-              after checking all conditions that apply.
+        In this function, we informingly place a hedge with a certain volume.
+        Thus, this function does not check whether position = hedged positon.
+        Rather, we make sure we aren't going about 100 lots or below -100 lots,
+        and send the hedge order.
+
+        This function uses MAX_ASK_NEAREST_TICK and MIN_BID_NEAREST_TICK
+        and we will call this function when we know its cheaper than an impulse order.
         '''
+        self.logger.info(f'ENTER MANUAL HEDGE FUNCTION WITH TYPE VOLUME {volume}.')
+        current_hedge_volume = self.total_volume_of_hedge_orders()[type]
+        price = MAX_ASK_NEAREST_TICK if type == Side.ASK else MIN_BID_NEAREST_TICK
 
-    def hedge(self, price=None) -> None:
+        if abs(self.hedged_position) + current_hedge_volume < POSITION_LIMIT:
+            if self.check_num_operations():
+                next_id = next(self.order_ids)
+                self.hedge_record_order(next_id, type, volume)
+                self.send_hedge_order(next_id, type, price, volume)
+                self.times_of_events.insert(0, TIME_MODULE.time())
+            else:
+                self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\tWE WANTED TO HEDGE AN UNSUCCESSFUL IMPULSE ORDER, BUT CANNOT!')
+        else:
+            # we wanted to hedge, but we have too many hedged orders currently placed.
+            self.logger.warning(f'COULD NOT HEDGE BECAUSE THERE IS TOO MUCH HEDGED VOLUME CURRENTLY PLACED!')
+
+
+    def periodical_hedge(self, price=None) -> None:
         '''
         Function to hedge as a last resort, to fix position back to full hedged.
         This function decides how to hedge ON ITS OWN.
@@ -329,7 +355,7 @@ class AutoTrader(BaseAutoTrader):
 
         Returns: nothing.
         '''
-        self.logger.info(f'ENTER HEDGE FUNCTION. TRYING TO HEDGE.')
+        self.logger.info(f'ENTER PERIODICAL HEDGE FUNCTION.')
 
         # if no price was passed in, we will be using max_ask_nearest_tick or min_bid_nearest_tick.
         price_to_bid = price if price is not None else MAX_ASK_NEAREST_TICK
@@ -441,11 +467,11 @@ class AutoTrader(BaseAutoTrader):
         
         for order_id, order in self.current_orders.items():
             if order['price'] != max_ask and order['price'] != min_bid:
-                if self.check_num_operations():
-                    self.send_amend_order(order_id, 1)
-                    self.times_of_events.insert(0, TIME_MODULE.time())
-                else:
-                    self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\tCANNOT AMEND ORDER {order_id} VOLUME TO 1!')
+                # if self.check_num_operations():
+                self.send_amend_order(order_id, 1)
+                self.times_of_events.insert(0, TIME_MODULE.time())
+                # else:
+                #     self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\tCANNOT AMEND ORDER {order_id} VOLUME TO 1!')
 
     def on_order_book_update_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
                                      ask_volumes: List[int], bid_prices: List[int], bid_volumes: List[int]) -> None:
@@ -464,6 +490,28 @@ class AutoTrader(BaseAutoTrader):
 
         # check all orders' time to live, cancel expired ones.
         self.check_current_orders_ttl()
+
+        # check if we should be looking for a liquidity pool to unwind into, or if we want to market make.
+        if self.look_for_liquidity_pockets:
+            # means abs(positon) > OUR_POSITION_LIMIT, let's find out if its + or 0
+            if self.position > 0:
+                # we want to sell out our position, and buy out our hedge.
+                # => we would like to look for a big buy order in the orderbook
+                #    and hit it (use it to our advantage baby).
+                # @TODO NEED TO IMLEMENT ONE-DIRECTIONAL ORDERS HERE TO BE ABLE TO UNWIND POSITION
+                pass
+            elif self.position < 0:
+                # we want to buy out our position, and sell out our hedge.
+                # => we would like to look for a big sell order in the orderbook
+                #    and hit it (use it to our advantage baby).
+                # @TODO NEED TO IMLEMENT ONE-DIRECTIONAL ORDERS HERE TO BE ABLE TO UNWIND POSITION
+                pass
+            
+            return # we only want to market make if we aren't looking for liquidity pockets.
+
+        # check hedged positions once in a while.
+        if self.timer % PERIODICAL_HEDGE_PERIOD == 0:
+            self.periodical_hedge()
 
         if bid_prices[0] == 0 or ask_prices[0] == 0:
             self.logger.info(">>>FIRST ITERATION, DO NOTHING!")
@@ -557,7 +605,7 @@ class AutoTrader(BaseAutoTrader):
                                             - self.current_orders[corresponding_order_id]['filled']
                         self.place_impulse_order(type=opposite_side, price=price, volume=remaining_volume)
                         if self.check_num_operations():
-                            self.send_amend_order(corresponding_order_id, 1)
+                            self.send_cancel_order(corresponding_order_id)
                             self.times_of_events.insert(0, TIME_MODULE.time())
                         else:
                             self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\tCANNOT SEND IMPULSE ORDER!')
@@ -610,6 +658,9 @@ class AutoTrader(BaseAutoTrader):
         elif self.current_orders[client_order_id]['type'] == Side.ASK:
             self.position -= fill_volume
 
+        # check if our position is "too far from 0" here. if so, start looking for liquidity pockets to unload position.
+        self.look_for_liquidity_pockets = True if abs(self.position) > OUR_POSITION_LIMIT else False
+
         self.logger.info(f'STATUS UPDATE ORDER {client_order_id} HAS BEEN FILLED FOR {fill_volume} MORE SHARES, REMAINING VOLUME {remaining_volume}')
 
         if remaining_volume > 0 and fill_volume == 0:
@@ -631,7 +682,8 @@ class AutoTrader(BaseAutoTrader):
                 # place hedge if the impulse order we sent did not get filled fully.
                 if remaining_volume > 0:
                     self.logger.info(f'IMPULSE ORDER {client_order_id} PARTIALLY FILLED, NEED TO HEDGE.')
-                    self.hedge(remaining_volume)
+                    type_of_hedge = Side.BID if self.current_orders[client_order_id]['type'] == Side.ASK else Side.ASK
+                    self.hedge(type_of_hedge, remaining_volume)
                 else:
                     self.logger.info(f'IMPULSE ORDER FULLY FILLED, NOT HEDGING.')
             elif self.current_orders[client_order_id]['lifespan'] == Lifespan.GOOD_FOR_DAY:
@@ -646,7 +698,8 @@ class AutoTrader(BaseAutoTrader):
             if self.current_orders[client_order_id]['lifespan'] == Lifespan.FILL_AND_KILL:
                 # place hedge if the impulse order we sent did not get filled fully.
                 self.logger.info(f'IMPULSE ORDER {client_order_id} NOT FILLED AT ALL, NEED TO HEDGE.')
-                self.hedge(remaining_volume)
+                type_of_hedge = Side.BID if self.current_orders[client_order_id]['type'] == Side.ASK else Side.ASK
+                self.hedge(type_of_hedge, remaining_volume)
             elif self.current_orders[client_order_id]['lifespan'] == Lifespan.GOOD_FOR_DAY:
                 self.logger.info(f'GOOD FOR DAY ORDER {client_order_id} HAS BEEN CANCELLED!')
             
