@@ -43,6 +43,20 @@ def order_volume_to_avg_volume_ratio(self, order_id, order_type) -> float:
     elif order_id in self.current_orders:
         return self.current_orders[order_id]['volume'] / self.average_volume(order_type)
 
+def send_FAK_order(self, side, price, volume):
+    '''
+    Function that helps us safely send a Fill And Kill
+    order at the given price and volume and direciton.
+
+    Parameters:
+    side(type):     Side.BID or Side.ASK
+    volume (int):   how many?
+    price (int):    for how much?
+    '''
+    if abs(self.position) + volume < POSITION_LIMIT:
+        next_id = next(self.order_ids)
+        self.send_insert_order(next_id, side, price, volume, Lifespan.FILL_AND_KILL)
+
 def place_one_order(self, type, volume, price) -> None:
     '''
     Places a single order with given volume and price, as a limit order.

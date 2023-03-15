@@ -35,14 +35,15 @@ from ready_trader_go import BaseAutoTrader, Instrument, Lifespan, MAXIMUM_ASK, M
 LOT_SIZE = 10                   # size of each order we make.
 POSITION_LIMIT = 100            # hard position cap.
 
-ALPHA = 0.5                     # scale error bars
+ALPHA = 0.8                     # scale error bars
 BETA = 0.4                      # hitting the opposite side after getting lifted
 
-OUR_POSITION_LIMIT = 75         # position size we prefer to stay under.
+OUR_POSITION_LIMIT = 80         # position size we prefer to stay under.
 ORDER_TTL = 40                  # number of orderbook snapshots an order lives for.
-VOLUME_SIGNAL_THRESHOLD = 1     # point after which we call the market volatile + scary.
+VOLUME_SIGNAL_THRESHOLD_ONE = 1 # point after which we widen our spread by lowering volume of inner orders to 1.
+VOLUME_SIGNAL_THRESHOLD_TWO = 2 # point after which we call the market volatile + scary.
 MAX_OPERATIONS_PER_SECOND = 48  # out operations per second limit is a little lower than the rules say.
-PERIODICAL_HEDGE_CHECK  = 20    # how often (in terms of orderbook snapshots) we check hedged positions.
+PERIODICAL_HEDGE_CHECK  = 40    # how often (in terms of orderbook snapshots) we check hedged positions.
 
 LIVE_ORDER_LIMIT = 10           # hard cap on live orders.
 TICK_SIZE_IN_CENTS = 100        # tick size of the ETF market.
@@ -60,11 +61,8 @@ class AutoTrader(BaseAutoTrader):
         super().__init__(loop, team_name, secret)
         self.order_ids = itertools.count(1)
 
-        # a good stat to track.
-        # self.order_pairs_placed = 0             # how many bid ask pairs have we placed?
-        # self.order_pairs_filled = 0             # how many bid ask pairs have we filled?
-
-        self.current_order_book = dict()        # keep latest order book
+        self.current_etf_book = dict()         # keep latest ETF order book.
+        self.current_future_book = dict()      # keep latest FUTURES order book. This one helps us with the cost function of impulse vs hedge.
         
         self.hedged_current_orders = dict()     # keeps track of orders we just tried to hedge.
         self.current_orders = dict()            # order_id -> info about order. 
@@ -93,14 +91,14 @@ class AutoTrader(BaseAutoTrader):
         self.look_for_liquidity_pockets = False # true means we should be unwinding a positon toward 0 by looking
                                                 # for liquidity pockets, false means we should be market making.
 
-    def check_num_operations(self) -> bool:
+    def check_num_operations(self) -> int:
         '''
-        Returns true if we can place an operation safely.
+        Returns num of operations in the last second.
         An operation limit applies to the following
         3 functions that interract with the exchange:
         send_insert_order, send_amend_order, send_cancel_order
 
-        Sending a hedge does not count as an operation, thankfully.
+        Thankfully, sending a hedge does not count as an operation.
         '''
         if len(self.times_of_events) < MAX_OPERATIONS_PER_SECOND:
             return True
@@ -113,8 +111,7 @@ class AutoTrader(BaseAutoTrader):
             else:
                 self.times_of_events = self.times_of_events[:counter+1] # we can delete everything from this point onward.
 
-        self.logger.info(f'NUMBER OPERATIONS IN THE LAST SECOND = {counter}!')
-        return (counter < MAX_OPERATIONS_PER_SECOND)
+        return counter
 
     def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
         '''
@@ -132,14 +129,14 @@ class AutoTrader(BaseAutoTrader):
 
         Returns: 
             {
-                'bid' : bid volume of current orders
-                'ask' : ask volume of current orders
+                Side.BID : bid volume of current orders
+                Side.ASK : ask volume of current orders
             }
         '''
         if len(self.current_orders) == 0:
             return {
-                'bid' : 0,
-                'ask' : 0
+                Side.BID : 0,
+                Side.ASK : 0
             }
 
         total_bids = 0
@@ -151,8 +148,8 @@ class AutoTrader(BaseAutoTrader):
                 total_asks += (order['volume'] - order['filled'])
    
         return {
-            'bid' : total_bids,
-            'ask' : total_asks
+            Side.BID : total_bids,
+            Side.ASK : total_asks
         }
     
     def total_volume_of_hedge_orders(self) -> int:
@@ -167,8 +164,8 @@ class AutoTrader(BaseAutoTrader):
         '''
         if len(self.hedged_current_orders) == 0:
             return {
-                'bid' : 0,
-                'ask' : 0
+                Side.BID : 0,
+                Side.ASK : 0
             }
 
         total_bids = 0
@@ -180,8 +177,8 @@ class AutoTrader(BaseAutoTrader):
                 total_asks += order['volume']
    
         return {
-            'bid' : total_bids,
-            'ask' : total_asks
+            Side.BID : total_bids,
+            Side.ASK : total_asks
         }
 
     def average_volume(self, order_type) -> float:
@@ -197,7 +194,6 @@ class AutoTrader(BaseAutoTrader):
         '''
         Records order into current_orders.
         '''
-        self.logger.info(f'LOGGING ORDER {order_id}')
         self.current_orders[order_id] = {
             'id' : order_id,                                    # order id.
             'type' : order_type,                                # Side.BID or Side.ASK.
@@ -206,14 +202,15 @@ class AutoTrader(BaseAutoTrader):
             'volume' : volume,                                  # total size of the order.
             'lifespan' : lifespan,                              # good for day vs fill and kill
             'placed_at' : self.timer,                           # to keep track of how long the order has been active for.
-            'corresponding_order_id' : corresponding_order_id
+            'corresponding_order_id' : corresponding_order_id   # if GOOD FOR DAY: it's the corresponding bid or ask of the spread we posted.
+                                                                # if FILL AND KILL: either says "IMPULSE_HEDGE" or "LIQUIDITY_POCKET" or "BAD_ORDER"
+                                                                # specifying the reason we placed the fill and kill order.
         }
 
     def hedge_record_order(self, order_id, order_type, volume) -> None:
         '''
         Records order into hedged_current_orders.
         '''
-        self.logger.info(f'LOGGING HEDGE ORDER {order_id}')
         self.hedged_current_orders[order_id] = {
             'type' : order_type,    # Side.BID or Side.ASK.
             'volume' : volume       # amount want to fill.
@@ -230,7 +227,6 @@ class AutoTrader(BaseAutoTrader):
         '''
         for order_id, order in self.current_orders.items():
             if order['type'] != order_type and order['price'] == order_price:
-                self.logger.info(f'PREVENTING A WASH ORDER, CANNOT PLACE ONE HERE')
                 return True
         return False
 
@@ -243,14 +239,13 @@ class AutoTrader(BaseAutoTrader):
         '''
         # if it isn't a wash order, we record this single-sided order, and send it out.
         if not self.check_wash_order(type, price):
-            if self.check_num_operations():
-                self.logger.info(f'PLACING IMMEDIATE IMPULSE ORDER, RESISTING DIRECTIONAL PRESSURE.')
+            if self.check_num_operations() < MAX_OPERATIONS_PER_SECOND:
                 next_id = next(self.order_ids)
-                self.record_order(next_id, type, price, volume, Lifespan.FILL_AND_KILL, None)
+                self.record_order(next_id, type, price, volume, Lifespan.FILL_AND_KILL, 'IMPULSE_HEDGE')
                 self.send_insert_order(next_id, type, price, volume, Lifespan.FILL_AND_KILL)
                 self.times_of_events.insert(0, TIME_MODULE.time())
             else:
-                self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\tCANNOT SEND IMPULSE ORDER!')
+                self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\t\t\t\tCANNOT SEND IMPULSE ORDER!')
 
     def place_two_orders_or_none(self, bid, bid_volume, ask, ask_volume) -> None:
         '''
@@ -258,18 +253,22 @@ class AutoTrader(BaseAutoTrader):
         inserts both orders into current_orders data structure.
         Either places both orders, or doesn't place either of them.
         '''
+        
+        for id, order in self.current_orders.items():
+            if order['price'] == bid or order['price'] == ask:
+                # we don't want to place spreads in spots we already have orders in.
+                return 
+
         bid_wash_flag = self.check_wash_order(Side.BID, bid)
         ask_wash_flag = self.check_wash_order(Side.ASK, ask)
             
         if bid_volume > 0 and ask_volume > 0 \
             and len(self.current_orders) + 2 <= LIVE_ORDER_LIMIT \
-            and self.total_volume_of_current_orders()['bid'] + self.position + bid_volume < POSITION_LIMIT \
-            and -self.total_volume_of_current_orders()['ask'] + self.position - ask_volume > -POSITION_LIMIT \
+            and self.total_volume_of_current_orders()[Side.BID] + self.position + bid_volume < POSITION_LIMIT \
+            and -self.total_volume_of_current_orders()[Side.ASK] + self.position - ask_volume > -POSITION_LIMIT \
             and not bid_wash_flag \
             and not ask_wash_flag \
-            and self.check_num_operations():
-
-            self.logger.info(f'PLACING TWO ORDERS AT BID {bid} VOLUME {bid_volume} ASK {ask} VOLUME {ask_volume}!') 
+            and self.check_num_operations() < MAX_OPERATIONS_PER_SECOND:
             
             bid_id = next(self.order_ids)
             ask_id = next(self.order_ids)
@@ -281,6 +280,8 @@ class AutoTrader(BaseAutoTrader):
             self.times_of_events.insert(0, TIME_MODULE.time()) # record time of message to exchange.
             self.send_insert_order(ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
             self.times_of_events.insert(0, TIME_MODULE.time()) # record time of message to exchange.
+            
+            self.logger.info(f'PLACED TWO ORDERS AT BID {bid} VOLUME {bid_volume} ASK {ask} VOLUME {ask_volume}!') 
         else:
             self.logger.info(f'CANNOT PLACE PAIR OF ORDERS AT THIS MOMENT, RISK PARAMETERS DO NOT ALLOW FOR THIS.')
 
@@ -303,7 +304,10 @@ class AutoTrader(BaseAutoTrader):
         which may be better than the order's limit price. The volume is
         the number of lots filled at that price.
         """
-        self.logger.info(f'RECEIVED HEDGE FILLED MESSAGE ID {client_order_id} PRICE {price} VOLUME {volume}')
+        if volume == 0 and price == 0:
+            self.logger.info(f'NO SUCCESS! CANCELLED HEDGE {client_order_id} PRICE {price} VOLUME {volume}')
+        else:
+            self.logger.info(f'SUCCESS! FILLED HEDGE {client_order_id} PRICE {price} VOLUME {volume}')
 
         # adjust hedged position value.
         if self.hedged_current_orders[client_order_id]['type'] == Side.BID:
@@ -316,7 +320,7 @@ class AutoTrader(BaseAutoTrader):
         # remove record of order if it has been fully filled.
         del self.hedged_current_orders[client_order_id]
 
-    def hedge(self, type, volume) -> None:
+    def hedge(self, type, volume, price=None) -> None:
         '''        
         Function to hedge given a volume we want to hedge.
         This differs from the function below, as this one is usually used
@@ -331,11 +335,15 @@ class AutoTrader(BaseAutoTrader):
         This function uses MAX_ASK_NEAREST_TICK and MIN_BID_NEAREST_TICK
         and we will call this function when we know its cheaper than an impulse order.
         '''
-        self.logger.info(f'ENTER MANUAL HEDGE FUNCTION WITH TYPE VOLUME {volume}.')
-        current_hedge_volume = self.total_volume_of_hedge_orders()[type]
-        price = MAX_ASK_NEAREST_TICK if type == Side.BID else MIN_BID_NEAREST_TICK
+        self.logger.info(f'ENTER MANUAL HEDGE WITH VOLUME {volume}.')
 
-        if abs(self.hedged_position) + current_hedge_volume < POSITION_LIMIT:
+        if price is None:
+            price = MAX_ASK_NEAREST_TICK if type == Side.BID else MIN_BID_NEAREST_TICK
+
+        # check what the volume of our hedge position + potentially executed hedges.
+        current_hedged_volume = self.total_volume_of_hedge_orders()[type]
+
+        if abs(self.hedged_position) + current_hedged_volume + volume < POSITION_LIMIT:
             next_id = next(self.order_ids)
             self.hedge_record_order(next_id, type, volume)
             self.send_hedge_order(next_id, type, price, volume)
@@ -354,15 +362,11 @@ class AutoTrader(BaseAutoTrader):
 
         Function should be called periodically, not sure how often...
 
-        @TODO Decide how often we should call this function. it is not good to call it frequently
-              assuming our strategy of measuring the spread is good. but still must call it sometimes
-              in order to make sure we aren't breaking the rules.
-
         @TODO There is two cases in this function where, instead of driving the hedge further from 0,
               it is probably best to use an impulse order to bring position closer to 0. however,
               to do this we need a price to send the impulse order at. what price should that be???
         '''
-        self.logger.info(f'ENTER PERIODICAL HEDGE FUNCTION.')
+        self.logger.info(f'ENTER PERIODICAL HEDGE.')
 
         # if no price was passed in, we will be using max_ask_nearest_tick or min_bid_nearest_tick.
         price_to_bid = price if price is not None else MAX_ASK_NEAREST_TICK
@@ -370,8 +374,8 @@ class AutoTrader(BaseAutoTrader):
 
         # check what the volume of our hedge position + potentially executed hedges.
         volume = self.total_volume_of_hedge_orders()
-        bid_hedge_volume_in_book = volume['bid']
-        ask_hedge_volume_in_book = volume['ask']
+        bid_hedge_volume_in_book = volume[Side.BID]
+        ask_hedge_volume_in_book = volume[Side.ASK]
         
         # current positon plus hedged position,
         diff = abs(self.position + self.hedged_position)
@@ -392,12 +396,8 @@ class AutoTrader(BaseAutoTrader):
                         pass # current hedged orders are in queue, we should see if they get filled first.
                 else:
                     # position is positive, hedge is too little.
-                    # either    1) drive hedge more negative, (THIS IS THE CURRENT CHOICE AND IT IS BAD)
-                    #           2) or bring position back toward 0.
-                    # FINISH THIS CASE WHEN WE DECIDE WHEN TO DO EACH ONE!
                     diff -= ask_hedge_volume_in_book
-                    self.hedge_record_order(next_id, Side.ASK, diff)
-                    self.send_hedge_order(next_id, Side.ASK, price_to_ask, diff)
+                    self.cost_function(Side.ASK, list(self.current_etf_book[Side.BID])[0], diff)
             elif self.position < 0:
                 if self.hedged_position > -self.position:
                     # position is negative, amd hedge is too large.
@@ -414,8 +414,7 @@ class AutoTrader(BaseAutoTrader):
                     #           2) or bring position back toward 0.
                     # FINISH THIS CASE WHEN WE DECIDE WHEN TO DO EACH ONE!
                     diff -= bid_hedge_volume_in_book
-                    self.hedge_record_order(next_id, Side.BID, diff)
-                    self.send_hedge_order(next_id, Side.BID, price_to_bid, diff)
+                    self.cost_function(Side.BID, list(self.current_etf_book[Side.ASK])[0], diff)
             else:
                 #position is 0 but we have a hedge open.
                 if self.position < self.hedged_position:
@@ -446,30 +445,68 @@ class AutoTrader(BaseAutoTrader):
             if self.timer - order['placed_at'] >= ORDER_TTL:
                 cancelled_ids.append(order_id)
 
-        for id in cancelled_ids:
-            if self.check_num_operations():
-                self.logger.info(f'ORDER {order_id} TIMED OUT, CANCELLING.')
-                self.send_cancel_order(id)
-                self.times_of_events.insert(0, TIME_MODULE.time())
-            else:
-                self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\tCANNOT CANCEL TIMED OUT ORDER {order_id}!')
+        temp = self.check_num_operations()
+        for id in cancelled_ids[:min(temp, len(cancelled_ids))]:
+            self.logger.info(f'ORDER {order_id} TIMED OUT.')
+            self.send_cancel_order(id)
+            self.times_of_events.insert(0, TIME_MODULE.time())
 
     def decrease_trading_activity(self) -> None:
         '''
         Function to decrease the volume of all orders close to the current theoretical price,
         but leave the volume of the furthest ask and furthest bid we have up in the order-book.
         '''
-        max_ask = max(list(self.current_order_book['A'].keys())) if 'A' in self.current_order_book else inf
-        min_bid = min(list(self.current_order_book['B'].keys())) if 'B' in self.current_order_book else 0
+        
+        # if the order book isn't of length 2, we don't have the orderbook.
+        max_ask = max(list(self.current_etf_book[Side.ASK].keys())) if len(self.current_etf_book) > 1 else inf
+        min_bid = min(list(self.current_etf_book[Side.BID].keys())) if len(self.current_etf_book) > 1 else 0
         self.logger.info(f'DECREASING TRADING ACTIVITY, KEEPING BID {min_bid} AND ASK {max_ask} ORDERS')
         
+        temp = MAX_OPERATIONS_PER_SECOND - self.check_num_operations()
         for order_id, order in self.current_orders.items():
             if order['price'] != max_ask and order['price'] != min_bid:
-                if self.check_num_operations():
-                    self.send_amend_order(order_id, 1)
-                    self.times_of_events.insert(0, TIME_MODULE.time())
-                else:
-                    self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\tCANNOT AMEND ORDER {order_id} VOLUME TO 1!')
+                if temp == 0: break
+                self.send_amend_order(order_id, 1)
+                self.times_of_events.insert(0, TIME_MODULE.time())
+                temp -= 1
+
+    def cost_function(self, type, price_of_impulse_cause, volume) -> None:
+        '''
+        Function to decide if its cheaper to send an impulse order
+        at the given price with the given volume,
+        or if its better to hedge at MIN_ASK or MAX_BID at this point in time.
+
+        Function will be used whenever we are unhedged, to decide how we are
+        to try to get back to a fully hedged state with minimal cost.
+        '''
+        if len(self.current_etf_book) <= 1 or len(self.current_future_book) <= 1:
+            return # base case where we dont have an orderbook to go off yet.
+        
+        # get the top etf and future orderbook order of the given type, calculate cost function.
+        ask_etf, bid_etf = list(self.current_etf_book[Side.ASK])[0], list(self.current_etf_book[Side.BID])[0]
+        ask_future, bid_future = list(self.current_future_book[Side.ASK])[0], list(self.current_future_book[Side.BID])[0]
+        impulse_loss = volume * ((ask_etf - bid_etf) + price_of_impulse_cause * 0.002) # we pay the spread times volume, as well as the taker fee.
+
+        if type == Side.BID:
+            # this means we want to place a bid cuz our ask just got filled.
+            future_loss = volume * (abs(ask_future - price_of_impulse_cause)) # we pay the difference of what we sold the ETF for and what we buy the FUTURE for. no fee.
+            cost = impulse_loss - future_loss
+            self.logger.info(f'\t\t\t\tCOST FUNCTIION FOR BUYING ETF OR BUYING A FUTURE = {cost}')
+            if cost > 0: # hedge is cheaper.
+                self.hedge(type=Side.BID, volume=volume, price=ask_future)
+            else: # impulse order is cheaper.
+                self.place_impulse_order(type, ask_etf, volume)
+        elif type == Side.ASK:
+            # this means we want to place a ask cuz our bid just got filled.
+            future_loss = volume * (abs(bid_future - price_of_impulse_cause)) # we pay the difference of what we sold the ETF for and what we buy the FUTURE for. no fee.
+            cost = impulse_loss - future_loss
+            self.logger.info(f'\t\t\t\tCOST FUNCTIION FOR SELLING ETF OR SELLING A FUTURE = {cost}')
+            if cost > 0: # hedge is cheaper.
+                self.hedge(type=Side.ASK, volume=volume, price=bid_future)
+            else: # impulse order is cheaper.
+                self.place_impulse_order(type, bid_etf, volume)
+        else:
+            self.logger.critical(f'THIS BRANCH SHOULD NEVER BE EXECUTED')
 
     def on_order_book_update_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
                                      ask_volumes: List[int], bid_prices: List[int], bid_volumes: List[int]) -> None:
@@ -482,15 +519,13 @@ class AutoTrader(BaseAutoTrader):
         price levels.
         """
         self.timer += 1 # increment time counter.
-        self.logger.info("received order book for instrument %d with sequence number %d", instrument,
-                         sequence_number)
+
         self.logger.info(f'SNAPSHOT POSTION {self.position} HEDGE {self.hedged_position}')
 
         # check all orders' time to live, cancel expired ones.
-        self.check_current_orders_ttl()
-
         # check hedged positions once in a while.
         if self.timer % PERIODICAL_HEDGE_CHECK == 0:
+            self.check_current_orders_ttl()
             self.periodical_hedge()
 
         if bid_prices[0] == 0 or ask_prices[0] == 0:
@@ -509,28 +544,39 @@ class AutoTrader(BaseAutoTrader):
             self.last_sequence_processed = sequence_number # set the sequence number since we are now processing it.
 
             # check if we should be looking for a liquidity pool to unwind into, or if we want to market make.
-            # @TODO The commented out portion of the code is gold of the gold this the thang that makes butter slippery.
             # if self.look_for_liquidity_pockets:
+            #     self.logger.critical(f'LOOKING FOR LIQUIDITY POCKETS!!!')
             #     # means abs(positon) > OUR_POSITION_LIMIT, let's find out if its + or 0
+            #     # @TODO: we should also check if price of this big volume is not too far from our theoretical price!
             #     if self.position > 0:
             #         # we want to sell out our position, and buy out our hedge.
-            #         # => we would like to look for a big buy order in the orderbook
-            #         #    and hit it (use it to our advantage baby).
-            #         # @TODO NEED TO IMLEMENT ONE-DIRECTIONAL ORDERS HERE TO BE ABLE TO UNWIND POSITION
-            #         pass
+            #         # => we would like to look for a big buy order in the orderbook.
+            #         if bid_volumes[0] > LOT_SIZE*3:
+            #             self.logger.critical(f'FOUND LIQUIDITY POCKET!!!')
+            #             # we want to hit this order and unwind hedge too.
+            #             if self.check_num_operations() < MAX_OPERATIONS_PER_SECOND:
+            #                 next_id = next(self.order_ids)
+            #                 self.record_order(next_id, Side.ASK, bid_prices[0], LOT_SIZE, Lifespan.FILL_AND_KILL, 'LIQUIDITY_POCKET')
+            #                 self.send_insert_order(next_id, Side.ASK, bid_prices[0], LOT_SIZE, Lifespan.FILL_AND_KILL)
+            #                 self.times_of_events.insert(0, TIME_MODULE.time())
             #     elif self.position < 0:
             #         # we want to buy out our position, and sell out our hedge.
             #         # => we would like to look for a big sell order in the orderbook
-            #         #    and hit it (use it to our advantage baby).
-            #         # @TODO NEED TO IMLEMENT ONE-DIRECTIONAL ORDERS HERE TO BE ABLE TO UNWIND POSITION
-            #         pass
-                
-            #     return # we only want to market make if we aren't looking for liquidity pockets.
-            # other wise, we make a market.
+            #         if ask_volumes[0] > LOT_SIZE*3:
+            #             self.logger.critical(f'FOUND LIQUIDITY POCKET!!!')
+            #             # we want to hit this order and unwind hedge too.
+            #             if self.check_num_operations() < MAX_OPERATIONS_PER_SECOND:
+            #                 next_id = next(self.order_ids)
+            #                 self.record_order(next_id, Side.BID, ask_prices[0], LOT_SIZE, Lifespan.FILL_AND_KILL, 'LIQUIDITY_POCKET')
+            #                 self.send_insert_order(next_id, Side.BID, ask_prices[0], LOT_SIZE, Lifespan.FILL_AND_KILL)
+            #                 self.times_of_events.insert(0, TIME_MODULE.time())
+            #     return # do we only want to market make if we aren't looking for liquidity pockets? or should we always make a market?
+            
+            # OTHERWISE WE HIT EM WIT THE GUD OL O CAPTAIN MY CAPTAIN O MAKE ME A MARKET.
 
-            # aggregate order book
-            self.current_order_book['A'] = dict(zip(ask_prices, ask_volumes))
-            self.current_order_book['B'] = dict(zip(bid_prices, bid_volumes))
+            # record ETF order book.
+            self.current_etf_book[Side.ASK] = dict(zip(ask_prices, ask_volumes))
+            self.current_etf_book[Side.BID] = dict(zip(bid_prices, bid_volumes))
 
             # next, we need to aggregate the volumes and append it to the orderbook_volumes list,
             # only keeping a window size amount of those records.
@@ -553,6 +599,24 @@ class AutoTrader(BaseAutoTrader):
             var_theo += sum([bid_volumes[i] * (bid_prices[i] - theo)**2 for i in range(len(bid_prices))])
             var_theo = var_theo / (sum(ask_volumes) + sum(bid_volumes))
 
+            # if ask_prices[0] - bid_prices[0] > 4 * TICK_SIZE_IN_CENTS:
+            #     if ask_prices[0] < theo:
+            #         self.logger.critical(f'FOUND BAD ORDER, TRYING TO SNAG IT!!!')
+            #         if self.check_num_operations() < MAX_OPERATIONS_PER_SECOND:
+            #             next_id = next(self.order_ids)
+            #             size = min(ask_volumes[0], LOT_SIZE)
+            #             self.record_order(next_id, Side.BID, ask_prices[0], size, Lifespan.FILL_AND_KILL, 'BAD_ORDER')
+            #             self.send_insert_order(next_id, Side.BID, ask_prices[0], size, Lifespan.FILL_AND_KILL)
+            #             self.times_of_events.insert(0, TIME_MODULE.time())
+            #     elif bid_prices[0] > theo:
+            #         self.logger.critical(f'FOUND BAD ORDER, TRYING TO SNAG IT!!!')
+            #         if self.check_num_operations() < MAX_OPERATIONS_PER_SECOND:
+            #             next_id = next(self.order_ids)
+            #             size = min(bid_volumes[0], LOT_SIZE)
+            #             self.record_order(next_id, Side.ASK, bid_prices[0], size, Lifespan.FILL_AND_KILL, 'BAD_ORDER')
+            #             self.send_insert_order(next_id, Side.ASK, bid_prices[0], size, Lifespan.FILL_AND_KILL)
+            #             self.times_of_events.insert(0, TIME_MODULE.time())
+
             # get new bid and ask using our theo and variance.
             new_bid = theo - ALPHA * np.sqrt(var_theo)
             new_ask = theo + ALPHA * np.sqrt(var_theo)
@@ -565,19 +629,22 @@ class AutoTrader(BaseAutoTrader):
             # 2 cases where we trade, for now:
             if (new_bid > regular-err) and (new_ask < regular+err):
                 # our interval is WITHIN the actual market interval.
-                self.logger.info("our interval is WITHIN (eaten) the actual market interval, TRYING TO TRADE")
                 self.place_two_orders_or_none(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
-            
+                # pass
             elif (new_bid < regular-err) and (new_ask > regular+err):
                 # our interval CONTAINS the actual market interval.
-                self.logger.info("our interval CONTAINS (eats) the actual market interval, TRYING TO TRADE")
-                self.place_two_orders_or_none(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                # self.place_two_orders_or_none(new_bid_by_tick, LOT_SIZE, new_ask_by_tick, LOT_SIZE)
+                pass
             else:
                 # all other cases, we do not trade.
-                self.logger.info("not trading this interval -- it does not eat nor is it eaten.")
+                pass
 
+        elif instrument == Instrument.FUTURE:
+            # record future book.
+            self.current_future_book[Side.ASK] = dict(zip(ask_prices, ask_volumes))
+            self.current_future_book[Side.BID] = dict(zip(bid_prices, bid_volumes))
         else:
-            pass
+            pass # received random instrument, don't interrupt flow of program.
 
     def on_order_filled_message(self, client_order_id: int, price: int, volume: int) -> None:
         """Called when one of your orders is filled, partially or fully.
@@ -586,61 +653,42 @@ class AutoTrader(BaseAutoTrader):
         which may be better than the order's limit price. The volume is
         the number of lots filled at that price.
         """
+        self.logger.info(f'ENTER ORDER FILLED FUNCTION FOR ORDER {client_order_id}')
         # when an order is filled, if it was a good for day order, it may have a corresponding order with it.
         if self.current_orders[client_order_id]['lifespan'] == Lifespan.GOOD_FOR_DAY:
             # check whether the filled order was a bid or an ask.
             if self.current_orders[client_order_id]['type'] == Side.ASK:
-                order_side, opposite_side = 'A', Side.BID
+                order_side, opposite_side = Side.ASK, Side.BID
             elif self.current_orders[client_order_id]['type'] == Side.BID:
-                order_side, opposite_side = 'B', Side.ASK
+                order_side, opposite_side = Side.BID, Side.ASK
 
-            if price in self.current_order_book[order_side].keys():
-                total_vol_at_price = self.current_order_book[order_side][price]
-                vol_ratio_stat = volume / total_vol_at_price
-                if vol_ratio_stat >= BETA:
-                    self.logger.info(f'VOLUME RATIO IS {vol_ratio_stat} >= BETA')
-                    corresponding_order_id = self.current_orders[client_order_id]['corresponding_order_id']
-                    if corresponding_order_id in self.current_orders:
-                        # the corresponding order id still exists, and beta is high.
-                        # => place an impulse order, 
-                        # => cancel corresponding order because we just upgraded it to an impulse order.
-                        remaining_volume = self.current_orders[corresponding_order_id]['volume'] \
-                                            - self.current_orders[corresponding_order_id]['filled']
-                        self.place_impulse_order(type=opposite_side, price=price, volume=remaining_volume)
-                        if self.check_num_operations():
-                            self.send_cancel_order(corresponding_order_id)
-                            self.times_of_events.insert(0, TIME_MODULE.time())
-                        else:
-                            self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\tCANNOT SEND IMPULSE ORDER!')
-
-                    elif corresponding_order_id in self.executed_orders:
-                        pass # the corresponding order was executed before this one, this is what we want.
-                    elif corresponding_order_id in self.cancelled_orders:
-                        # the corresponding order was, for some reason, cancelled.
-                        # => send an impulse order for the volume amount that
-                        # this order was filled at.
-                        self.place_impulse_order(type=opposite_side, price=price, volume=remaining_volume)
-                    else:
-                        # the corresponding order id never existed, we should try to send an impulse order.
-                        self.place_impulse_order(type=opposite_side, price=price, volume=remaining_volume)
+            corresponding_order_id = self.current_orders[client_order_id]['corresponding_order_id']
+            if corresponding_order_id in self.current_orders:
+                # the corresponding order id still exists.
+                # find volume that was filled, hedge it.
+                self.logger.info(f'IN ORDER FILLED FUNCTION:\n\t\t\t\tNEED TO HEDGE AN ORDER THAT WAS JUST FILLED')
+                remaining_volume = self.current_orders[corresponding_order_id]['volume'] \
+                                    - self.current_orders[corresponding_order_id]['filled']
+                self.cost_function(type=opposite_side, price_of_impulse_cause=price, volume=remaining_volume)
+                
+                # after all this, we can cancel the order we moved up.
+                if self.check_num_operations() < MAX_OPERATIONS_PER_SECOND:
+                    self.send_cancel_order(corresponding_order_id)
+                    self.times_of_events.insert(0, TIME_MODULE.time())
                 else:
-                    # means volume ratio stat was below Beta!
-                    self.logger.info(f'VOLUME RATIO IS {vol_ratio_stat} < BETA')
+                    self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\t\t\t\tCANNOT SEND IMPULSE ORDER!')
+
+            elif corresponding_order_id in self.executed_orders:
+                pass # the corresponding order was executed before this one, this is what we want.
+            elif corresponding_order_id in self.cancelled_orders:
+                pass # the corresponding order was cancelled properly
             else:
-                # unable to calculate beta
-                # => unable place an impulse order -- there's no remaining volume at the price.
-                # we should:
-                #   1) check whether we need an impulse order.
-                #   2) if we do need an impulse, send it. otherwise, chillen.
-                #   2.1) How to decide if we need an impulse? if we have more bids than asks.
-                self.logger.critical(f'CASE NOT IMPLEMENTED:\n\t1)UNABLE TO CALCULATE BETA\n\tPOSITION IS {self.position} HEDGE IS {self.hedged_position}')
+                # the corresponding order id never existed.
+                self.logger.critical(f'THIS BRANCH SHOULD NEVER GET EXECUTED')
         elif self.current_orders[client_order_id]['lifespan'] == Lifespan.FILL_AND_KILL:
-            # the filled order was an impulse order. great.
-            # order_status function below checks whether the fill and kill was partially or fully filled,
-            # and hedges if it was only partially filled.
-            pass
+            pass # below function takes care of fill and kill order updates, including executions.
         else:
-            self.logger.critical(f'THIS BRANCH SHOULD NEVER BE EXECUTED.')
+            self.logger.critical(f'THIS BRANCH SHOULD NEVER BE EXECUTED!') # all orders are GOOD FOR DAY or FILL AND KILL.
 
     def on_order_status_message(self, client_order_id: int, fill_volume: int, remaining_volume: int,
                                 fees: int) -> None:
@@ -654,70 +702,110 @@ class AutoTrader(BaseAutoTrader):
         If an order is cancelled its remaining volume will be zero.
         """
         if client_order_id not in self.current_orders:
+            self.logger.warning(f'RECEIVED ORDER ID IN UPDATE ORDER STATUS THAT IS NOT IN CURRENT ORDERS: {client_order_id}')
             return # we should not do anything if we receive a random client order id...
 
-        fill_volume -= self.current_orders[client_order_id]['filled'] # fill_volume is total filled, but order could've been partially filled multiple times.
-                                                                        # we thus need to difference in status, not the fill_volume on its own.
-        # update our position
+        # fill_volume is total filled, but order could've been partially filled multiple times.
+        # we adjust fill volume to mean how many shares filled since last update to this order.
+        fill_volume -= self.current_orders[client_order_id]['filled'] 
+
+        # update our position count.
         if self.current_orders[client_order_id]['type'] == Side.BID:
             self.position += fill_volume
         elif self.current_orders[client_order_id]['type'] == Side.ASK:
             self.position -= fill_volume
 
         # check if our position is "too far from 0" here. if so, start looking for liquidity pockets to unload position.
-        self.look_for_liquidity_pockets = True if abs(self.position) > OUR_POSITION_LIMIT else False
-
-        self.logger.info(f'STATUS UPDATE ORDER {client_order_id} HAS BEEN FILLED FOR {fill_volume} MORE SHARES, REMAINING VOLUME {remaining_volume}')
+        # the variable will be checked in the orderbook function to decide if we want to make a market or unload.
+        # definitely a better way to decide when to look for liquidity pockets, but for now, we switch modes past 50 ETF SHARES.
+        # self.look_for_liquidity_pockets = True if abs(self.position) > OUR_POSITION_LIMIT else False
 
         if remaining_volume > 0 and fill_volume == 0:
-            # either order was updated or order is brand new.
-            if client_order_id in self.current_orders:
-                # this means order was updated.
-                self.logger.info(f'UPDATED ORDER {client_order_id} TO VOLUME {remaining_volume}!')
-                self.current_orders[client_order_id]['filled'] = 0
-                self.current_orders[client_order_id]['volume'] = remaining_volume
-            else:
-                # this means the order is brand new.
-                if self.current_orders[client_order_id]['lifespan'] == Lifespan.FILL_AND_KILL:
-                    self.logger.info(f'CREATED FILL AND KILL ORDER {client_order_id} WITH VOLUME {remaining_volume}!')
-                elif self.current_orders[client_order_id]['lifespan'] == Lifespan.GOOD_FOR_DAY:
-                    self.logger.info(f'CREATED GOOD FOR DAY ORDER {client_order_id} WITH VOLUME {remaining_volume}!')
+            # order updated or is brand new... does not really matter.
+            # this means the order is brand new.
+            if self.current_orders[client_order_id]['lifespan'] == Lifespan.FILL_AND_KILL:
+                reason = self.current_orders[client_order_id]['corresponding_order_id']
+                self.logger.info(f'FROM ORDER STATUS UPDATE:\n\t\t\t\tCREATED FILL AND KILL ORDER {client_order_id} WITH VOLUME {remaining_volume}\n\t\t\t\tREASON => {reason}!')
+            elif self.current_orders[client_order_id]['lifespan'] == Lifespan.GOOD_FOR_DAY:
+                corresponding_order_id = self.current_orders[client_order_id]['corresponding_order_id']
+                self.logger.info(f'FROM ORDER STATUS UPDATE:\n\t\t\t\tCREATED GOOD FOR DAY ORDER {client_order_id} WITH VOLUME {remaining_volume}\n\t\t\t\tCORRESPONDING ORDER ID => {corresponding_order_id}!')
         elif remaining_volume == 0 and fill_volume > 0:
             # order has been filled and executed!!!
             if self.current_orders[client_order_id]['lifespan'] == Lifespan.FILL_AND_KILL:
-                # place hedge if the impulse order we sent did not get filled fully.
-                if remaining_volume > 0:
-                    self.logger.info(f'IMPULSE ORDER {client_order_id} PARTIALLY FILLED, NEED TO HEDGE.')
-                    type_of_hedge = Side.BID if self.current_orders[client_order_id]['type'] == Side.ASK else Side.ASK
-                    self.hedge(type_of_hedge, remaining_volume)
+                reason = self.current_orders[client_order_id]['corresponding_order_id']
+                if reason == 'IMPULSE_HEDGE':
+                    # this was an impulse hedge, we should send a hedge if this impulse did not work for us, in the same direction as the impulse was in.
+                    if remaining_volume > 0:
+                        self.logger.info(f'IMPULSE ORDER {client_order_id} PARTIALLY FILLED, SENDING FOLLOW-UP ORDER.')
+                        self.hedge(self.current_orders[client_order_id]['type'], remaining_volume)
+                    else:
+                        self.logger.info(f'IMPULSE ORDER FULLY FILLED, NO NEED TO FOLLOW UP.')
+                elif reason == 'LIQUIDITY_POCKET':
+                    # we are trying to bring our position close to 0. hedge for the same amount that the order was filled for, in the opposite direction.
+                    type_of_hedge = Side.ASK if self.current_orders[client_order_id]['type'] == Side.BID else Side.BID
+                    self.hedge(type=type_of_hedge, volume=remaining_volume, price=self.current_orders[client_order_id]['price'])
+                elif reason == 'BAD_TRADE':
+                    # we see someone posted a bad trade on the market. if we snagged that trade, we should hedge the amount we filled, in the opposite direction.
+                    # type_of_hedge = Side.ASK if self.current_orders[client_order_id]['type'] == Side.BID else Side.BID
+                    # self.hedge(type=type_of_hedge, volume=remaining_volume)
+                    pass
                 else:
-                    self.logger.info(f'IMPULSE ORDER FULLY FILLED, NOT HEDGING.')
+                    self.logger.critical(f'THIS BRANCH SHOULD NEVER BE EXECUTED!') # reasons to trade fill and kills are only the 3 outlined above.
             elif self.current_orders[client_order_id]['lifespan'] == Lifespan.GOOD_FOR_DAY:
-                self.logger.info(f'GOOD FOR DAY ORDER {client_order_id} FULLY FILLED FOR {fill_volume} SHARES!')
+                self.logger.info(f'FROM ORDER STATUS UPDATE:\n\t\t\t\tGOOD FOR DAY ORDER {client_order_id} FULLY FILLED FOR {fill_volume} SHARES!')
             
             # move order from current orders to executed orders.
             self.executed_orders[client_order_id] = self.current_orders[client_order_id]
-            order = self.executed_orders[client_order_id]
             del self.current_orders[client_order_id]
         elif remaining_volume == 0 and fill_volume == 0:
-            # order has been cancelled or it was a fill and kill order that did not get filled at all.
+            # order has been cancelled.
             if self.current_orders[client_order_id]['lifespan'] == Lifespan.FILL_AND_KILL:
-                # place hedge if the impulse order we sent did not get filled fully.
-                self.logger.info(f'IMPULSE ORDER {client_order_id} NOT FILLED AT ALL, NEED TO HEDGE.')
-                type_of_hedge = Side.BID if self.current_orders[client_order_id]['type'] == Side.ASK else Side.ASK
-                self.hedge(type_of_hedge, remaining_volume)
+                # fill and kill order did not fill a single share. check reason we tried to do the fill and kill.
+                reason = self.current_orders[client_order_id]['corresponding_order_id']
+                if reason == 'IMPULSE_HEDGE':
+                    # this was an impulse hedge, we should send a hedge since this order did not work for us.
+                    # self.logger.info(f'IMPULSE ORDER {client_order_id} DID NOT FILL AT ALL. FOLLOWING UP WITH A HEDGE.')
+                    self.hedge(self.current_orders[client_order_id]['type'], remaining_volume)
+                elif reason == 'LIQUIDITY_POCKET':
+                    # we missed the liquidity pocket we were pursuing. not a problem.
+                    # self.logger.info('FROM ORDER STATUS UPDATE:\n\t\t\t\tMISSED LIQUIDITY POCKET OPPORTUNITY.')
+                    pass
+                elif reason == 'BAD_TRADE':
+                    # we missed the bad trade we were trying to catch. too slow.
+                    # self.logger.info('FROM ORDER STATUS UPDATE:\n\t\t\t\tMISSED SNAGGING A BAD TRADE OPPORTUNITY.')
+                    pass
+                else:
+                    self.logger.critical(f'THIS BRANCH SHOULD NEVER BE EXECUTED!') # reasons to trade fill and kills are only the 3 outlined above.
             elif self.current_orders[client_order_id]['lifespan'] == Lifespan.GOOD_FOR_DAY:
-                self.logger.info(f'GOOD FOR DAY ORDER {client_order_id} HAS BEEN CANCELLED!')
+                # corresponding_order_id = self.current_orders[client_order_id]['corresponding_order_id']
+                self.logger.info(f'FROM ORDER STATUS UPDATE:\n\t\t\t\tGOOD FOR DAY ORDER {client_order_id} HAS BEEN CANCELLED!')
+                # if corresponding_order_id in self.current_orders:
+                #     if self.check_num_operations():
+                #         self.logger.info(f'\SENDING CANCEL REQUEST FOR CORRESPONDING ORDER {corresponding_order_id} AS WELL!')
+                #         self.send_cancel_order(corresponding_order_id)
+                #         self.times_of_events.insert(0, TIME_MODULE.time())
             
             # move order from current orders to cancelled orders.
             self.cancelled_orders[client_order_id] = self.current_orders[client_order_id]
-            order = self.cancelled_orders[client_order_id]
             del self.current_orders[client_order_id]
         else:
-            # order has been partially filled, not cancelled, not executed, not just created.
-            self.logger.info(f'THE ORDER {client_order_id} WAS PARTIALLY FILLED!')
-            order = self.current_orders[client_order_id]
-
+            # # regular order has been partially filled.
+            # self.logger.info(f'FROM ORDER STATUS UPDATE:\n\t\t\t\tTHE ORDER {client_order_id} WAS PARTIALLY FILLED FOR {fill_volume} WITH {remaining_volume} remaining!')
+            # # we would like to hedge or offset, but an impulse order may result in a wash order. so we hedge.
+            # opposite_side = Side.BUY if self.current_orders[client_order_id]['type'] == Side.ASK else Side.ASK
+            # self.cost_function(opposite_side, self.current_orders[client_order_id]['price'], fill_volume)
+            
+            # # should amend the corresponding GOOD FOR DAY's order's volume down to match this one.
+            # # corresponding_order_id = self.current_orders[client_order_id]['corresponding_order_id']
+            # # if corresponding_order_id in self.current_orders:
+            # #     if self.check_num_operations():
+            # #         self.send_amend_order(corresponding_order_id, remaining_volume)
+            # #         self.times_of_events.insert(0, TIME_MODULE.time())
+            # #     else:
+            # #         self.logger.warning(f'OPERATION RATE RESTRICTION HIT:\n\t\t\t\tCOULD NOT AMEND CORRESPONDING ORDER!')
+            # # else:
+            # #     self.logger.critical(f'\t\t\t\tTHIS GOOD FOR DAY ORDER DOES NOT HAVE A CORRESPONDING GOOD FOR DAY ORDER... NOT GOOD.')
+            pass
         # finally, update the filled amount of the order we just worked with if its still a current order.
         if client_order_id in self.current_orders:
             self.current_orders[client_order_id]['filled'] += fill_volume
@@ -734,6 +822,7 @@ class AutoTrader(BaseAutoTrader):
         If there are less than five prices on a side, then zeros will appear at
         the end of both the prices and volumes arrays.
         """
+
         # sum up traded ask volumes and traded bid volumes
         sum_ask, sum_bid = sum(ask_volumes), sum(bid_volumes)
         if sum_ask == 0 and sum_bid == 0:
@@ -755,7 +844,7 @@ class AutoTrader(BaseAutoTrader):
             self.logger.info(f'VOLUME PRESSURE SIGNAL IS: {self.latest_volume_signal}')
 
             # we do this here because we should react to the signal as fast as we can.
-            if self.latest_volume_signal > VOLUME_SIGNAL_THRESHOLD:
+            if self.latest_volume_signal > VOLUME_SIGNAL_THRESHOLD_ONE:
                 self.decrease_trading_activity()
         else:
             pass
