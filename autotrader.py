@@ -48,8 +48,12 @@ class AutoTrader(BaseAutoTrader):
         super().__init__(loop, team_name, secret)
         self.order_ids = itertools.count(1)
 
-        self.our_spread_bid_id = self.our_spread_bid_price = 0          # state of the bid of our interval.
-        self.our_spread_ask_id = self.our_spread_ask_price = 0          # state of the ask of our interval.
+        self.best_futures_bid = self.best_futures_ask = 0 # keeping track of best ask and offer for futures for computing cost
+
+        self.real_bid = [0, 0, 0] # (id, price, volume) for bid thats out there
+        self.real_ask = [0, 0, 0] # (id, price, volume) for ask thats out there
+
+        self.theo_orders = dict() # id -> (side, price, volume)
 
         self.hedge_bid_id = self.hedge_ask_id = 0                       # state of the hedge order we placed so we can adjust 
                                                                         # hedged position in the correct direction.
@@ -81,58 +85,59 @@ class AutoTrader(BaseAutoTrader):
         if bid > 0 and ask > 0 \
             and self.position + LOT_SIZE < POSITION_LIMIT \
             and self.position - LOT_SIZE > -POSITION_LIMIT \
-            and bid != self.our_spread_bid_price \
-            and ask != self.our_spread_ask_price:
+            and bid != self.real_bid[1] \
+            and ask != self.real_ask[1]:
 
             self.logger.info(f'MAKING A MARKET AT BID {bid} VOLUME {bid_volume} ASK {ask} VOLUME {ask_volume}!') 
             
-            # cancel the previous ask and bids we had.
-            if self.our_spread_bid_id != 0:
-                self.send_cancel_order(self.our_spread_bid_id)
-            if self.our_spread_ask_id != 0:
-                self.send_cancel_order(self.our_spread_ask_id)
+            # cancel the previous ask and bids we had. ID OF 0 MEANS WE DONT HAVE AN ORDER PLACED
+            if self.real_bid[0] != 0:
+                self.send_cancel_order(self.real_bid[0])
+            if self.real_ask[0] != 0:
+                self.send_cancel_order(self.real_ask[0])
 
             # record info about the new ask and bid.
-            self.our_spread_bid_id = next(self.order_ids)
-            self.our_spread_ask_id = next(self.order_ids)
-            self.our_spread_bid_price = bid
-            self.our_spread_ask_price = ask
+            new_bid_id = next(self.order_ids)
+            new_ask_id = next(self.order_ids)
+            # we need to segment orders we are about to place because we dont know what will happen
+            self.theo_orders[new_bid_id] = (Side.BID, bid, bid_volume)
+            self.theo_orders[new_ask_id] = (Side.ASK, ask, ask_volume)
 
             # send da order out.
-            self.send_insert_order(self.our_spread_bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
-            self.send_insert_order(self.our_spread_ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
+            self.send_insert_order(new_bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
+            self.send_insert_order(new_ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
         elif bid > 0 \
             and self.position + LOT_SIZE < POSITION_LIMIT \
-            and bid != self.our_spread_bid_price:
+            and bid != self.real_bid[1]:
 
             self.logger.info(f'PLACING ORDER AT BID {bid} VOLUME {bid_volume}!') 
             
             # cancel bid because we are about to place a new bid.
-            if self.our_spread_bid_id != 0:
-                self.send_cancel_order(self.our_spread_bid_id)
+            if self.real_bid[0] != 0:
+                self.send_cancel_order(self.real_bid[0])
             
             # record new info about the thang.
-            self.our_spread_bid_id = next(self.order_ids)
-            self.our_spread_bid_price = bid
+            new_bid_id = next(self.order_ids)
+            self.theo_orders[new_bid_id] = (Side.BID, bid, bid_volume)
 
             # place dat order baby.
-            self.send_insert_order(self.our_spread_bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
+            self.send_insert_order(new_bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
         elif ask > 0 \
             and self.position - LOT_SIZE > -POSITION_LIMIT \
-            and ask != self.our_spread_ask_price:
+            and ask != self.real_ask[1]:
 
             self.logger.info(f'PLACING ORDER AT ASK {ask} VOLUME {ask_volume}!')
 
             # cancel ask order, about to place a new one.
-            if self.our_spread_ask_id != 0:
-                self.send_cancel_order(self.our_spread_ask_id)
+            if self.real_ask[0] != 0:
+                self.send_cancel_order(self.real_ask[0])
             
             # record new info about the thang.
-            self.our_spread_ask_id = next(self.order_ids)
-            self.our_spread_ask_price = ask
+            new_ask_id = next(self.order_ids)
+            self.theo_orders[new_ask_id] = (Side.ASK, ask, ask_volume)
 
             # place dat order baby.
-            self.send_insert_order(self.our_spread_ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
+            self.send_insert_order(new_ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
         else:
             self.logger.info(f'CANNOT PLACE PAIR OF ORDERS AT THIS MOMENT, RISK PARAMETERS DO NOT ALLOW FOR THIS.')
 
@@ -227,13 +232,18 @@ class AutoTrader(BaseAutoTrader):
 
         # trade!
         if bid_prices[0] == 0 or ask_prices[0] == 0 or self.p_prime_0 == 0 or self.p_prime_1 == 0:
-            return # we got nothing in this thang. 
-        if instrument == Instrument.ETF:
+            # we got nothing in this thang. 
+            return
+        if sequence_number < self.last_order_book_sequence:
             # check sequence is in order.
-            if sequence_number < self.last_order_book_sequence:
-                return
-            self.last_order_book_sequence = sequence_number
+            return
+        
+        self.last_order_book_sequence = sequence_number
+        if instrument == Instrument.FUTURE:
+            self.best_futures_bid, self.best_futures_ask = bid_prices[0], ask_prices[0]
+            #
 
+        elif instrument == Instrument.ETF:
             # calculate p_t, based on the midpoint of the bid and ask we got just now.
             p_t = (ask_prices[0] + bid_prices[0]) / 2
 
@@ -263,6 +273,22 @@ class AutoTrader(BaseAutoTrader):
             new_bid = int(new_bid - new_bid % TICK_SIZE_IN_CENTS) # more conservative to round bid down.
             new_ask = int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS) # more conservative to round ask up.
 
+            # correction to current best bid and/or current best ask if our interval is too small...
+            self.logger.critical(f'Our computed interval is smaller than current spread. Probably not a good strat.')
+            if new_bid > bid_prices[0]:
+                new_bid = bid_prices[0]
+            
+            if new_ask < ask_prices[0]:
+                new_ask = ask_prices[0]
+            
+            # we have our bounds, try to hunt some orders first
+            if bid_volumes[0] <= LOT_SIZE:
+                if bid_prices[0] > p_t:
+                    pass
+            if ask_volumes[0] <= LOT_SIZE:
+                if ask_prices[0] < p_t:
+                    pass
+
             # make the new market!
             self.make_a_market(new_bid, LOT_SIZE, new_ask, LOT_SIZE)
 
@@ -273,12 +299,47 @@ class AutoTrader(BaseAutoTrader):
         which may be better than the order's limit price. The volume is
         the number of lots filled at that price.
         """
-        self.logger.info(f'ORDER {client_order_id} FILLED AT PRICE {price} VOLUME {volume}')
-        if client_order_id == self.our_spread_bid_id:
+        if client_order_id == self.real_bid[0]:
             self.position += volume
-            
-        elif client_order_id == self.our_spread_ask_id:
+            # adjusting to volume remaining
+            self.real_bid[2] -= volume
+            if self.real_bid[2] <= 0:
+                # this is a full fill
+                self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
+        
+        elif client_order_id == self.real_ask[0]:
             self.position -= volume
+            self.real_ask[2] -= volume
+            if self.real_ask[2] <= 0:
+                self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
+        
+        elif client_order_id in self.theo_orders.keys():
+            if self.theo_orders[client_order_id][0] == Side.BID:
+                self.position += volume
+                vol_rem = self.theo_orders[client_order_id][2] - volume
+                if vol_rem > 0:
+                    # order partially filled, it exists
+                    self.real_bid = [client_order_id, self.theo_orders[client_order_id][1], vol_rem]
+                else:
+                    # order fully filled, not exists anymore
+                    self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
+            
+            elif self.theo_orders[client_order_id][0] == Side.ASK:
+                self.position -= volume
+                vol_rem = self.theo_orders[client_order_id][2] - volume
+                if vol_rem > 0:
+                    # order partially filled, it exists
+                    self.real_ask = [client_order_id, self.theo_orders[client_order_id][1], vol_rem]
+                else:
+                    # order fully filled, not exists anymore
+                    self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
+            
+            else:
+                self.logger.critical('SIDE NOT EQUAL TO BID OR ASK IN DICT PART 1???')
+            
+            # remove virtual order because it was instantiated
+            del self.theo_orders[client_order_id]
+        
         else:
             self.logger.critical(f'\n\n\nTHIS SHOULDNT HAPPEN BRUH FUCK THE POSITION AINT FUCKING UPDATING\n\n\n')
                 
@@ -294,45 +355,37 @@ class AutoTrader(BaseAutoTrader):
 
         If an order is cancelled its remaining volume will be zero.
         """
-        self.logger.info("received order status for order %d with fill volume %d remaining %d and fees %d",
-                         client_order_id, fill_volume, remaining_volume, fees)
-        # if client_order_id == 0:
-        #     return
-        if remaining_volume == 0:
+        # created, cancelled, partially filled, fully filled are the options
+
+        if fill_volume == 0 and remaining_volume > 0:
+            # order was just created. we need to instantiate it if not already.
+            if client_order_id in self.theo_orders.keys():
+                if self.theo_orders[client_order_id][0] == Side.BID:
+                    self.real_bid = [client_order_id, self.theo_orders[client_order_id][1], self.theo_orders[client_order_id][2]]
+                    del self.theo_orders[client_order_id]
+            
+                elif self.theo_orders[client_order_id][0] == Side.ASK:
+                    self.real_ask = [client_order_id, self.theo_orders[client_order_id][1], self.theo_orders[client_order_id][2]]
+                    del self.theo_orders[client_order_id]
+            
+                else:
+                    self.logger.critical('SIDE NOT EQUAL TO ASK OR BID IN DICT PART 2???')
+            else:
+                self.logger.critical('Order was instantiated by on_order_filled_message.')
+
+        elif remaining_volume == 0:
             # order was cancelled or order was filled. order filled function takes care of the latter case.
             # this part takes care of the former, case: cancelled order.
-            if client_order_id == self.our_spread_bid_id:
-                self.our_spread_bid_id = self.our_spread_bid_price = 0
-            elif client_order_id == self.our_spread_ask_id:
-                self.our_spread_ask_id = self.our_spread_ask_price = 0
+            if client_order_id == self.real_bid[0]:
+                self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
+            elif client_order_id == self.real_ask[0]:
+                self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
             else:
-                pass # filled function above takes care of other cases.
-
-        elif fill_volume == 0:
-            # order was just created!
-            side = "BID" if client_order_id == self.our_spread_bid_id else "ASK"
-            self.logger.critical(f'CREATED ORDER {client_order_id} WITH VOLUME {remaining_volume} ON SIDE {side}')
-            self.logger.critical(f'POSITION {self.position} HEDGE {self.hedged_position}')
+                self.logger.critical('Remaining volume is 0 but order not exists. This means on_order_filled_message took care of it.')
 
         else:
             # partially filled, fill volume and remaining volume both above 0.
-            # cancel the rest of this bad boy, place a new order of LOT SIZE at this price.
-
-            # I COMMENTED THIS OUT CUZ THERE WERE ERRORS ARISING WHEN WE STARTED DEALING WITH PARTIALLY FILLED ONES...
-            
-            # if client_order_id == self.our_spread_bid_id:
-            #     self.bids.add(client_order_id)
-            #     self.send_cancel_order(client_order_id)
-            #     self.position += fill_volume
-            #     self.our_spread_bid_id = 0
-            #     self.make_a_market(self.our_spread_bid_price, LOT_SIZE, 0, 0) # bid order.
-            # elif client_order_id == self.our_spread_ask_id:
-            #     self.asks.add(client_order_id)
-            #     self.send_cancel_order(client_order_id)
-            #     self.position -= fill_volume
-            #     self.our_spread_ask_id = 0
-            #     self.make_a_market(0, 0, self.our_spread_ask_price, LOT_SIZE) # ask order.
-            pass
+            self.logger.critical('Fill volume and remaining volume above 0. This means on_order_filled_message took care of it.')
             
 
     def on_trade_ticks_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
