@@ -58,9 +58,6 @@ class AutoTrader(BaseAutoTrader):
         self.we_are_hedged = True                                       # flag to set for when we are set vs not.
         self.time_of_last_imbalance = self.event_loop.time()            # used to hedge as a last resort before the minute runs out.
 
-        self.bids = set()                                               # we need these in case an order gets filled as we are placing a new one and the bid id doesn't match up.
-        self.asks = set()                                               # we need these in case an order gets filled as we are placing a new one and the bid id doesn't match up.
-
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
 
     def make_a_market(self, bid, bid_volume, ask, ask_volume) -> None:
@@ -86,10 +83,8 @@ class AutoTrader(BaseAutoTrader):
             
             # cancel the previous ask and bids we had.
             if self.our_spread_bid_id != 0:
-                self.bids.add(self.our_spread_bid_id)
                 self.send_cancel_order(self.our_spread_bid_id)
             if self.our_spread_ask_id != 0:
-                self.asks.add(self.our_spread_ask_id)
                 self.send_cancel_order(self.our_spread_ask_id)
 
             # record info about the new ask and bid.
@@ -109,7 +104,6 @@ class AutoTrader(BaseAutoTrader):
             
             # cancel bid because we are about to place a new bid.
             if self.our_spread_bid_id != 0:
-                self.bids.add(self.our_spread_bid_id)
                 self.send_cancel_order(self.our_spread_bid_id)
             
             # record new info about the thang.
@@ -126,7 +120,6 @@ class AutoTrader(BaseAutoTrader):
 
             # cancel ask order, about to place a new one.
             if self.our_spread_ask_id != 0:
-                self.asks.add(self.our_spread_ask_id)
                 self.send_cancel_order(self.our_spread_ask_id)
             
             # record new info about the thang.
@@ -150,22 +143,22 @@ class AutoTrader(BaseAutoTrader):
         amt_to_hedge = self.position + self.hedged_position
         next_id = next(self.order_ids)
         if self.position < 0:
-            if amt_to_hedge > 0:
+            if abs(self.position) < self.hedged_position:
                 self.logger.critical(f'TRYING TO SELL {amt_to_hedge} HEDGE!')
                 # sell hedge.
                 self.hedge_ask_id = next_id
-                self.send_hedge_order(next_id, Side.ASK, MIN_BID_NEAREST_TICK, amt_to_hedge)
+                self.send_hedge_order(next_id, Side.ASK, MIN_BID_NEAREST_TICK, abs(amt_to_hedge))
             else:
                 self.logger.critical(f'TRYING TO BUY {amt_to_hedge} HEDGE!')
                 # buy hedge.
                 self.hedge_bid_id = next_id
                 self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(amt_to_hedge))
         else:
-            if amt_to_hedge > 0:
+            if self.position < abs(self.hedged_position):
                 self.logger.critical(f'TRYING TO BUY {amt_to_hedge} HEDGE!')
                 #buy hedge.
                 self.hedge_bid_id = next_id
-                self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, amt_to_hedge)
+                self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(amt_to_hedge))
             else:
                 self.logger.critical(f'TRYING TO SELL {amt_to_hedge} HEDGE!')
                 # sell hedge.
@@ -282,15 +275,7 @@ class AutoTrader(BaseAutoTrader):
         elif client_order_id == self.our_spread_ask_id:
             self.position -= volume
         else:
-            self.logger.critical('ORDER WAS FILLED BEFORE CANCELLING IT WORKED...')
-            if client_order_id in self.bids:
-                self.position += volume
-                self.bids.discard(client_order_id)
-            elif client_order_id in self.asks:
-                self.position -= volume
-                self.asks.discard(client_order_id)
-            else:
-                self.logger.critical(f'\n\n\nTHIS SHOULDNT HAPPEN BRUH\n\n\n')
+            self.logger.critical(f'\n\n\nTHIS SHOULDNT HAPPEN BRUH FUCK THE POSITION AINT FUCKING UPDATING\n\n\n')
                 
 
     def on_order_status_message(self, client_order_id: int, fill_volume: int, remaining_volume: int,
@@ -327,19 +312,22 @@ class AutoTrader(BaseAutoTrader):
         else:
             # partially filled, fill volume and remaining volume both above 0.
             # cancel the rest of this bad boy, place a new order of LOT SIZE at this price.
+
+            # I COMMENTED THIS OUT CUZ THERE WERE ERRORS ARISING WHEN WE STARTED DEALING WITH PARTIALLY FILLED ONES...
             
-            if client_order_id == self.our_spread_bid_id:
-                self.bids.add(client_order_id)
-                self.send_cancel_order(client_order_id)
-                self.position += fill_volume
-                self.our_spread_bid_id = 0
-                self.make_a_market(self.our_spread_bid_price, LOT_SIZE, 0, 0) # bid order.
-            elif client_order_id == self.our_spread_ask_id:
-                self.asks.add(client_order_id)
-                self.send_cancel_order(client_order_id)
-                self.position -= fill_volume
-                self.our_spread_ask_id = 0
-                self.make_a_market(0, 0, self.our_spread_ask_price, LOT_SIZE) # ask order.
+            # if client_order_id == self.our_spread_bid_id:
+            #     self.bids.add(client_order_id)
+            #     self.send_cancel_order(client_order_id)
+            #     self.position += fill_volume
+            #     self.our_spread_bid_id = 0
+            #     self.make_a_market(self.our_spread_bid_price, LOT_SIZE, 0, 0) # bid order.
+            # elif client_order_id == self.our_spread_ask_id:
+            #     self.asks.add(client_order_id)
+            #     self.send_cancel_order(client_order_id)
+            #     self.position -= fill_volume
+            #     self.our_spread_ask_id = 0
+            #     self.make_a_market(0, 0, self.our_spread_ask_price, LOT_SIZE) # ask order.
+            pass
             
 
     def on_trade_ticks_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
