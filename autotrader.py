@@ -31,6 +31,9 @@ TICK_SIZE_IN_CENTS = 100
 MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 
+BPS_ROUND_DOWN = 0.0001
+BPS_ROUND_UP = 0.0002
+
 UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
 MAX_TIME_UNHEDGED = 58  # time limit in seconds.
 LAMBDA_ONE = 0.5    # our first constant, by which we decide whether order imbalance is up or down or flat.
@@ -48,7 +51,9 @@ class AutoTrader(BaseAutoTrader):
         self.our_spread_bid_id = self.our_spread_bid_price = 0          # state of the bid of our interval.
         self.our_spread_ask_id = self.our_spread_ask_price = 0          # state of the ask of our interval.
 
-        self.hedge_bid_id = self.hedge_ask_id = 0                       # state of the hedge order we placed so we can adjust hedged position in the correct direction.
+        self.hedge_bid_id = self.hedge_ask_id = 0                       # state of the hedge order we placed so we can adjust 
+                                                                        # hedged position in the correct direction.
+        
         self.last_fak_id = self.last_fak_price = 0                      # state of the last fill and kill we sent.
         
         self.position = self.hedged_position = 0                        # state of each position's size.
@@ -245,12 +250,12 @@ class AutoTrader(BaseAutoTrader):
                 new_ask = p_t + (r_t)*p_t
             elif lambda_imbalance < -LAMBDA_ONE:
                 # sell order imbalance.
-                new_bid = p_t - (r_t + 0.0002)*p_t
-                new_ask = p_t + (r_t + 0.0001)*p_t
+                new_bid = p_t - (r_t + BPS_ROUND_UP)*p_t
+                new_ask = p_t + (r_t + BPS_ROUND_DOWN)*p_t
             elif lambda_imbalance > LAMBDA_ONE:
                 # buy order imbalance.
-                new_bid = p_t - (r_t + 0.0001)*p_t
-                new_ask = p_t + (r_t + 0.0002)*p_t
+                new_bid = p_t - (r_t + BPS_ROUND_DOWN)*p_t
+                new_ask = p_t + (r_t + BPS_ROUND_UP)*p_t
             else:
                 self.logger.critical(f'BRANCH SHOULD NEVER BE EXECUTED!')
 
@@ -348,18 +353,19 @@ class AutoTrader(BaseAutoTrader):
 
         if ask_prices[0] == 0 and bid_prices[0] == 0:
             return # means nothing was traded.
-        
-        # check sequence is in order.
-        if sequence_number < self.last_ticks_sequence:
-            return
-        self.last_ticks_sequence = sequence_number
+        # INSTRUMENT MUST BE ETF!!!
+        if instrument == Instrument.ETF:
+            # check sequence is in order.
+            if sequence_number < self.last_ticks_sequence:
+                return
+            self.last_ticks_sequence = sequence_number
 
-        # compute weighted average.
-        numer = denom = total = 0
-        for vol, price in zip(bid_volumes+ask_volumes, bid_prices+ask_prices):
-            numer += vol*price
-            denom += vol
-        
-        # sliding window to keep last two weighted averages.
-        self.p_prime_0 = self.p_prime_1
-        self.p_prime_1 = numer / denom
+            # compute weighted average.
+            numer = denom = 0
+            for vol, price in zip(bid_volumes+ask_volumes, bid_prices+ask_prices):
+                numer += vol*price
+                denom += vol
+            
+            # sliding window to keep last two weighted averages.
+            self.p_prime_0 = self.p_prime_1
+            self.p_prime_1 = numer / denom

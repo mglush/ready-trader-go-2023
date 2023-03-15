@@ -1,3 +1,4 @@
+.DS_Store
 __pycache__
 .ipynb_checkpoints
 
@@ -7,12 +8,12 @@ analysis/
 
 pyvenv.cfg
 provided_autotrader*.*
-*.log
-temp.txt
 
+autotrader.log
+exchange.log
 match_events.csv
 score_board.csv
-
-.DS_Store
+info.dat
 
 volume_signals.txt
+temp.txt
