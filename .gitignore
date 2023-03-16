@@ -4,7 +4,6 @@ __pycache__
 
 bin/
 lib/
-analysis/
 etc/
 share/
 
@@ -19,6 +18,5 @@ info.dat
 
 volume_signals.txt
 temp.txt
-temp.ipynb
 dumbass*
 retard.*
