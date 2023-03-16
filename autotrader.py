@@ -35,7 +35,7 @@ TICK_SIZE_IN_CENTS = 100
 MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 
-BPS_ROUND_FLAT = 0
+BPS_ROUND_FLAT = 0.0001
 BPS_ROUND_DOWN = 0.0002
 BPS_ROUND_UP = 0.001 # ive gotten better results (alone and against others) by using a higher BPS or ROUND UP.
 
@@ -533,24 +533,6 @@ class AutoTrader(BaseAutoTrader):
             # compute signal
             self.previous_volume_signal = self.latest_volume_signal
             self.latest_volume_signal = self.compute_volume_signal(ask_vol=sum_ask, bid_vol=sum_bid)
-
-
-            # i wanna try this idea tomorrow when i have time. that is to unload whenver we have a position and its profitable to sell (lock in the unrealized P/L).
-            # because during many simulations we sit there wit our dicks in our hand when we should unload position at profit and realize some P/L.
-
-            # if self.previous_volume_signal / self.latest_volume_signal > 2:
-            #     # check if we can unload position for a profit!
-            #     if self.position > 0 and (self.money_in / self.position) < bid_prices[0] and len(self.fak_orders) == 0:
-            #         self.logger.critical(f'CALCULATED AVG PRICE OS POSITION IS {self.money_in / self.position}')
-            #         next_id = next(self.order_ids)
-            #         self.fak_orders[next_id] = (Side.ASK, bid_prices[0], abs(self.position))
-            #         self.send_insert_order(next_id, Side.ASK, bid_prices[0], abs(self.position), Lifespan.FILL_AND_KILL)
-            #     elif self.position < 0 and (self.money_in / self.position) > ask_prices[0] and len(self.fak_orders) == 0:
-            #         self.logger.critical(f'CALCULATED AVG PRICE OS POSITION IS {self.money_in / self.position}')
-            #         next_id = next(self.order_ids)
-            #         self.fak_orders[next_id] = (Side.BID, ask_prices[0], abs(self.position))
-            #         self.send_insert_order(next_id, Side.BID, ask_prices[0], abs(self.position), Lifespan.FILL_AND_KILL)
-
 
             # compute weighted average.
             numer = 0
