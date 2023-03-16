@@ -5,6 +5,8 @@ __pycache__
 bin/
 lib/
 analysis/
+etc/
+share/
 
 pyvenv.cfg
 provided_autotrader*.*
@@ -19,3 +21,4 @@ volume_signals.txt
 temp.txt
 temp.ipynb
 dumbass*
+retard.*
