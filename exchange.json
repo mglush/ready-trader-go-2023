@@ -5,7 +5,7 @@
     "MarketOpenDelay": 5.0,
     "MatchEventsFile": "match_events.csv",
     "ScoreBoardFile": "score_board.csv",
-    "Speed": 1.0,
+    "Speed": 2.0,
     "TickInterval": 0.25
   },
   "Execution": {
@@ -37,8 +37,6 @@
   },
   "Traders": {
     "LiquidBear": "glush",
-    "ContenderPY": "secret",
-    "ContenderCPP": "secret",
-    "GlushOriginal": "glush"
+    "retard": "retard"
   }
 }

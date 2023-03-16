@@ -37,6 +37,9 @@ BPS_ROUND_UP = 0.0002
 UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
 MAX_TIME_UNHEDGED = 58  # time limit in seconds.
 LAMBDA_ONE = 0.5    # our first constant, by which we decide whether order imbalance is up or down or flat.
+BETA = 0.25         # our second constant, by which we decide whether we like a potential FAK order
+ATV_WIN_SIZE = 20
+LAMBDA_TWO = 1.5
 
 class AutoTrader(BaseAutoTrader):
     '''
@@ -54,6 +57,8 @@ class AutoTrader(BaseAutoTrader):
         self.real_ask = [0, 0, 0] # (id, price, volume) for ask thats out there
 
         self.theo_orders = dict() # id -> (side, price, volume)
+        self.traded_volumes = list() # n-most recent traded volumes from on_ticks_update_message for ATV in volume indicator
+        self.latest_volume_signal = 0
 
         self.hedge_bid_id = self.hedge_ask_id = 0                       # state of the hedge order we placed so we can adjust 
                                                                         # hedged position in the correct direction.
@@ -62,12 +67,24 @@ class AutoTrader(BaseAutoTrader):
         
         self.position = self.hedged_position = 0                        # state of each position's size.
         self.p_prime_0 = self.p_prime_1 = 0                             # weighted averages of last tick update.
-        self.last_ticks_sequence = self.last_order_book_sequence = -1   # last message we processed (one for ticks one for order book).
+        self.last_ticks_sequence_etf = self.last_order_book_sequence_etf = -1   # last message we processed (one for ticks one for order book). ETF
+        self.last_ticks_sequence_fut = self.last_order_book_sequence_fut = -1   # last message we processed (one for ticks one for order book). FUT
 
         self.we_are_hedged = True                                       # flag to set for when we are set vs not.
         self.time_of_last_imbalance = self.event_loop.time()            # used to hedge as a last resort before the minute runs out.
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
+    def compute_beta(self, order_rate=None):
+        return BETA
+    
+    def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
+        '''
+        Compute volume pressure magnitude and side based on newest ticks update message.
+        If positive, asks are getting knocked out and price should be rising.
+        If negative, bids are getting cleared and price should be falling. We could reverse this.
+        Returns: the indicator as a float.
+        '''
+        return (bid_vol - ask_vol) / (sum(self.traded_volumes) / len(self.traded_volumes))
 
     def make_a_market(self, bid, bid_volume, ask, ask_volume) -> None:
         '''
@@ -217,33 +234,56 @@ class AutoTrader(BaseAutoTrader):
         price levels.
         """
         # check if we are hedged! duh.
-        if self.we_are_hedged:
-            if abs(self.position + self.hedged_position) > UNHEDGED_LOTS_LIMIT:
-                # start da timer!
-                self.time_of_last_imbalance = self.event_loop.time()
-                self.we_are_hedged = False
-            else:
-                self.we_are_hedged = True # we are hedged and chillen.
+        
+        if abs(self.position + self.hedged_position) > UNHEDGED_LOTS_LIMIT:
+            # start da timer!
+            self.time_of_last_imbalance = self.event_loop.time()
+            self.we_are_hedged = False
         else:
-            # check how long it has been, hedge if absolutely necessary.
+            self.we_are_hedged = True
+        
+        if not self.we_are_hedged:
             if self.event_loop.time() - self.time_of_last_imbalance > MAX_TIME_UNHEDGED:
+                # check how long it has been, hedge if absolutely necessary.
                 # need to hedge the difference.
                 self.hedge()
+            else:
+                if self.latest_volume_signal > LAMBDA_TWO:
+                    # price moving up
+                    # NEGATIVE POSITION = BUYBUYUBUYBUYUBUYBUYUBY
+                    #   EITHER FUTURES OR ETF WHICHEVER IS CHEAPER TO DO
+                    #   SELL ON THE WAY UP
+                    pass
+                elif self.latest_volume_signal < -LAMBDA_TWO:
+                    # price moving down
+                    # POSITIVE POSITION = SELL SELL SELL
+                    #   EITHER FUTURES OR ETF ACCORDINGLY
+                    #   BUY ON THE WAY DOWN
+                    pass
+                else:
+                    self.logger.critical('omgwtfbbq')
+
 
         # trade!
         if bid_prices[0] == 0 or ask_prices[0] == 0 or self.p_prime_0 == 0 or self.p_prime_1 == 0:
             # we got nothing in this thang. 
             return
-        if sequence_number < self.last_order_book_sequence:
-            # check sequence is in order.
-            return
         
-        self.last_order_book_sequence = sequence_number
         if instrument == Instrument.FUTURE:
+            if sequence_number < self.last_order_book_sequence_fut:
+                # check sequence is in order.
+                return
+            self.last_order_book_sequence_fut = sequence_number
+            
             self.best_futures_bid, self.best_futures_ask = bid_prices[0], ask_prices[0]
             #
 
         elif instrument == Instrument.ETF:
+            if sequence_number < self.last_order_book_sequence_etf:
+                # check sequence is in order.
+                return
+            self.last_order_book_sequence_etf = sequence_number
+            
             # calculate p_t, based on the midpoint of the bid and ask we got just now.
             p_t = (ask_prices[0] + bid_prices[0]) / 2
 
@@ -281,13 +321,30 @@ class AutoTrader(BaseAutoTrader):
             if new_ask < ask_prices[0]:
                 new_ask = ask_prices[0]
             
-            # we have our bounds, try to hunt some orders first
-            if bid_volumes[0] <= LOT_SIZE:
-                if bid_prices[0] > p_t:
-                    pass
-            if ask_volumes[0] <= LOT_SIZE:
-                if ask_prices[0] < p_t:
-                    pass
+            # # we have our bounds, try to hunt some orders first
+            # if bid_volumes[0] <= LOT_SIZE:
+            #     if bid_prices[0] > p_t:
+            #         rel_dist = (bid_prices[0] - p_t) / new_bid
+            #         rel_loss = ((self.best_futures_ask - bid_prices[0]) / new_bid)
+            #         beta = self.compute_beta()
+            #         if rel_dist - rel_loss >= beta:
+            #             # do stuff
+            #             pass
+            #         else:
+            #             self.logger.critical(f'Determined their BID order not worth.')
+            #         self.logger.critical(f'Dist: {rel_dist}, loss: {rel_loss}, beta: {beta}.')
+                        
+            # if ask_volumes[0] <= LOT_SIZE:
+            #     if ask_prices[0] < p_t:
+            #         rel_dist = abs((ask_prices[0] - p_t) / new_ask)
+            #         rel_loss = ((ask_prices[0] - self.best_futures_bid) / new_ask)
+            #         beta = self.compute_beta()
+            #         if rel_dist - rel_loss >= beta:
+            #             # do stuff
+            #             pass
+            #         else:
+            #             self.logger.critical(f'Determined their ASK order not worth.')
+            #         self.logger.critical(f'Dist: {rel_dist}, loss: {rel_loss}, beta: {beta}.')
 
             # make the new market!
             self.make_a_market(new_bid, LOT_SIZE, new_ask, LOT_SIZE)
@@ -406,19 +463,30 @@ class AutoTrader(BaseAutoTrader):
 
         if ask_prices[0] == 0 and bid_prices[0] == 0:
             return # means nothing was traded.
+        
         # INSTRUMENT MUST BE ETF!!!
         if instrument == Instrument.ETF:
             # check sequence is in order.
-            if sequence_number < self.last_ticks_sequence:
+            if sequence_number < self.last_ticks_sequence_etf:
                 return
-            self.last_ticks_sequence = sequence_number
+            self.last_ticks_sequence_etf = sequence_number
 
+            sum_ask, sum_bid = sum(ask_volumes), sum(bid_volumes)
+
+            # add traded volume to container list for average traded volume computation.
+            if len(self.traded_volumes) == ATV_WIN_SIZE:
+                self.traded_volumes.pop(0)
+            self.traded_volumes.append(sum_ask + sum_bid)
+
+            # compute signal
+            self.latest_volume_signal = self.compute_volume_signal(ask_vol=sum_ask, bid_vol=sum_bid)
+            self.logger.info(f'VOLUME PRESSURE SIGNAL IS: {self.latest_volume_signal}')
+            
             # compute weighted average.
-            numer = denom = 0
+            numer = 0
             for vol, price in zip(bid_volumes+ask_volumes, bid_prices+ask_prices):
                 numer += vol*price
-                denom += vol
             
             # sliding window to keep last two weighted averages.
             self.p_prime_0 = self.p_prime_1
-            self.p_prime_1 = numer / denom
+            self.p_prime_1 = numer / (sum_ask+sum_bid)
