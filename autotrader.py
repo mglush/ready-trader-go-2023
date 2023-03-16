@@ -77,7 +77,7 @@ class AutoTrader(BaseAutoTrader):
         self.fak_orders = dict()                                                # id -> (side, price, volume)
         self.theo_orders = dict()                                               # id -> (side, price, volume)
         self.traded_volumes = list()                                            # n-most recent traded volumes from on_ticks_update_message for ATV in volume indicator
-        self.latest_volume_signal = self.previous_volume_signal = 0             # volume signal baby.
+        self.latest_volume_signal = self.previous_volume_signal = -1             # volume signal baby.
 
         self.hedge_bid_id = self.hedge_ask_id = 0                               # state of the hedge order we placed so we can adjust 
                                                                                 # hedged position in the correct direction.
@@ -93,7 +93,7 @@ class AutoTrader(BaseAutoTrader):
         self.time_of_last_imbalance = self.event_loop.time()                    # used to hedge as a last resort before the minute runs out.
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
-    def sigmoid(x: int | float) -> float:
+    def sigmoid(self, x) -> float:
         return 1 / (1 + np.exp(-x))
     
     def get_avg_fill_percentage(self) -> dict:
@@ -290,7 +290,7 @@ class AutoTrader(BaseAutoTrader):
             if self.event_loop.time() - self.time_of_last_imbalance > MAX_TIME_UNHEDGED:
                 self.hedge() # hedge only if absolutely necessary!
             else:
-                if self.latest_volume_signal < LAMBDA_TWO:
+                if self.latest_volume_signal != -1 and self.latest_volume_signal < LAMBDA_TWO:
                     # price moving up
                     # NEGATIVE POSITION = BUYBUYUBUYBUYUBUYBUYUBY
                     #   EITHER FUTURES OR ETF WHICHEVER IS CHEAPER TO DO
@@ -309,7 +309,7 @@ class AutoTrader(BaseAutoTrader):
                         # self.logger.critical(f'UP MOVE INCOMING BUT WE ABSOLUTELY CHILLEN WIT POSITION {self.position} HEDGE {self.hedged_position}')
 
 
-                elif self.latest_volume_signal > 1-LAMBDA_TWO:
+                elif self.latest_volume_signal != -1 and self.latest_volume_signal > 1-LAMBDA_TWO:
                     # price moving down
                     # POSITIVE POSITION = SELL SELL SELL
                     #   EITHER FUTURES OR ETF ACCORDINGLY
@@ -576,8 +576,11 @@ class AutoTrader(BaseAutoTrader):
             self.traded_volumes.append(sum_ask + sum_bid)
 
             # compute signal
-            self.previous_volume_signal = self.latest_volume_signal
-            self.latest_volume_signal = self.compute_volume_signal(ask_vol=sum_ask, bid_vol=sum_bid)
+            if len(self.traded_volumes) == ATV_WIN_SIZE:
+                if self.latest_volume_signal != -1:
+                    self.previous_volume_signal = self.latest_volume_signal
+                
+                self.latest_volume_signal = self.compute_volume_signal(ask_vol=sum_ask, bid_vol=sum_bid)
 
             # compute weighted average.
             numer = 0
