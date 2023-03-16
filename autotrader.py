@@ -18,6 +18,7 @@
 import asyncio
 from http import client
 import itertools
+from re import L
 from textwrap import fill
 from tkinter.tix import MAX
 from turtle import pos, position
@@ -35,7 +36,7 @@ TICK_SIZE_IN_CENTS = 100
 MIN_BID_NEAREST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 
-BPS_ROUND_FLAT = 0.0001
+BPS_ROUND_FLAT = 0.0000
 BPS_ROUND_DOWN = 0.0002
 BPS_ROUND_UP = 0.001 # ive gotten better results (alone and against others) by using a higher BPS or ROUND UP.
 
@@ -46,7 +47,8 @@ BETA = 0.25         # our second constant, by which we decide whether we like a 
 ATV_WIN_SIZE = 20
 LAMBDA_TWO = 1.5
 
-MIN_SPREAD_WE_TRADE = 2 * TICK_SIZE_IN_CENTS
+FILL_RATE_WINDOW_SIZE = 50
+DESIRED_FILL_RATE = 0.85
 
 class AutoTrader(BaseAutoTrader):
     '''
@@ -58,6 +60,11 @@ class AutoTrader(BaseAutoTrader):
 
         super().__init__(loop, team_name, secret)
         self.order_ids = itertools.count(1)
+
+        self.adj_bid_up = self.adj_ask_up = 0
+
+        self.bid_fill_amounts = list()
+        self.ask_fill_amounts = list()
 
         self.money_in = 0
 
@@ -85,6 +92,17 @@ class AutoTrader(BaseAutoTrader):
         self.time_of_last_imbalance = self.event_loop.time()                    # used to hedge as a last resort before the minute runs out.
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
+
+    def get_avg_fill_percentage(self) -> dict:
+        '''
+        Returns average fill proportion of our orders for the bid and ask side, as a dict.
+        '''
+        bid_res = 0 if len(self.bid_fill_amounts) == 0 else ((sum(self.bid_fill_amounts[-FILL_RATE_WINDOW_SIZE:]) / len(self.bid_fill_amounts[-FILL_RATE_WINDOW_SIZE:])) / LOT_SIZE)
+        ask_res = 0 if len(self.ask_fill_amounts) == 0 else ((sum(self.ask_fill_amounts[-FILL_RATE_WINDOW_SIZE:]) / len(self.ask_fill_amounts[-FILL_RATE_WINDOW_SIZE:])) / LOT_SIZE)
+        return {
+            'bid' : bid_res,
+            'ask' : ask_res
+        }
 
     def compute_beta(self, order_rate=None):
         return BETA
@@ -163,7 +181,7 @@ class AutoTrader(BaseAutoTrader):
             # place dat order baby.
             self.send_insert_order(new_ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
         else:
-            self.logger.info(f'CANNOT PLACE PAIR OF ORDERS AT THIS MOMENT, RISK PARAMETERS DO NOT ALLOW FOR THIS.')
+            pass
 
     def hedge(self) -> None:
         '''
@@ -273,11 +291,11 @@ class AutoTrader(BaseAutoTrader):
                     # NEGATIVE POSITION = BUYBUYUBUYBUYUBUYBUYUBY
                     #   EITHER FUTURES OR ETF WHICHEVER IS CHEAPER TO DO
                     #   SELL ON THE WAY UP
-                    if self.position < 0:
-                        # buy etf.
-                        if self.real_ask[0] != 0:
-                            self.send_cancel_order(self.real_ask[0])
-                        self.market_move_coming(Side.BID, ask_prices[-1])
+                    # if self.position < 0:
+                    #     # buy etf.
+                    #     if self.real_ask[0] != 0:
+                    #         self.send_cancel_order(self.real_ask[0])
+                    #     self.market_move_coming(Side.BID, ask_prices[-1])
                     if self.hedged_position < 0 and self.hedge_bid_id == 0:
                         # buy hedge
                         # self.logger.critical(f'OFFSETTING POSITION BY GETTING RID OF HEDGE')
@@ -292,10 +310,10 @@ class AutoTrader(BaseAutoTrader):
                     # POSITIVE POSITION = SELL SELL SELL
                     #   EITHER FUTURES OR ETF ACCORDINGLY
                     #   BUY ON THE WAY DOWN
-                    if self.position > 0:
-                        if self.real_bid[0] != 0:
-                            self.send_cancel_order(self.real_bid[0])
-                        self.market_move_coming(Side.ASK, bid_prices[-1])
+                    # if self.position > 0:
+                    #     if self.real_bid[0] != 0:
+                    #         self.send_cancel_order(self.real_bid[0])
+                    #     self.market_move_coming(Side.ASK, bid_prices[-1])
                     if self.hedged_position > 0  and self.hedge_ask_id == 0:
                         # sell hedge
                         # self.logger.critical(f'OFFSETTING POSITION BY GETTING RID OF HEDGE')
@@ -318,9 +336,7 @@ class AutoTrader(BaseAutoTrader):
                 # check sequence is in order.
                 return
             self.last_order_book_sequence_fut = sequence_number
-            
             self.best_futures_bid, self.best_futures_ask = bid_prices[0], ask_prices[0]
-            #
 
         elif instrument == Instrument.ETF:
             if sequence_number < self.last_order_book_sequence_etf:
@@ -332,24 +348,41 @@ class AutoTrader(BaseAutoTrader):
             p_t = (ask_prices[0] + bid_prices[0]) / 2
 
             # calculate r_t based on our p_prime values collected in order ticks.
-            r_t = abs((self.p_prime_0 - self.p_prime_1) / self.p_prime_0)
+            r_t = abs((self.p_prime_0 - self.p_prime_1) / self.p_prime_0) + BPS_ROUND_FLAT
 
             # calculate volume imbalance to see whether we need to adjust spread.
             lambda_imbalance = (sum(bid_volumes) - sum(ask_volumes)) / sum(bid_volumes + ask_volumes)
 
+            # help print to pinpoint parameters.
+            # fill_rate = self.get_avg_fill_percentage()
+            # fill_bid = fill_rate['bid']
+            # fill_ask = fill_rate['ask']
+
+            # if fill_bid > DESIRED_FILL_RATE:
+            #     self.adj_bid_up += 0.00001
+            # else:
+            #     self.adj_bid_up -= 0.00001
+            # if fill_ask > DESIRED_FILL_RATE:
+            #     self.adj_ask_up += 0.00001
+            # else:
+            #     self.adj_ask_up -= 0.00001
+            
+            # self.adj_ask_up = min(self.adj_ask_up, 0.001)
+            # self.adj_bid_up = min(self.adj_bid_up, 0.001)
+
             # check if we need to adjust spread based on lambda imbalance.
             if -LAMBDA_ONE < lambda_imbalance and lambda_imbalance < LAMBDA_ONE:
                 # the regular case, no spread adjustment.
-                new_bid = p_t - (r_t + BPS_ROUND_FLAT)*p_t
-                new_ask = p_t + (r_t + BPS_ROUND_FLAT)*p_t
+                new_bid = p_t - (r_t)*p_t
+                new_ask = p_t + (r_t)*p_t
             elif lambda_imbalance < -LAMBDA_ONE:
                 # sell order imbalance.
-                new_bid = p_t - (r_t + BPS_ROUND_UP)*p_t
+                new_bid = p_t - (r_t + self.adj_bid_up + BPS_ROUND_UP)*p_t
                 new_ask = p_t + (r_t + BPS_ROUND_DOWN)*p_t
             elif lambda_imbalance > LAMBDA_ONE:
                 # buy order imbalance.
                 new_bid = p_t - (r_t + BPS_ROUND_DOWN)*p_t
-                new_ask = p_t + (r_t + BPS_ROUND_UP)*p_t
+                new_ask = p_t + (r_t + self.adj_ask_up + BPS_ROUND_UP)*p_t
             else:
                 self.logger.critical(f'BRANCH SHOULD NEVER BE EXECUTED!')
 
@@ -404,6 +437,7 @@ class AutoTrader(BaseAutoTrader):
             self.real_bid[2] -= volume
             # self.money_in += price*volume
             if self.real_bid[2] <= 0:
+                self.bid_fill_amounts.append(1)
                 # this is a full fill
                 self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
         
@@ -412,6 +446,7 @@ class AutoTrader(BaseAutoTrader):
             self.real_ask[2] -= volume
             # self.money_in -= price*volume
             if self.real_ask[2] <= 0:
+                self.ask_fill_amounts.append(1)
                 self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
         
         elif client_order_id in self.theo_orders.keys():
@@ -424,6 +459,7 @@ class AutoTrader(BaseAutoTrader):
                     self.real_bid = [client_order_id, self.theo_orders[client_order_id][1], vol_rem]
                 else:
                     # order fully filled, not exists anymore
+                    self.bid_fill_amounts.append(1)
                     self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
             
             elif self.theo_orders[client_order_id][0] == Side.ASK:
@@ -435,6 +471,7 @@ class AutoTrader(BaseAutoTrader):
                     self.real_ask = [client_order_id, self.theo_orders[client_order_id][1], vol_rem]
                 else:
                     # order fully filled, not exists anymore
+                    self.ask_fill_amounts.append(1)
                     self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
 
             else:
@@ -475,14 +512,16 @@ class AutoTrader(BaseAutoTrader):
             if client_order_id in self.theo_orders.keys():
                 if self.theo_orders[client_order_id][0] == Side.BID:
                     self.real_bid = [client_order_id, self.theo_orders[client_order_id][1], self.theo_orders[client_order_id][2]]
-                    del self.theo_orders[client_order_id]
+                    # del self.theo_orders[client_order_id]
             
                 elif self.theo_orders[client_order_id][0] == Side.ASK:
                     self.real_ask = [client_order_id, self.theo_orders[client_order_id][1], self.theo_orders[client_order_id][2]]
-                    del self.theo_orders[client_order_id]
+                    # del self.theo_orders[client_order_id]
             
                 else:
                     self.logger.critical('SIDE NOT EQUAL TO ASK OR BID IN DICT PART 2???')
+            # elif client_order_id in self.fak_orders.keys():
+            #     del self.fak_orders[client_order_id]
             else:
                 pass # self.logger.critical(f'Order {client_order_id} was instantiated by make_a_market.')
 
@@ -490,8 +529,10 @@ class AutoTrader(BaseAutoTrader):
             # order was cancelled or order was filled. order filled function takes care of the latter case.
             # this part takes care of the former, case: cancelled order.
             if client_order_id == self.real_bid[0]:
+                self.bid_fill_amounts.append(self.real_bid[2])
                 self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
             elif client_order_id == self.real_ask[0]:
+                self.ask_fill_amounts.append(self.real_ask[2])
                 self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
             else:
                 pass # self.logger.critical('Remaining volume is 0 but order not exists. This means on_order_filled_message took care of it.')

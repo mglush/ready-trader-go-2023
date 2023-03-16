@@ -5,7 +5,7 @@
     "MarketOpenDelay": 5.0,
     "MatchEventsFile": "match_events.csv",
     "ScoreBoardFile": "score_board.csv",
-    "Speed": 15.0,
+    "Speed": 5.0,
     "TickInterval": 0.25
   },
   "Execution": {
@@ -36,7 +36,13 @@
     "PositionLimit": 100
   },
   "Traders": {
-    "LiquidBear": "glush",
-    "retard": "retard"
+    "BaseModel1": "glush",
+    "Model2": "secret",
+    "Model3": "secret",
+    "Model4": "secret",
+    "TraderFour": "secret",
+    "TraderFive": "secret",
+    "TraderSix": "secret",
+    "TraderSeven": "secret"
   }
 }
