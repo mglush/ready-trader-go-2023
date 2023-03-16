@@ -44,8 +44,9 @@ UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
 MAX_TIME_UNHEDGED = 59  # time limit in seconds.
 LAMBDA_ONE = 0.5      # our first constant, by which we decide whether order imbalance is up or down or flat.
 BETA = 0.25         # our second constant, by which we decide whether we like a potential FAK order
-ATV_WIN_SIZE = 20
-LAMBDA_TWO = 1.5
+
+LAMBDA_TWO = 0.1
+ATV_WIN_SIZE = 4
 
 FILL_RATE_WINDOW_SIZE = 50
 DESIRED_FILL_RATE = 0.85
@@ -92,7 +93,9 @@ class AutoTrader(BaseAutoTrader):
         self.time_of_last_imbalance = self.event_loop.time()                    # used to hedge as a last resort before the minute runs out.
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
-
+    def sigmoid(x: int | float) -> float:
+        return 1 / (1 + np.exp(-x))
+    
     def get_avg_fill_percentage(self) -> dict:
         '''
         Returns average fill proportion of our orders for the bid and ask side, as a dict.
@@ -110,11 +113,12 @@ class AutoTrader(BaseAutoTrader):
     def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
         '''
         Compute volume pressure magnitude and side based on newest ticks update message.
-        If positive, asks are getting knocked out and price should be rising.
-        If negative, bids are getting cleared and price should be falling. We could reverse this.
+        If close to 0 -> asks are traded -> fat pump incoming
+        If close to 1 -> bids are traded -> fat drop incoming
         Returns: the indicator as a float.
         '''
-        return (bid_vol - ask_vol) / (sum(self.traded_volumes) / len(self.traded_volumes))
+        val = (bid_vol - ask_vol) / (sum(self.traded_volumes) / len(self.traded_volumes))
+        return self.sigmoid(val)
 
     def make_a_market(self, bid, bid_volume, ask, ask_volume) -> None:
         '''
@@ -286,7 +290,7 @@ class AutoTrader(BaseAutoTrader):
             if self.event_loop.time() - self.time_of_last_imbalance > MAX_TIME_UNHEDGED:
                 self.hedge() # hedge only if absolutely necessary!
             else:
-                if self.latest_volume_signal > LAMBDA_TWO:
+                if self.latest_volume_signal < LAMBDA_TWO:
                     # price moving up
                     # NEGATIVE POSITION = BUYBUYUBUYBUYUBUYBUYUBY
                     #   EITHER FUTURES OR ETF WHICHEVER IS CHEAPER TO DO
@@ -305,7 +309,7 @@ class AutoTrader(BaseAutoTrader):
                         # self.logger.critical(f'UP MOVE INCOMING BUT WE ABSOLUTELY CHILLEN WIT POSITION {self.position} HEDGE {self.hedged_position}')
 
 
-                elif self.latest_volume_signal < -LAMBDA_TWO:
+                elif self.latest_volume_signal > 1-LAMBDA_TWO:
                     # price moving down
                     # POSITIVE POSITION = SELL SELL SELL
                     #   EITHER FUTURES OR ETF ACCORDINGLY

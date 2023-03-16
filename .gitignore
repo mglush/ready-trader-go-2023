@@ -8,21 +8,24 @@ etc/
 share/
 
 pyvenv.cfg
-provided_autotrader*.*
 
-autotrader.log
+provided_autotrader*
+autotrader*
+!autotrader.py
+!autotrader.json
+
+dummy*
+retard*
+dumbass*
+
 exchange.log
 match_events.csv
 score_board.csv
 info.dat
 
+market_data_intersected.csv
+market_data_merged.csv
+
 volume_signals.txt
 temp.txt
-dumbass*
-retard.*
-
-provided*
-
-interval_comparison.csv
-round_values.csv
-fill_rates.csv
+temp.ipynb
