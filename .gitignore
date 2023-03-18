@@ -4,16 +4,27 @@ __pycache__
 
 bin/
 lib/
-analysis/
+etc/
+share/
 
 pyvenv.cfg
 provided_autotrader*.*
 
 autotrader.log
 exchange.log
+market_data_merged.csv
 match_events.csv
 score_board.csv
 info.dat
+SCORE*
+LOG*
 
 volume_signals.txt
 temp.txt
+temp.ipynb
+
+dumbass*
+dummy*
+retard*
+contender*
+provided*
