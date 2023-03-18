@@ -40,6 +40,9 @@
     "Model2": "secret",
     "Model3": "secret",
     "Model4": "secret",
-    "TraderFour": "secret"
+    "TraderFour": "secret",
+    "TraderFive": "secret",
+    "TraderSix": "secret",
+    "TraderSeven": "secret"
   }
 }
