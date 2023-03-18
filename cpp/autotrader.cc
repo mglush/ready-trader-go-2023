@@ -23,12 +23,14 @@
 
 #include "autotrader.h"
 
+#include <boost/version.hpp>
+
 using namespace ReadyTraderGo;
 
 RTG_INLINE_GLOBAL_LOGGER_WITH_CHANNEL(LG_AT, "AUTO")
 
-constexpr int LOT_SIZE = 20;
-constexpr int POSITION_LIMIT = 80;
+constexpr int LOT_SIZE = 25;
+constexpr int POSITION_LIMIT = 100;
 constexpr int TICK_SIZE_IN_CENTS = 100;
 constexpr int MIN_BID_NEARST_TICK = (MINIMUM_BID + TICK_SIZE_IN_CENTS) / TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS;
 constexpr int MAX_ASK_NEAREST_TICK = MAXIMUM_ASK / TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS;
@@ -53,10 +55,7 @@ AutoTrader::AutoTrader(boost::asio::io_context& context) : BaseAutoTrader(contex
 {
     time_of_last_imbalance = 0;
 
-    real_bid = std::vector<int>(3, 0);
-    real_ask = std::vector<int>(3, 0);
-    traded_volumes = boost::circular_buffer<int>(ATV_WIN_SIZE);
-    traded_volumes.push_back(0);
+    traded_volumes = boost::circular_buffer<unsigned long>(ATV_WIN_SIZE);
 
     RLOG(LG_AT, LogLevel::LL_WARNING) << "AutoTrader has been constructed properly";
 }
@@ -84,44 +83,36 @@ void AutoTrader::make_a_market(unsigned long ask,
                                 unsigned long bid, 
                                 unsigned long bid_vol)
 {
-    // RLOG(LG_AT, LogLevel::LL_INFO) << "TRYING TO MAKE  A MARKET!";
-    if (bid > 0 && ask > 0 \
-            && position + LOT_SIZE < POSITION_LIMIT \
-            && position - LOT_SIZE > -POSITION_LIMIT \
-            && bid != real_bid[1] \
-            && ask != real_ask[1])
-    {
-        if (real_bid[0] != 0)
-            SendCancelOrder(real_bid[0]);
-        if (real_ask[0] != 0)
-            SendCancelOrder(real_ask[0]);
+    RLOG(LG_AT, LogLevel::LL_DEBUG) << "MAKING A MARKET! DO WE HAVE A BUY? " << std::to_string(this->orders.find(Side::BUY) != this->orders.end());
+    RLOG(LG_AT, LogLevel::LL_DEBUG) << "Boost Version " << std::to_string(BOOST_VERSION / 100000) << "." << std::to_string(BOOST_VERSION / 100 % 1000) << "." << std::to_string(BOOST_VERSION % 100);
+    if (this->orders.find(Side::BUY) != this->orders.end() && this->orders[Side::BUY][1] != bid)
+        SendCancelOrder(this->orders[Side::BUY][0]);
 
-        theo_orders[mNextMessageId++] = boost::make_tuple<Side, unsigned long, unsigned long>(Side::BUY, bid, bid_vol);
-        theo_orders[mNextMessageId++] = boost::make_tuple<Side, unsigned long, unsigned long>(Side::SELL, ask, ask_vol);
+    if (this->orders.find(Side::BUY) == this->orders.end() \
+        && bid != 0 \
+        && position + LOT_SIZE < POSITION_LIMIT) {
 
-        SendInsertOrder(mNextMessageId - 2, Side::BUY, bid, bid_vol, Lifespan::GOOD_FOR_DAY);
-        SendInsertOrder(mNextMessageId - 1, Side::SELL, ask, ask_vol, Lifespan::GOOD_FOR_DAY);
-    } else if (bid > 0 \
-            && position + LOT_SIZE < POSITION_LIMIT \
-            && bid != real_bid[1])
-    {
-        if (real_bid[0] != 0)
-            SendCancelOrder(real_bid[0]);
+        this->orders[Side::BUY] = std::vector<unsigned long>();
+        this->orders[Side::BUY][0] = mNextMessageId++;
+        this->orders[Side::BUY][1] = bid;
+        this->orders[Side::BUY][2] = bid_vol;
 
-        theo_orders[mNextMessageId] = boost::make_tuple<Side, unsigned long, unsigned long>(Side::BUY, bid, bid_vol);
-        SendInsertOrder(mNextMessageId++, Side::BUY, bid, bid_vol, Lifespan::GOOD_FOR_DAY);
-    } else if (ask > 0 \
-            && position - LOT_SIZE > -POSITION_LIMIT \
-            && ask != real_ask[1])
-    {
-        if (real_ask[0] != 0)
-            SendCancelOrder(real_ask[0]);
-
-        theo_orders[mNextMessageId] = boost::make_tuple<Side, unsigned long, unsigned long>(Side::SELL, ask, ask_vol);
-        SendInsertOrder(mNextMessageId++, Side::SELL, ask, ask_vol, Lifespan::GOOD_FOR_DAY);
+        SendInsertOrder(mNextMessageId - 1, Side::BUY, bid, bid_vol, Lifespan::GOOD_FOR_DAY);
     }
-    else {
+
+    if (this->orders.find(Side::SELL) != this->orders.end() && this->orders[Side::SELL][1] != ask)
+        SendCancelOrder(this->orders[Side::SELL][0]);
+
+    if (this->orders.find(Side::SELL) == this->orders.end() \
+        && ask != 0 \
+        && position - LOT_SIZE < -POSITION_LIMIT) {
+
+        this->orders[Side::SELL] = std::vector<unsigned long>();
+        this->orders[Side::SELL][0] = mNextMessageId++;
+        this->orders[Side::SELL][1] = ask;
+        this->orders[Side::SELL][2] = ask_vol;
         
+        SendInsertOrder(mNextMessageId - 1, Side::SELL, ask, ask_vol, Lifespan::GOOD_FOR_DAY);
     }
 }
 
@@ -168,9 +159,8 @@ void AutoTrader::hedge() {
             }
         }
             
-    } else {
-        RLOG(LG_AT, LogLevel::LL_FATAL) << "2 THIS CASE SHOULD NEVER HAPPEN";
     }
+    RLOG(LG_AT, LogLevel::LL_INFO) << "EXIT HEDGE";
 }
 
 // Unwinds our hedge when it is profitable to do so.
@@ -180,14 +170,14 @@ void AutoTrader::realize_hedge_PnL() {
     
     float avg_entry = hedged_money_in / static_cast<float>(hedged_position);
     if (hedged_position > POSITION_LIMIT_TO_UNWIND) {
-        if (avg_entry < best_futures_bid - (best_futures_ask - best_futures_bid)) {
+        if (avg_entry < 2 * best_futures_bid - best_futures_ask) {
             if (hedge_ask_id == 0) {
                 hedge_ask_id = mNextMessageId;
                 SendHedgeOrder(mNextMessageId++, Side::SELL, MIN_BID_NEARST_TICK, hedged_position);
             }
         }
     } else if (hedged_position < -POSITION_LIMIT_TO_UNWIND) {
-        if (avg_entry > best_futures_ask + (best_futures_ask - best_futures_bid)) {
+        if (avg_entry > 2 * best_futures_ask - best_futures_bid) {
             if (hedge_bid_id == 0) {
                 hedge_bid_id = mNextMessageId;
                 SendHedgeOrder(mNextMessageId++, Side::BUY, MAX_ASK_NEAREST_TICK, abs(hedged_position));
@@ -196,56 +186,56 @@ void AutoTrader::realize_hedge_PnL() {
     }
 }
 
-// This function realizes out PnL if we have any past a certain threshold.
-// That is, if we have +50 etf and the stock moved up, we should realize our PnL
-// by selling off some of the etf at the new higher price via a fill and kill.
-void AutoTrader::realize_PnL(unsigned long bid,
-                            unsigned long ask)
-{
-    if (position == 0)
-        return;
+// // This function realizes out PnL if we have any past a certain threshold.
+// // That is, if we have +50 etf and the stock moved up, we should realize our PnL
+// // by selling off some of the etf at the new higher price via a fill and kill.
+// void AutoTrader::realize_PnL(unsigned long bid,
+//                             unsigned long ask)
+// {
+//     if (position == 0)
+//         return;
 
-    float avg_entry = money_in / static_cast<float>(position);
+//     float avg_entry = money_in / static_cast<float>(position);
 
-    RLOG(LG_AT, LogLevel::LL_INFO) << "AVERAGE POSITION CALCULATED AT " << std::to_string(avg_entry);
-    if (position > POSITION_LIMIT_TO_UNWIND) {
-        if (avg_entry < bid / UNWIND_FACTOR) { // REALIZE PNL BY SELLING A SHARE
-            RLOG(LG_AT, LogLevel::LL_INFO) << "OPPORTUNITY";
-            fak_orders[mNextMessageId] = boost::tuple<Side, unsigned long, unsigned long>(Side::SELL, bid, 1);
-            SendInsertOrder(mNextMessageId++, Side::SELL, bid, 1, Lifespan::FILL_AND_KILL);
-        } else {
+//     RLOG(LG_AT, LogLevel::LL_INFO) << "AVERAGE POSITION CALCULATED AT " << std::to_string(avg_entry);
+//     if (position > POSITION_LIMIT_TO_UNWIND) {
+//         if (avg_entry < bid / UNWIND_FACTOR) { // REALIZE PNL BY SELLING A SHARE
+//             RLOG(LG_AT, LogLevel::LL_INFO) << "OPPORTUNITY";
+//             fak_orders[mNextMessageId] = boost::tuple<Side, unsigned long, unsigned long>(Side::SELL, bid, 1);
+//             SendInsertOrder(mNextMessageId++, Side::SELL, bid, 1, Lifespan::FILL_AND_KILL);
+//         } else {
             
-        }
-    }
-    else if (0 < position && position <= POSITION_LIMIT_TO_UNWIND) {
-        float cushion = (ask - bid) * (POSITION_LIMIT_TO_UNWIND / static_cast<float>(position));
-        if (avg_entry < bid - cushion) { // REALIZE PNL BY SELLING A SHARE
-            RLOG(LG_AT, LogLevel::LL_INFO) << "OPPORTUNITY";
-            fak_orders[mNextMessageId] = boost::tuple<Side, unsigned long, unsigned long>(Side::SELL, bid, LOT_SIZE);
-            SendInsertOrder(mNextMessageId++, Side::SELL, bid, LOT_SIZE, Lifespan::FILL_AND_KILL);
-        } else {
+//         }
+//     }
+//     else if (0 < position && position <= POSITION_LIMIT_TO_UNWIND) {
+//         float cushion = (ask - bid) * (POSITION_LIMIT_TO_UNWIND / static_cast<float>(position));
+//         if (avg_entry < bid - cushion) { // REALIZE PNL BY SELLING A SHARE
+//             RLOG(LG_AT, LogLevel::LL_INFO) << "OPPORTUNITY";
+//             fak_orders[mNextMessageId] = boost::tuple<Side, unsigned long, unsigned long>(Side::SELL, bid, LOT_SIZE);
+//             SendInsertOrder(mNextMessageId++, Side::SELL, bid, LOT_SIZE, Lifespan::FILL_AND_KILL);
+//         } else {
 
-        }
-    } else if (-POSITION_LIMIT_TO_UNWIND <= position && position < 0) {
-        float cushion = (ask - bid) * (POSITION_LIMIT_TO_UNWIND / static_cast<float>(position));
-        if (avg_entry > ask + cushion) { // REALIZE PNL BY BUYING A SHARE
-            RLOG(LG_AT, LogLevel::LL_INFO) << "OPPORTUNITY";
-            fak_orders[mNextMessageId] = boost::tuple<Side, unsigned long, unsigned long>(Side::BUY, ask, LOT_SIZE);
-            SendInsertOrder(mNextMessageId++, Side::BUY, ask, LOT_SIZE, Lifespan::FILL_AND_KILL);
-        } else {
+//         }
+//     } else if (-POSITION_LIMIT_TO_UNWIND <= position && position < 0) {
+//         float cushion = (ask - bid) * (POSITION_LIMIT_TO_UNWIND / static_cast<float>(position));
+//         if (avg_entry > ask + cushion) { // REALIZE PNL BY BUYING A SHARE
+//             RLOG(LG_AT, LogLevel::LL_INFO) << "OPPORTUNITY";
+//             fak_orders[mNextMessageId] = boost::tuple<Side, unsigned long, unsigned long>(Side::BUY, ask, LOT_SIZE);
+//             SendInsertOrder(mNextMessageId++, Side::BUY, ask, LOT_SIZE, Lifespan::FILL_AND_KILL);
+//         } else {
 
-        }
-    } 
-    else if (position < -POSITION_LIMIT_TO_UNWIND) {
-        if (avg_entry > ask * UNWIND_FACTOR) { // REALIZE PNL BY BUYING A SHARE
-            RLOG(LG_AT, LogLevel::LL_INFO) << "OPPORTUNITY";
-            fak_orders[mNextMessageId] = boost::tuple<Side, unsigned long, unsigned long>(Side::BUY, ask, 1);
-            SendInsertOrder(mNextMessageId++, Side::BUY, ask, 1, Lifespan::FILL_AND_KILL);
-        } else {
+//         }
+//     } 
+//     else if (position < -POSITION_LIMIT_TO_UNWIND) {
+//         if (avg_entry > ask * UNWIND_FACTOR) { // REALIZE PNL BY BUYING A SHARE
+//             RLOG(LG_AT, LogLevel::LL_INFO) << "OPPORTUNITY";
+//             fak_orders[mNextMessageId] = boost::tuple<Side, unsigned long, unsigned long>(Side::BUY, ask, 1);
+//             SendInsertOrder(mNextMessageId++, Side::BUY, ask, 1, Lifespan::FILL_AND_KILL);
+//         } else {
 
-        }
-    }
-}
+//         }
+//     }
+// }
 
 /* THIS SECTION CONTAINS OUR HELPER FUNCTION DEFINITIONS! */
 
@@ -293,15 +283,14 @@ void AutoTrader::OrderBookMessageHandler(Instrument instrument,
                                          const std::array<unsigned long, TOP_LEVEL_COUNT>& bidVolumes)
 {
 
-    RLOG(LG_AT, LogLevel::LL_INFO) << "\tPOSITION = " << std::to_string(position) << " HEDGE = " << std::to_string(hedged_position);
+    RLOG(LG_AT, LogLevel::LL_INFO) << "GOOMBA?";
     if (bidPrices[0] == 0 || askPrices[0] == 0 || p_prime_0 == 0 || p_prime_1 == 0)
         return; // we don't got shid to do here.
-
+    RLOG(LG_AT, LogLevel::LL_DEBUG) << "SO WE GET PAST THE FIRST CHECK";
     if (instrument == Instrument::FUTURE) {
-        if (sequenceNumber < last_order_book_sequence_fut) {
-            RLOG(LG_AT, LogLevel::LL_INFO) << "OLD INFORMATION!!!";
+        if (sequenceNumber < last_order_book_sequence_fut)
             return; // old sequence
-        }
+
         last_order_book_sequence_fut = sequenceNumber;
         best_futures_bid = bidPrices[0];
         best_futures_ask = askPrices[0];
@@ -313,18 +302,20 @@ void AutoTrader::OrderBookMessageHandler(Instrument instrument,
                     we_are_hedged = false;
                 }
             } 
-            else { // we are not hedged, les do something about it!
+            else { 
+                // we are not hedged, les do something about it!
                 // if (sequenceNumber - time_of_last_imbalance > 500) // absolutely must hedge.
                 //     hedge();
                 // else {} // realize_hedge_PnL();
             }
         }
     } else if (instrument == Instrument::ETF) {
-        if (sequenceNumber < last_order_book_sequence_etf) {
-            RLOG(LG_AT, LogLevel::LL_INFO) << "OLD INFORMATION!!!";
+        if (sequenceNumber < last_order_book_sequence_etf)
             return; // old sequence
-        }
+
         last_order_book_sequence_etf = sequenceNumber;
+
+        RLOG(LG_AT, LogLevel::LL_DEBUG) << "INSIDE ETF ORDER BOOK SNAPSHOT";
 
         // # next, calculate current entry, and see if we have a PnL to collect.
         // realize_PnL(bidPrices[0], askPrices[0]);
@@ -372,6 +363,8 @@ void AutoTrader::OrderBookMessageHandler(Instrument instrument,
         if (new_ask < askPrices[0])
             new_ask = askPrices[0];
 
+        RLOG(LG_AT, LogLevel::LL_DEBUG) << "CALCULATED BID AND ASK!";
+
         // # make the new market!
         make_a_market(new_ask, LOT_SIZE, new_bid, LOT_SIZE);
     }
@@ -381,66 +374,35 @@ void AutoTrader::OrderFilledMessageHandler(unsigned long clientOrderId,
                                            unsigned long price,
                                            unsigned long volume)
 {
-    if (clientOrderId == real_bid[0]) {
+    // if (this->fak_orders.find(clientOrderId) != this->fak_orders.end()) {
+    //     if (this->fak_orders[clientOrderId][0] == Side::BUY) {
+    //         position += volume;
+    //         money_in += price * volume;
+    //     }
+    //     else if (this->fak_orders[clientOrderId][0] == Side::SELL) {
+    //         position -= volume;
+    //         money_in -= price * volume;
+    //     }
+    //     this->fak_orders[clientOrderId][2] -= volume;
+    //     return;
+    // }
+
+    if (this->orders.find(Side::BUY) != this->orders.end() && this->orders[Side::BUY][0] == clientOrderId) {
         position += volume;
-        real_bid[2] -= volume;
         money_in += price * volume;
-        if (real_bid[2] <= 0)
-            real_bid[0] = real_bid[1] = real_bid[2] = 0;
-    } else if (clientOrderId == real_ask[0]) {
-        position -= volume;
-        real_ask[2] -= volume;
-        money_in -= price * volume;
-        if (real_ask[2] <= 0)
-            real_ask[0] = real_ask[1] = real_ask[2] = 0;
-    } else if (theo_orders.find(clientOrderId) != theo_orders.end()) {
-        if (theo_orders[clientOrderId].get<0>() == Side::BUY) {
-            position += volume;
-            money_in += price * volume;
-            signed long vol_rem = theo_orders[clientOrderId].get<2>() - volume;
-            if (vol_rem > 0) {
-                real_bid[0] = clientOrderId;
-                real_bid[1] = theo_orders[clientOrderId].get<1>();
-                real_bid[2] = vol_rem;
-            } else {
-                real_bid[0] = real_bid[1] = real_bid[2] = 0;
-            }
-        } else if (theo_orders[clientOrderId].get<0>() == Side::SELL) {
-            position -= volume;
-            money_in -= price*volume;
-            signed long vol_rem = theo_orders[clientOrderId].get<2>() - volume;
-            if (vol_rem > 0) {
-                real_ask[0] = clientOrderId;
-                real_ask[1] = theo_orders[clientOrderId].get<1>();
-                real_ask[2] = vol_rem;
-            } else {
-                real_ask[0] = real_ask[1] = real_ask[2] = 0;
-            }
-        }
-        
-        theo_orders.erase(clientOrderId);
+        this->orders[Side::BUY][2] -= volume;
     }
-    
-    else if (fak_orders.find(clientOrderId) != fak_orders.end()) {
-        RLOG(LG_AT, LogLevel::LL_INFO) << "FAK ORDER " << std::to_string(clientOrderId) << " FILLED FOR " << std::to_string(volume);
-        if (fak_orders[clientOrderId].get<0>() == Side::BUY) {
-            position += volume;
-            money_in += price * volume;
-            fak_orders[clientOrderId].get<2>() -= volume;
-        }
-        else if (fak_orders[clientOrderId].get<0>() == Side::SELL) {
-            position -= volume;
-            money_in -= price * volume;
-            fak_orders[clientOrderId].get<2>() -= volume;
-        } else {
-            RLOG(LG_AT, LogLevel::LL_FATAL) << "5 THIS CASE SHOULD NEVER HAPPEN";
-        }
+    else if (this->orders.find(Side::SELL) != this->orders.end() && this->orders[Side::SELL][0] == clientOrderId) {
+        position -= volume;
+        money_in -= price * volume;
+        this->orders[Side::SELL][2] -= volume;
     } else {
-        RLOG(LG_AT, LogLevel::LL_FATAL) << "6 THIS CASE SHOULD NEVER HAPPEN";
+        RLOG(LG_AT, LogLevel::LL_ERROR) << "ORDER " << std::to_string(clientOrderId) << " NOT AN ASK OR A BID IN ORDER FILLED";
     }
 
     if (position == 0)
         money_in = 0;
+
 }
 
 void AutoTrader::OrderStatusMessageHandler(unsigned long clientOrderId,
@@ -448,27 +410,15 @@ void AutoTrader::OrderStatusMessageHandler(unsigned long clientOrderId,
                                            unsigned long remainingVolume,
                                            signed long fees)
 {
-    if (fillVolume == 0 and remainingVolume > 0) {
-        if (theo_orders.find(clientOrderId) != theo_orders.end()) {
-            if (boost::get<0>(theo_orders[clientOrderId]) == Side::BUY) {
-                real_bid[0] = clientOrderId;
-                real_bid[1] = theo_orders[clientOrderId].get<1>();
-                real_bid[2] = theo_orders[clientOrderId].get<2>();
-            } else if (boost::get<0>(theo_orders[clientOrderId]) == Side::SELL) {
-                real_ask[0] = clientOrderId;
-                real_ask[1] = theo_orders[clientOrderId].get<1>();
-                real_ask[2] = theo_orders[clientOrderId].get<2>();
-            }
-        } else if (fak_orders.find(clientOrderId) != theo_orders.end()) {
-            fak_orders.erase(clientOrderId);
-        }
-    }
+    if (remainingVolume == 0) {
+        // insert fak stuff here.
+        if (this->orders.find(Side::BUY) != this->orders.end())
+            if (this->orders[Side::BUY][0] == clientOrderId)
+                this->orders.erase(Side::BUY);
 
-    else if (remainingVolume == 0) {
-        if (clientOrderId == real_bid[0])
-            real_bid[0] = real_bid[1] = real_bid[2] = 0;
-        else if (clientOrderId == real_ask[0])
-            real_ask[0] = real_ask[1] = real_ask[2] = 0;
+        if (this->orders.find(Side::SELL) != this->orders.end())
+            if (this->orders[Side::SELL][0] == clientOrderId)
+                this->orders.erase(Side::SELL);
     }
 }
 
@@ -513,5 +463,6 @@ void AutoTrader::TradeTicksMessageHandler(Instrument instrument,
         // # record this weighted average in memory.
         p_prime_0 = p_prime_1;
         p_prime_1 = numer / (bidVolumeSum + askVolumeSum);
+        RLOG(LG_AT, LogLevel::LL_DEBUG) << "P RPIME CALCULATED TO BE " << std::to_string(p_prime_1);
     }
 }

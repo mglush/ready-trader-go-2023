@@ -42,6 +42,8 @@ UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
 MAX_TIME_UNHEDGED = 58  # time limit in seconds.
 LAMBDA_ONE = 0.5      # our first constant, by which we decide whether order imbalance is up or down or flat.
 
+PARTICIPATION_RATE = 0.3    # our desired participation rate to use for order sizing.
+
 HOW_OFTEN_TO_CHECK_HEDGE = 4
 HEDGE_POSITION_LIMIT_TO_UNWIND = 0
 # POSITION_LIMIT_TO_UNWIND = 0
@@ -327,7 +329,8 @@ class AutoTrader(BaseAutoTrader):
                 # self.realize_PnL(bid_prices[0], ask_prices[0])
 
             # calculate volume imbalance to see whether we need to adjust spread.
-            lambda_imbalance = (sum(bid_volumes) - sum(ask_volumes)) / sum(bid_volumes + ask_volumes)
+            volume_sum = sum(bid_volumes + ask_volumes)
+            lambda_imbalance = (sum(bid_volumes) - sum(ask_volumes)) / volume_sum
 
             # check if we need to adjust spread based on lambda imbalance.
             if -LAMBDA_ONE < lambda_imbalance and lambda_imbalance < LAMBDA_ONE:
@@ -349,8 +352,9 @@ class AutoTrader(BaseAutoTrader):
             new_bid = min(int(new_bid - new_bid % TICK_SIZE_IN_CENTS), bid_prices[0])
             new_ask = max(int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS), ask_prices[0])
             
+            size = int(PARTICIPATION_RATE * volume_sum)
             # make the new market!
-            self.make_a_market(new_bid, LOT_SIZE, new_ask, LOT_SIZE)
+            self.make_a_market(new_bid, size, new_ask, size)
 
     def on_order_filled_message(self, client_order_id: int, price: int, volume: int) -> None:
         """Called when one of your orders is filled, partially or fully.
