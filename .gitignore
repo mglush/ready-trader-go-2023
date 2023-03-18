@@ -6,6 +6,9 @@ bin/
 lib/
 etc/
 share/
+cpp/build/
+cpp/libs/
+cpp/ready_trader_go/
 
 pyvenv.cfg
 provided_autotrader*.*

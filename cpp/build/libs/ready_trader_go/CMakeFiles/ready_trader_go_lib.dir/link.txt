@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libready_trader_go_lib.a CMakeFiles/ready_trader_go_lib.dir/application.cc.o CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib libready_trader_go_lib.a
