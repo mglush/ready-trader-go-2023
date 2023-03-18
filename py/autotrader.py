@@ -38,19 +38,18 @@ MAX_ASK_NEAREST_TICK = MAXIMUM_ASK // TICK_SIZE_IN_CENTS * TICK_SIZE_IN_CENTS
 
 BPS_ROUND_FLAT = 0.0000
 BPS_ROUND_DOWN = 0.0001
-BPS_ROUND_UP = 0.001 # ive gotten better results (alone and against others) by using a higher BPS or ROUND UP.
+BPS_ROUND_UP = 0.001        # ive gotten better results (alone and against others) by using a higher BPS or ROUND UP.
 
 UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
 MAX_TIME_UNHEDGED = 58  # time limit in seconds.
 LAMBDA_ONE = 0.5      # our first constant, by which we decide whether order imbalance is up or down or flat.
-BETA = 0.25         # our second constant, by which we decide whether we like a potential FAK order
-ATV_WIN_SIZE = 20
-LAMBDA_TWO = 1.5
 
 HOW_OFTEN_TO_CHECK_HEDGE = 2
+POSITION_LIMIT_TO_UNWIND = 20
+HEDGE_POSITION_LIMIT_TO_UNWIND = 30
 
-FILL_RATE_WINDOW_SIZE = 50
-DESIRED_FILL_RATE = 0.85
+# FILL_RATE_WINDOW_SIZE = 50
+# DESIRED_FILL_RATE = 0.85
 
 class AutoTrader(BaseAutoTrader):
     '''
@@ -68,7 +67,7 @@ class AutoTrader(BaseAutoTrader):
         self.bid_fill_amounts = list()
         self.ask_fill_amounts = list()
 
-        self.money_in = 0
+        self.money_in = self.hedged_money_in = 0
 
         self.best_futures_bid = self.best_futures_ask = 0                       # keeping track of best ask and offer for futures for computing cost
 
@@ -95,16 +94,16 @@ class AutoTrader(BaseAutoTrader):
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
 
-    def get_avg_fill_percentage(self) -> dict:
-        '''
-        Returns average fill proportion of our orders for the bid and ask side, as a dict.
-        '''
-        bid_res = 0 if len(self.bid_fill_amounts) == 0 else ((sum(self.bid_fill_amounts[-FILL_RATE_WINDOW_SIZE:]) / len(self.bid_fill_amounts[-FILL_RATE_WINDOW_SIZE:])) / LOT_SIZE)
-        ask_res = 0 if len(self.ask_fill_amounts) == 0 else ((sum(self.ask_fill_amounts[-FILL_RATE_WINDOW_SIZE:]) / len(self.ask_fill_amounts[-FILL_RATE_WINDOW_SIZE:])) / LOT_SIZE)
-        return {
-            'bid' : bid_res,
-            'ask' : ask_res
-        }
+    # def get_avg_fill_percentage(self) -> dict:
+    #     '''
+    #     Returns average fill proportion of our orders for the bid and ask side, as a dict.
+    #     '''
+    #     bid_res = 0 if len(self.bid_fill_amounts) == 0 else ((sum(self.bid_fill_amounts[-FILL_RATE_WINDOW_SIZE:]) / len(self.bid_fill_amounts[-FILL_RATE_WINDOW_SIZE:])) / LOT_SIZE)
+    #     ask_res = 0 if len(self.ask_fill_amounts) == 0 else ((sum(self.ask_fill_amounts[-FILL_RATE_WINDOW_SIZE:]) / len(self.ask_fill_amounts[-FILL_RATE_WINDOW_SIZE:])) / LOT_SIZE)
+    #     return {
+    #         'bid' : bid_res,
+    #         'ask' : ask_res
+    #     }
     
     def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
         '''
@@ -125,62 +124,26 @@ class AutoTrader(BaseAutoTrader):
         bid_volume (int):   how many shares to bid?
         ask (int):          price to place ask at.
         ask_volume (int):   how many shares to ask?
-        '''
-        # self.logger.critical(f'MAKING A MARKET, POSTIION {self.position} HEDGE {self.hedged_position}')
+        '''        
+        if self.real_bid[0] != 0 and self.real_bid[1] != bid:
+            self.logger.critical(f'ABLE TO CANCEL BID {self.real_bid[0]}!')
+            self.send_cancel_order(self.real_bid[0])
 
-        # try to place em both at once if we can. otherwise place one of them.
-        if bid > 0 and ask > 0 \
-            and self.position + LOT_SIZE < POSITION_LIMIT \
-            and self.position - LOT_SIZE > -POSITION_LIMIT \
-            and bid != self.real_bid[1] \
-            and ask != self.real_ask[1]:
+        if self.real_ask[0] != 0 and self.real_ask[1] != ask:
+            self.logger.critical(f'ABLE TO CANCEL ASK {self.real_ask[0]}!')
+            self.send_cancel_order(self.real_ask[0])
 
-            # cancel the previous ask and bids we had. ID OF 0 MEANS WE DONT HAVE AN ORDER PLACED
-            if self.real_bid[0] != 0:
-                self.send_cancel_order(self.real_bid[0])
-            if self.real_ask[0] != 0:
-                self.send_cancel_order(self.real_ask[0])
-
-            # record info about the new ask and bid.
-            new_bid_id = next(self.order_ids)
-            new_ask_id = next(self.order_ids)
-            # we need to segment orders we are about to place because we dont know what will happen
-            self.theo_orders[new_bid_id] = (Side.BID, bid, bid_volume)
-            self.theo_orders[new_ask_id] = (Side.ASK, ask, ask_volume)
-
-            # send da order out.
-            self.send_insert_order(new_bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
-            self.send_insert_order(new_ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
-        elif bid > 0 \
-            and self.position + LOT_SIZE < POSITION_LIMIT \
-            and bid != self.real_bid[1]:
-            
-            # cancel bid because we are about to place a new bid.
-            if self.real_bid[0] != 0:
-                self.send_cancel_order(self.real_bid[0])
-            
-            # record new info about the thang.
+        if self.real_bid[0] == 0 and self.position + LOT_SIZE < POSITION_LIMIT and bid != 0:
+            self.logger.critical(f'ABLE TO PLACE A BID ORDER AT {bid}!')
             new_bid_id = next(self.order_ids)
             self.theo_orders[new_bid_id] = (Side.BID, bid, bid_volume)
-
-            # place dat order baby.
             self.send_insert_order(new_bid_id, Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
-        elif ask > 0 \
-            and self.position - LOT_SIZE > -POSITION_LIMIT \
-            and ask != self.real_ask[1]:
 
-            # cancel ask order, about to place a new one.
-            if self.real_ask[0] != 0:
-                self.send_cancel_order(self.real_ask[0])
-            
-            # record new info about the thang.
+        if self.real_ask[0] == 0 and self.position + LOT_SIZE < POSITION_LIMIT and ask != 0:
+            self.logger.critical(f'ABLE TO PLACE AN ASK ORDER AT {ask}!')
             new_ask_id = next(self.order_ids)
             self.theo_orders[new_ask_id] = (Side.ASK, ask, ask_volume)
-
-            # place dat order baby.
-            self.send_insert_order(new_ask_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
-        else:
-            pass
+            self.send_insert_order(new_bid_id, Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
 
     def hedge(self) -> None:
         '''
@@ -218,6 +181,63 @@ class AutoTrader(BaseAutoTrader):
         self.we_are_hedged = True
         self.logger.critical(f'\tEXIT HEDGE.')
 
+    def realize_hedge_PnL(self) -> None:
+        '''
+        Unwinds our hedge when it is profitable to do so.
+        '''
+        if self.hedged_position != 0:
+            return
+
+        avg_entry = self.hedged_money_in / self.hedged_position
+        if self.hedged_position > POSITION_LIMIT_TO_UNWIND:
+            if avg_entry < self.best_futures_bid - (self.best_futures_ask - self.best_futures_bid):
+                if self.hedge_ask_id == 0:
+                    self.logger.info(f'HEDGE LUCRATIVE UNWIND SPOT, SELLLING {self.hedged_position}, COLLECTING {(self.best_futures_bid - avg_entry) * self.hedged_position} DOLLARS BABY')
+                    self.hedge_ask_id = next(self.order_ids)
+                    self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, self.hedged_position)
+        elif self.hedged_position < -POSITION_LIMIT_TO_UNWIND:
+            if avg_entry > self.best_futures_ask + (self.best_futures_ask - self.best_futures_bid):
+                if self.hedge_bid_id == 0:
+                    self.logger.info(f'HEDGE LUCRATIVE UNWIND SPOT, SELLLING {abs(self.hedged_position)}, COLLECTING {(avg_entry - self.best_futures_ask) * abs(self.hedged_position)} DOLLARS BABY')
+                    self.hedge_ask_id = next(self.order_ids)
+                    self.send_hedge_order(self.hedge_ask_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.hedged_position))
+        
+    def realize_PnL(self, bid, ask) -> None:
+        '''
+        This function realizes out PnL if we have any past a certain threshold.
+        That is, if we have +50 etf and the stock moved up, we should realize our PnL
+        by selling off some of the etf at the new higher price via a fill and kill.
+        '''
+        if ask - bid == TICK_SIZE_IN_CENTS:
+            return
+        avg_entry = self.money_in / self.position if self.position != 0 else 0
+        next_id = next(self.order_ids)
+        if self.position > POSITION_LIMIT_TO_UNWIND:
+            if avg_entry < 2*bid - ask:
+                # realize da PnL
+                self.fak_orders[next_id] = [Side.ASK, bid, 1]
+                self.send_insert_order(next_id, Side.ASK, bid, 1, Lifespan.FILL_AND_KILL)
+
+        elif 0 < self.position and self.position <= POSITION_LIMIT_TO_UNWIND:
+            cushion = (ask-bid) * (POSITION_LIMIT_TO_UNWIND / self.position)
+            if avg_entry < bid - cushion:
+                # realize da PnL
+                self.fak_orders[next_id] = [Side.ASK, bid, 1]
+                self.send_insert_order(next_id, Side.ASK, bid, 1, Lifespan.FILL_AND_KILL)
+
+        elif -POSITION_LIMIT_TO_UNWIND <= self.position and self.position < 0:
+            cushion = (ask-bid) * (POSITION_LIMIT_TO_UNWIND / self.position)
+            if avg_entry > ask + cushion:
+                # realize da PnL
+                self.fak_orders[next_id] = [Side.BID, ask, 1]
+                self.send_insert_order(next_id, Side.BID, ask, 1, Lifespan.FILL_AND_KILL)
+
+        elif self.position < -POSITION_LIMIT_TO_UNWIND:
+            if avg_entry > 2*ask - bid:
+                # realize da PnL
+                self.fak_orders[next_id] = [Side.BID, ask, 1]
+                self.send_insert_order(next_id, Side.BID, ask, 1, Lifespan.FILL_AND_KILL)
+
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
 
     def on_error_message(self, client_order_id: int, error_message: bytes) -> None:
@@ -240,9 +260,11 @@ class AutoTrader(BaseAutoTrader):
         self.logger.info(f'FILLED A HEDGE {client_order_id} PRICE {price} VOLUME {volume}')
         if client_order_id == self.hedge_bid_id:
             self.hedged_position += volume
+            self.hedged_money_in += price * volume
             self.hedge_bid_id = 0
         elif client_order_id == self.hedge_ask_id:
             self.hedged_position -= volume
+            self.hedged_money_in -= price * volume
             self.hedge_ask_id = 0
         else:
             self.logger.critical(f'I BELIEVER THIS CASE SHOULD NEVER HAPPEN')
@@ -280,7 +302,7 @@ class AutoTrader(BaseAutoTrader):
                         self.hedge() # hedge only if absolutely necessary!
                     else:
                         # new strat to get rid of hedge: get rid of it when we are profiting from that.
-                        # self.realize_hedge_PnL()
+                        self.realize_hedge_PnL()
                         pass
         elif instrument == Instrument.ETF:
             if sequence_number < self.last_order_book_sequence_etf:
@@ -319,7 +341,7 @@ class AutoTrader(BaseAutoTrader):
             # round new bid and new ask outward to the nearest TICK_SIZE, check if interval too tight.
             new_bid = min(int(new_bid - new_bid % TICK_SIZE_IN_CENTS), bid_prices[0])
             new_ask = max(int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS), ask_prices[0])
-
+            
             # make the new market!
             self.make_a_market(new_bid, LOT_SIZE, new_ask, LOT_SIZE)
 
@@ -333,43 +355,43 @@ class AutoTrader(BaseAutoTrader):
         if client_order_id == self.real_bid[0]:
             self.position += volume
             self.real_bid[2] -= volume
-            # self.money_in += price*volume
+            self.money_in += price*volume
             if self.real_bid[2] <= 0:
-                self.bid_fill_amounts.append(1)
+                # self.bid_fill_amounts.append(1)
                 # this is a full fill
                 self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
         
         elif client_order_id == self.real_ask[0]:
             self.position -= volume
             self.real_ask[2] -= volume
-            # self.money_in -= price*volume
+            self.money_in -= price*volume
             if self.real_ask[2] <= 0:
-                self.ask_fill_amounts.append(1)
+                # self.ask_fill_amounts.append(1)
                 self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
         
         elif client_order_id in self.theo_orders.keys():
             if self.theo_orders[client_order_id][0] == Side.BID:
                 self.position += volume
-                # self.money_in += price*volume
+                self.money_in += price*volume
                 vol_rem = self.theo_orders[client_order_id][2] - volume
                 if vol_rem > 0:
                     # order partially filled, it exists
                     self.real_bid = [client_order_id, self.theo_orders[client_order_id][1], vol_rem]
                 else:
                     # order fully filled, not exists anymore
-                    self.bid_fill_amounts.append(1)
+                    # self.bid_fill_amounts.append(1)
                     self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
             
             elif self.theo_orders[client_order_id][0] == Side.ASK:
                 self.position -= volume
-                # self.money_in -= price*volume
+                self.money_in -= price*volume
                 vol_rem = self.theo_orders[client_order_id][2] - volume
                 if vol_rem > 0:
                     # order partially filled, it exists
                     self.real_ask = [client_order_id, self.theo_orders[client_order_id][1], vol_rem]
                 else:
                     # order fully filled, not exists anymore
-                    self.ask_fill_amounts.append(1)
+                    # self.ask_fill_amounts.append(1)
                     self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
 
             else:
@@ -381,13 +403,14 @@ class AutoTrader(BaseAutoTrader):
         elif client_order_id in self.fak_orders.keys():
             if self.fak_orders[client_order_id][0] == Side.BID:
                 self.position += volume
-                # self.money_in += price*volume
+                self.money_in += price*volume
             elif self.fak_orders[client_order_id][0] == Side.ASK:
                 self.position -= volume
-                # self.money_in -= price*volume
+                self.money_in -= price*volume
             else:
                 self.logger.critical(f'THIS CASE SHOULD NEVER HAPPEN')
 
+            self.logger.critical('NOT IMPLEMENTED I WOULD DELETE FAK HERE ORDER FILLED.')
             # del self.fak_orders[client_order_id]
         else:
             self.logger.critical(f'\n\n\nTHIS SHOULDNT HAPPEN BRUH FUCK THE POSITION AINT FUCKING UPDATING ORDER {client_order_id} IS THE CULPRIT FILL {volume}\n\n\n')
@@ -407,37 +430,42 @@ class AutoTrader(BaseAutoTrader):
 
         if fill_volume == 0 and remaining_volume > 0:
             # order was just created. we need to instantiate it if not already.
+            self.logger.critical(f'CREATED ORDER {client_order_id}! YE YA')
             if client_order_id in self.theo_orders.keys():
                 if self.theo_orders[client_order_id][0] == Side.BID:
                     self.real_bid = [client_order_id, self.theo_orders[client_order_id][1], self.theo_orders[client_order_id][2]]
-                    # del self.theo_orders[client_order_id]
+                    del self.theo_orders[client_order_id]
             
                 elif self.theo_orders[client_order_id][0] == Side.ASK:
                     self.real_ask = [client_order_id, self.theo_orders[client_order_id][1], self.theo_orders[client_order_id][2]]
-                    # del self.theo_orders[client_order_id]
+                    del self.theo_orders[client_order_id]
             
                 else:
                     self.logger.critical('SIDE NOT EQUAL TO ASK OR BID IN DICT PART 2???')
-            # elif client_order_id in self.fak_orders.keys():
-            #     del self.fak_orders[client_order_id]
+            elif client_order_id in self.fak_orders.keys():
+                del self.fak_orders[client_order_id]
             else:
-                pass # self.logger.critical(f'Order {client_order_id} was instantiated by make_a_market.')
+                self.logger.critical(f'Order {client_order_id} was instantiated by make_a_market.')
 
         elif remaining_volume == 0:
             # order was cancelled or order was filled. order filled function takes care of the latter case.
             # this part takes care of the former, case: cancelled order.
-            if client_order_id == self.real_bid[0]:
-                self.bid_fill_amounts.append(self.real_bid[2])
+            if client_order_id == self.real_bid[0] and self.real_bid[2] != 0:
+                # self.bid_fill_amounts.append(self.real_bid[2])
                 self.real_bid[0] = self.real_bid[1] = self.real_bid[2] = 0
-            elif client_order_id == self.real_ask[0]:
-                self.ask_fill_amounts.append(self.real_ask[2])
+            elif client_order_id == self.real_ask[0] and self.real_bid[2] != 0:
+                # self.ask_fill_amounts.append(self.real_ask[2])
                 self.real_ask[0] = self.real_ask[1] = self.real_ask[2] = 0
+            elif client_order_id in self.fak_orders and self.fak_orders[client_order_id][2] <= 0:
+                self.logger.critical('NOT IMPLEMENTED I WOULD DELETE FAK HERE ORDER STAAAATUS.')
+                pass # del self.fak_orders[client_order_id]
             else:
-                pass # self.logger.critical('Remaining volume is 0 but order not exists. This means on_order_filled_message took care of it.')
+                self.logger.critical('Remaining volume is 0 but order not real ask or. This means on_order_filled_message took care of it.')
+                
 
         else:
             # partially filled, fill volume and remaining volume both above 0.
-            pass # self.logger.critical('Fill volume and remaining volume above 0. This means on_order_filled_message took care of it.')
+            self.logger.critical('Fill volume and remaining volume above 0. This means on_order_filled_message took care of it.')
 
     def on_trade_ticks_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
                                ask_volumes: List[int], bid_prices: List[int], bid_volumes: List[int]) -> None:
@@ -451,10 +479,10 @@ class AutoTrader(BaseAutoTrader):
         the end of both the prices and volumes arrays.
         """
         # Here, we just calculate the P' value for our formula and store is as a global variable.
-
         if ask_prices[0] == 0 and bid_prices[0] == 0:
             return # means nothing was traded.
         
+        # INSTRUMENT MUST BE ETF!!!
         if instrument == Instrument.ETF:
             # check sequence is in order.
             if sequence_number < self.last_ticks_sequence_etf:
@@ -464,12 +492,9 @@ class AutoTrader(BaseAutoTrader):
             sum_ask, sum_bid = sum(ask_volumes), sum(bid_volumes)
 
             # add traded volume to container list for average traded volume computation.
-            if len(self.traded_volumes) == ATV_WIN_SIZE:
-                self.traded_volumes.pop(0)
             self.traded_volumes.append(sum_ask + sum_bid)
 
             # compute signal
-            self.previous_volume_signal = self.latest_volume_signal
             self.latest_volume_signal = self.compute_volume_signal(ask_vol=sum_ask, bid_vol=sum_bid)
 
             # compute weighted average.
