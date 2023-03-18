@@ -44,6 +44,9 @@ LAMBDA_ONE = 0.5      # our first constant, by which we decide whether order imb
 
 HOW_OFTEN_TO_CHECK_HEDGE = 4
 HEDGE_POSITION_LIMIT_TO_UNWIND = 0
+
+VOLUME_SIGNAL_AGG_TIME = 3
+LAMBDA_TWO = 8
 # POSITION_LIMIT_TO_UNWIND = 0
 # REALIZE_PNL_PRICE_CHANGE_FACTOR = 0
 
@@ -81,8 +84,7 @@ class AutoTrader(BaseAutoTrader):
 
         self.best_futures_bid = self.best_futures_ask = 0                       # keeping track of best ask and offer for futures for computing cost
 
-        self.traded_volumes = list()                                            # ATV_WIN_SIZE of the most recent traded volumes from on_ticks_update_message for ATV in volume indicator
-        self.latest_volume_signal = self.previous_volume_signal = 0             # volume signal baby.
+        self.traded_bids = self.traded_asks = self.num = self.volume_signal = 0 #
 
         self.hedge_bid_id = self.hedge_ask_id = 0                               # state of the hedge order we placed so we can adjust 
                                                                                 # hedged position in the correct direction.
@@ -94,6 +96,7 @@ class AutoTrader(BaseAutoTrader):
 
         self.we_are_hedged = True                                               # flag to set for when we are set vs not.
         self.time_of_last_imbalance = self.event_loop.time()                    # used to hedge as a last resort before the minute runs out.
+        self.time_of_last_volume_signal = self.event_loop.time()                #
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
 
@@ -108,15 +111,6 @@ class AutoTrader(BaseAutoTrader):
     #         Side.BID : bid_res,
     #         Side.ASK : ask_res
     #     }
-    
-    def compute_volume_signal(self, ask_vol: int, bid_vol: int) -> float:
-        '''
-        Compute volume pressure magnitude and side based on newest ticks update message.
-        If positive, asks are getting knocked out and price should be rising.
-        If negative, bids are getting cleared and price should be falling. We could reverse this.
-        Returns: the indicator as a float.
-        '''
-        return (bid_vol - ask_vol) / (sum(self.traded_volumes) / len(self.traded_volumes))
 
     def make_a_market(self, bid, bid_volume, ask, ask_volume) -> None:
         '''
@@ -442,19 +436,28 @@ class AutoTrader(BaseAutoTrader):
                 return
             self.last_ticks_sequence_etf = sequence_number
 
-            sum_ask, sum_bid = sum(ask_volumes), sum(bid_volumes)
-
-            # add traded volume to container list for average traded volume computation.
-            self.traded_volumes.append(sum_ask + sum_bid)
-
-            # compute signal
-            self.latest_volume_signal = self.compute_volume_signal(ask_vol=sum_ask, bid_vol=sum_bid)
-
             # compute weighted average.
-            numer = 0
-            for vol, price in zip(bid_volumes+ask_volumes, bid_prices+ask_prices):
-                numer += vol*price
+            numer = denom = 0
+            for bid_vol, bid_price in zip(bid_volumes, bid_prices):
+                numer += bid_vol*bid_price
+                denom += bid_vol
+                self.traded_bids += bid_vol
+            
+            for ask_vol, ask_price in zip(ask_volumes, ask_prices):
+                numer += ask_vol*ask_price
+                denom += ask_vol
+                self.traded_asks += ask_vol
+            self.num += 1
+
+            if self.event_loop.time() - self.time_of_last_volume_signal > VOLUME_SIGNAL_AGG_TIME:
+                atv = (self.traded_bids + self.traded_asks) / self.num
+                self.volume_signal = (self.traded_bids - self.traded_asks) / atv
+
+                self.traded_bids = self.traded_asks = self.num = 0
+                self.time_of_last_volume_signal = self.event_loop.time()
             
             # sliding window to keep last two weighted averages.
             self.p_prime_0 = self.p_prime_1
-            self.p_prime_1 = numer / (sum_ask+sum_bid)
+            self.p_prime_1 = numer / denom
+
+            self.logger.critical(f'SIG: {self.volume_signal} -> TRADED PRICE: {self.p_prime_1}')
