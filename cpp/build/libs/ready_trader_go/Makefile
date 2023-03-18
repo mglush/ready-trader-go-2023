@@ -57,10 +57,10 @@ RM = /opt/homebrew/Cellar/cmake/3.25.1/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/glush/Downloads/cppready_trader_go
+CMAKE_SOURCE_DIR = /Users/glush/Desktop/ReadyTraderGo/cpp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/glush/Downloads/cppready_trader_go/build
+CMAKE_BINARY_DIR = /Users/glush/Desktop/ReadyTraderGo/cpp/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,14 +87,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(CMAKE_COMMAND) -E cmake_progress_start /Users/glush/Downloads/cppready_trader_go/build/CMakeFiles /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go//CMakeFiles/progress.marks
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/glush/Downloads/cppready_trader_go/build/CMakeFiles 0
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(CMAKE_COMMAND) -E cmake_progress_start /Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go//CMakeFiles/progress.marks
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/clean
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/clean
 .PHONY : clean
 
 # The main clean target
@@ -103,22 +103,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/preinstall
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/preinstall
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/rule:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/rule
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/rule
 .PHONY : libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/rule
 
 # Convenience name for target.
@@ -127,7 +127,7 @@ ready_trader_go_lib: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/rul
 
 # fast build rule for target.
 ready_trader_go_lib/fast:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build
 .PHONY : ready_trader_go_lib/fast
 
 application.o: application.cc.o
@@ -135,7 +135,7 @@ application.o: application.cc.o
 
 # target to build an object file
 application.cc.o:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o
 .PHONY : application.cc.o
 
 application.i: application.cc.i
@@ -143,7 +143,7 @@ application.i: application.cc.i
 
 # target to preprocess a source file
 application.cc.i:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.i
 .PHONY : application.cc.i
 
 application.s: application.cc.s
@@ -151,7 +151,7 @@ application.s: application.cc.s
 
 # target to generate assembly for a file
 application.cc.s:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.s
 .PHONY : application.cc.s
 
 autotraderapphandler.o: autotraderapphandler.cc.o
@@ -159,7 +159,7 @@ autotraderapphandler.o: autotraderapphandler.cc.o
 
 # target to build an object file
 autotraderapphandler.cc.o:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o
 .PHONY : autotraderapphandler.cc.o
 
 autotraderapphandler.i: autotraderapphandler.cc.i
@@ -167,7 +167,7 @@ autotraderapphandler.i: autotraderapphandler.cc.i
 
 # target to preprocess a source file
 autotraderapphandler.cc.i:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.i
 .PHONY : autotraderapphandler.cc.i
 
 autotraderapphandler.s: autotraderapphandler.cc.s
@@ -175,7 +175,7 @@ autotraderapphandler.s: autotraderapphandler.cc.s
 
 # target to generate assembly for a file
 autotraderapphandler.cc.s:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.s
 .PHONY : autotraderapphandler.cc.s
 
 baseautotrader.o: baseautotrader.cc.o
@@ -183,7 +183,7 @@ baseautotrader.o: baseautotrader.cc.o
 
 # target to build an object file
 baseautotrader.cc.o:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o
 .PHONY : baseautotrader.cc.o
 
 baseautotrader.i: baseautotrader.cc.i
@@ -191,7 +191,7 @@ baseautotrader.i: baseautotrader.cc.i
 
 # target to preprocess a source file
 baseautotrader.cc.i:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.i
 .PHONY : baseautotrader.cc.i
 
 baseautotrader.s: baseautotrader.cc.s
@@ -199,7 +199,7 @@ baseautotrader.s: baseautotrader.cc.s
 
 # target to generate assembly for a file
 baseautotrader.cc.s:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.s
 .PHONY : baseautotrader.cc.s
 
 connectivity.o: connectivity.cc.o
@@ -207,7 +207,7 @@ connectivity.o: connectivity.cc.o
 
 # target to build an object file
 connectivity.cc.o:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o
 .PHONY : connectivity.cc.o
 
 connectivity.i: connectivity.cc.i
@@ -215,7 +215,7 @@ connectivity.i: connectivity.cc.i
 
 # target to preprocess a source file
 connectivity.cc.i:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.i
 .PHONY : connectivity.cc.i
 
 connectivity.s: connectivity.cc.s
@@ -223,7 +223,7 @@ connectivity.s: connectivity.cc.s
 
 # target to generate assembly for a file
 connectivity.cc.s:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.s
 .PHONY : connectivity.cc.s
 
 protocol.o: protocol.cc.o
@@ -231,7 +231,7 @@ protocol.o: protocol.cc.o
 
 # target to build an object file
 protocol.cc.o:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o
 .PHONY : protocol.cc.o
 
 protocol.i: protocol.cc.i
@@ -239,7 +239,7 @@ protocol.i: protocol.cc.i
 
 # target to preprocess a source file
 protocol.cc.i:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.i
 .PHONY : protocol.cc.i
 
 protocol.s: protocol.cc.s
@@ -247,7 +247,7 @@ protocol.s: protocol.cc.s
 
 # target to generate assembly for a file
 protocol.cc.s:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.s
 .PHONY : protocol.cc.s
 
 # Help Target
@@ -285,6 +285,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

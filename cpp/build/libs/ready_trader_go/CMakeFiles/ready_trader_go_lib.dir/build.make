@@ -53,10 +53,10 @@ RM = /opt/homebrew/Cellar/cmake/3.25.1/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/glush/Downloads/cppready_trader_go
+CMAKE_SOURCE_DIR = /Users/glush/Desktop/ReadyTraderGo/cpp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/glush/Downloads/cppready_trader_go/build
+CMAKE_BINARY_DIR = /Users/glush/Desktop/ReadyTraderGo/cpp/build
 
 # Include any dependencies generated for this target.
 include libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/depend.make
@@ -70,74 +70,74 @@ include libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/progress.make
 include libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/flags.make
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/flags.make
-libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o: /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/application.cc
+libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o: /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/application.cc
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/application.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/application.cc.o -c /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/application.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o"
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/application.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/application.cc.o -c /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/application.cc
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ready_trader_go_lib.dir/application.cc.i"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/application.cc > CMakeFiles/ready_trader_go_lib.dir/application.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/application.cc > CMakeFiles/ready_trader_go_lib.dir/application.cc.i
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ready_trader_go_lib.dir/application.cc.s"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/application.cc -o CMakeFiles/ready_trader_go_lib.dir/application.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/application.cc -o CMakeFiles/ready_trader_go_lib.dir/application.cc.s
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/flags.make
-libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o: /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/autotraderapphandler.cc
+libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o: /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/autotraderapphandler.cc
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o -c /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/autotraderapphandler.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o"
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.o -c /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/autotraderapphandler.cc
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.i"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/autotraderapphandler.cc > CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/autotraderapphandler.cc > CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.i
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.s"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/autotraderapphandler.cc -o CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/autotraderapphandler.cc -o CMakeFiles/ready_trader_go_lib.dir/autotraderapphandler.cc.s
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/flags.make
-libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o: /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/baseautotrader.cc
+libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o: /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/baseautotrader.cc
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o -c /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/baseautotrader.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o"
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o -c /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/baseautotrader.cc
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.i"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/baseautotrader.cc > CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/baseautotrader.cc > CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.i
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.s"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/baseautotrader.cc -o CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/baseautotrader.cc -o CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.s
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/flags.make
-libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o: /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivity.cc
+libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o: /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivity.cc
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o -c /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivity.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o"
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o -c /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivity.cc
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.i"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivity.cc > CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivity.cc > CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.i
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.s"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivity.cc -o CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivity.cc -o CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.s
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/flags.make
-libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o: /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.cc
+libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o: /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.cc
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o -c /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o"
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o -MF CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o.d -o CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o -c /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.cc
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/ready_trader_go_lib.dir/protocol.cc.i"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.cc > CMakeFiles/ready_trader_go_lib.dir/protocol.cc.i
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.cc > CMakeFiles/ready_trader_go_lib.dir/protocol.cc.i
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/ready_trader_go_lib.dir/protocol.cc.s"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.cc -o CMakeFiles/ready_trader_go_lib.dir/protocol.cc.s
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && /Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.cc -o CMakeFiles/ready_trader_go_lib.dir/protocol.cc.s
 
 # Object files for target ready_trader_go_lib
 ready_trader_go_lib_OBJECTS = \
@@ -157,19 +157,19 @@ libs/ready_trader_go/libready_trader_go_lib.a: libs/ready_trader_go/CMakeFiles/r
 libs/ready_trader_go/libready_trader_go_lib.a: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o
 libs/ready_trader_go/libready_trader_go_lib.a: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build.make
 libs/ready_trader_go/libready_trader_go_lib.a: libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libready_trader_go_lib.a"
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && $(CMAKE_COMMAND) -P CMakeFiles/ready_trader_go_lib.dir/cmake_clean_target.cmake
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ready_trader_go_lib.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libready_trader_go_lib.a"
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && $(CMAKE_COMMAND) -P CMakeFiles/ready_trader_go_lib.dir/cmake_clean_target.cmake
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ready_trader_go_lib.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build: libs/ready_trader_go/libready_trader_go_lib.a
 .PHONY : libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/build
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/clean:
-	cd /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go && $(CMAKE_COMMAND) -P CMakeFiles/ready_trader_go_lib.dir/cmake_clean.cmake
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go && $(CMAKE_COMMAND) -P CMakeFiles/ready_trader_go_lib.dir/cmake_clean.cmake
 .PHONY : libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/clean
 
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/depend:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/glush/Downloads/cppready_trader_go /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go /Users/glush/Downloads/cppready_trader_go/build /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go /Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/DependInfo.cmake --color=$(COLOR)
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/glush/Desktop/ReadyTraderGo/cpp /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go /Users/glush/Desktop/ReadyTraderGo/cpp/build /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/depend
 

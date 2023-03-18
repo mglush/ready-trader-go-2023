@@ -53,10 +53,10 @@ RM = /opt/homebrew/Cellar/cmake/3.25.1/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/glush/Downloads/cppready_trader_go
+CMAKE_SOURCE_DIR = /Users/glush/Desktop/ReadyTraderGo/cpp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/glush/Downloads/cppready_trader_go/build
+CMAKE_BINARY_DIR = /Users/glush/Desktop/ReadyTraderGo/cpp/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/autotrader.dir/depend.make
@@ -70,32 +70,32 @@ include CMakeFiles/autotrader.dir/progress.make
 include CMakeFiles/autotrader.dir/flags.make
 
 CMakeFiles/autotrader.dir/main.cc.o: CMakeFiles/autotrader.dir/flags.make
-CMakeFiles/autotrader.dir/main.cc.o: /Users/glush/Downloads/cppready_trader_go/main.cc
+CMakeFiles/autotrader.dir/main.cc.o: /Users/glush/Desktop/ReadyTraderGo/cpp/main.cc
 CMakeFiles/autotrader.dir/main.cc.o: CMakeFiles/autotrader.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/autotrader.dir/main.cc.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/autotrader.dir/main.cc.o -MF CMakeFiles/autotrader.dir/main.cc.o.d -o CMakeFiles/autotrader.dir/main.cc.o -c /Users/glush/Downloads/cppready_trader_go/main.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/autotrader.dir/main.cc.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/autotrader.dir/main.cc.o -MF CMakeFiles/autotrader.dir/main.cc.o.d -o CMakeFiles/autotrader.dir/main.cc.o -c /Users/glush/Desktop/ReadyTraderGo/cpp/main.cc
 
 CMakeFiles/autotrader.dir/main.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/autotrader.dir/main.cc.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Downloads/cppready_trader_go/main.cc > CMakeFiles/autotrader.dir/main.cc.i
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Desktop/ReadyTraderGo/cpp/main.cc > CMakeFiles/autotrader.dir/main.cc.i
 
 CMakeFiles/autotrader.dir/main.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/autotrader.dir/main.cc.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Downloads/cppready_trader_go/main.cc -o CMakeFiles/autotrader.dir/main.cc.s
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Desktop/ReadyTraderGo/cpp/main.cc -o CMakeFiles/autotrader.dir/main.cc.s
 
 CMakeFiles/autotrader.dir/autotrader.cc.o: CMakeFiles/autotrader.dir/flags.make
-CMakeFiles/autotrader.dir/autotrader.cc.o: /Users/glush/Downloads/cppready_trader_go/autotrader.cc
+CMakeFiles/autotrader.dir/autotrader.cc.o: /Users/glush/Desktop/ReadyTraderGo/cpp/autotrader.cc
 CMakeFiles/autotrader.dir/autotrader.cc.o: CMakeFiles/autotrader.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/autotrader.dir/autotrader.cc.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/autotrader.dir/autotrader.cc.o -MF CMakeFiles/autotrader.dir/autotrader.cc.o.d -o CMakeFiles/autotrader.dir/autotrader.cc.o -c /Users/glush/Downloads/cppready_trader_go/autotrader.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/autotrader.dir/autotrader.cc.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/autotrader.dir/autotrader.cc.o -MF CMakeFiles/autotrader.dir/autotrader.cc.o.d -o CMakeFiles/autotrader.dir/autotrader.cc.o -c /Users/glush/Desktop/ReadyTraderGo/cpp/autotrader.cc
 
 CMakeFiles/autotrader.dir/autotrader.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/autotrader.dir/autotrader.cc.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Downloads/cppready_trader_go/autotrader.cc > CMakeFiles/autotrader.dir/autotrader.cc.i
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/glush/Desktop/ReadyTraderGo/cpp/autotrader.cc > CMakeFiles/autotrader.dir/autotrader.cc.i
 
 CMakeFiles/autotrader.dir/autotrader.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/autotrader.dir/autotrader.cc.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Downloads/cppready_trader_go/autotrader.cc -o CMakeFiles/autotrader.dir/autotrader.cc.s
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/glush/Desktop/ReadyTraderGo/cpp/autotrader.cc -o CMakeFiles/autotrader.dir/autotrader.cc.s
 
 # Object files for target autotrader
 autotrader_OBJECTS = \
@@ -127,7 +127,7 @@ autotrader: /opt/homebrew/lib/libboost_filesystem-mt.dylib
 autotrader: /opt/homebrew/lib/libboost_atomic-mt.dylib
 autotrader: /opt/homebrew/lib/libboost_chrono-mt.dylib
 autotrader: CMakeFiles/autotrader.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable autotrader"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable autotrader"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/autotrader.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -139,6 +139,6 @@ CMakeFiles/autotrader.dir/clean:
 .PHONY : CMakeFiles/autotrader.dir/clean
 
 CMakeFiles/autotrader.dir/depend:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/glush/Downloads/cppready_trader_go /Users/glush/Downloads/cppready_trader_go /Users/glush/Downloads/cppready_trader_go/build /Users/glush/Downloads/cppready_trader_go/build /Users/glush/Downloads/cppready_trader_go/build/CMakeFiles/autotrader.dir/DependInfo.cmake --color=$(COLOR)
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /Users/glush/Desktop/ReadyTraderGo/cpp /Users/glush/Desktop/ReadyTraderGo/cpp /Users/glush/Desktop/ReadyTraderGo/cpp/build /Users/glush/Desktop/ReadyTraderGo/cpp/build /Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles/autotrader.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/autotrader.dir/depend
 

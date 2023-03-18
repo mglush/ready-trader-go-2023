@@ -1,8 +1,8 @@
-/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles/autotrader.dir
-/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles/edit_cache.dir
-/Users/glush/Downloads/cppready_trader_go/build/CMakeFiles/rebuild_cache.dir
-/Users/glush/Downloads/cppready_trader_go/build/libs/CMakeFiles/edit_cache.dir
-/Users/glush/Downloads/cppready_trader_go/build/libs/CMakeFiles/rebuild_cache.dir
-/Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir
-/Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go/CMakeFiles/edit_cache.dir
-/Users/glush/Downloads/cppready_trader_go/build/libs/ready_trader_go/CMakeFiles/rebuild_cache.dir
+/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles/autotrader.dir
+/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles/edit_cache.dir
+/Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles/rebuild_cache.dir
+/Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/CMakeFiles/edit_cache.dir
+/Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/CMakeFiles/rebuild_cache.dir
+/Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir
+/Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go/CMakeFiles/edit_cache.dir
+/Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/ready_trader_go/CMakeFiles/rebuild_cache.dir

@@ -1,5 +1,5 @@
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o: \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.cc \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.cc \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/cstring \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -451,13 +451,13 @@ libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/protocol.cc.o: \
   /opt/homebrew/include/boost/type_traits/is_signed.hpp \
   /opt/homebrew/include/boost/type_traits/remove_cv.hpp \
   /opt/homebrew/include/boost/endian/detail/endian_store.hpp \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/array \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/vector \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__bit_reference \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__split_buffer \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivitytypes.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/types.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivitytypes.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/types.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/ostream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/bitset \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/ios \

@@ -1,5 +1,5 @@
 CMakeFiles/autotrader.dir/main.cc.o: \
-  /Users/glush/Downloads/cppready_trader_go/main.cc \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/main.cc \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/cstdlib \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -414,7 +414,7 @@ CMakeFiles/autotrader.dir/main.cc.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/_types/_fsfilcnt_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/_types/_nl_item.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__bsd_locale_defaults.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/application.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/application.h \
   /opt/homebrew/include/boost/asio/io_context.hpp \
   /opt/homebrew/include/boost/asio/detail/config.hpp \
   /opt/homebrew/include/boost/config.hpp \
@@ -2308,13 +2308,13 @@ CMakeFiles/autotrader.dir/main.cc.o: \
   /opt/homebrew/include/boost/multi_index/detail/duplicates_iterator.hpp \
   /opt/homebrew/include/boost/multi_index/member.hpp \
   /opt/homebrew/include/boost/property_tree/detail/ptree_implementation.hpp \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/autotraderapphandler.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/baseautotrader.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/autotraderapphandler.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/baseautotrader.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/array \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivitytypes.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/types.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivity.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivitytypes.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/types.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivity.h \
   /opt/homebrew/include/boost/asio/ip/tcp.hpp \
   /opt/homebrew/include/boost/asio/basic_socket_acceptor.hpp \
   /opt/homebrew/include/boost/asio/basic_socket.hpp \
@@ -2436,8 +2436,8 @@ CMakeFiles/autotrader.dir/main.cc.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/mman.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/shm.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/ipc.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/error.h \
-  /Users/glush/Downloads/cppready_trader_go/autotrader.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/error.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/autotrader.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/unordered_map \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__hash_table \
   /opt/homebrew/include/boost/circular_buffer.hpp \

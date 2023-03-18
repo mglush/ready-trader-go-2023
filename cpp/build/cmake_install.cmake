@@ -1,4 +1,4 @@
-# Install script for directory: /Users/glush/Downloads/cppready_trader_go
+# Install script for directory: /Users/glush/Desktop/ReadyTraderGo/cpp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,7 +39,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/Users/glush/Downloads/cppready_trader_go/build/libs/cmake_install.cmake")
+  include("/Users/glush/Desktop/ReadyTraderGo/cpp/build/libs/cmake_install.cmake")
 
 endif()
 
@@ -51,5 +51,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/glush/Downloads/cppready_trader_go/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/glush/Desktop/ReadyTraderGo/cpp/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

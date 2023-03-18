@@ -1,6 +1,6 @@
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o: \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/baseautotrader.cc \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/baseautotrader.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/baseautotrader.cc \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/baseautotrader.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/array \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -702,11 +702,11 @@ libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/baseautotrader.cc.o: \
   /opt/homebrew/include/boost/asio/impl/system_context.ipp \
   /opt/homebrew/include/boost/asio/executor_work_guard.hpp \
   /opt/homebrew/include/boost/asio/impl/io_context.ipp \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivitytypes.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/types.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/error.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/logging.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivitytypes.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/types.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/error.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/logging.h \
   /opt/homebrew/include/boost/log/keywords/channel.hpp \
   /opt/homebrew/include/boost/parameter/keyword.hpp \
   /opt/homebrew/include/boost/parameter/aux_/tag.hpp \

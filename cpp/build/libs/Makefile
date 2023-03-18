@@ -57,10 +57,10 @@ RM = /opt/homebrew/Cellar/cmake/3.25.1/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/glush/Downloads/cppready_trader_go
+CMAKE_SOURCE_DIR = /Users/glush/Desktop/ReadyTraderGo/cpp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/glush/Downloads/cppready_trader_go/build
+CMAKE_BINARY_DIR = /Users/glush/Desktop/ReadyTraderGo/cpp/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,14 +87,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(CMAKE_COMMAND) -E cmake_progress_start /Users/glush/Downloads/cppready_trader_go/build/CMakeFiles /Users/glush/Downloads/cppready_trader_go/build/libs//CMakeFiles/progress.marks
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/glush/Downloads/cppready_trader_go/build/CMakeFiles 0
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(CMAKE_COMMAND) -E cmake_progress_start /Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles /Users/glush/Desktop/ReadyTraderGo/cpp/build/libs//CMakeFiles/progress.marks
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/glush/Desktop/ReadyTraderGo/cpp/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/clean
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/clean
 .PHONY : clean
 
 # The main clean target
@@ -103,17 +103,17 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/preinstall
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/preinstall
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 libs/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Help Target
@@ -135,6 +135,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /Users/glush/Downloads/cppready_trader_go/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /Users/glush/Desktop/ReadyTraderGo/cpp/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

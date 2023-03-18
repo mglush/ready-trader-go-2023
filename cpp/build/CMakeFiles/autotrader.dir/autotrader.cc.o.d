@@ -1,5 +1,5 @@
 CMakeFiles/autotrader.dir/autotrader.cc.o: \
-  /Users/glush/Downloads/cppready_trader_go/autotrader.cc \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/autotrader.cc \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/array \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -701,7 +701,7 @@ CMakeFiles/autotrader.dir/autotrader.cc.o: \
   /opt/homebrew/include/boost/asio/impl/system_context.ipp \
   /opt/homebrew/include/boost/asio/executor_work_guard.hpp \
   /opt/homebrew/include/boost/asio/impl/io_context.ipp \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/logging.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/logging.h \
   /opt/homebrew/include/boost/log/keywords/channel.hpp \
   /opt/homebrew/include/boost/parameter/keyword.hpp \
   /opt/homebrew/include/boost/parameter/aux_/tag.hpp \
@@ -1181,7 +1181,7 @@ CMakeFiles/autotrader.dir/autotrader.cc.o: \
   /opt/homebrew/include/boost/log/keywords/severity.hpp \
   /opt/homebrew/include/boost/log/sources/channel_feature.hpp \
   /opt/homebrew/include/boost/log/attributes/mutable_constant.hpp \
-  /Users/glush/Downloads/cppready_trader_go/autotrader.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/autotrader.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/unordered_map \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__functional/is_transparent.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__hash_table \
@@ -1254,7 +1254,7 @@ CMakeFiles/autotrader.dir/autotrader.cc.o: \
   /opt/homebrew/include/boost/type_traits/function_traits.hpp \
   /opt/homebrew/include/boost/type_traits/add_pointer.hpp \
   /opt/homebrew/include/boost/utility/swap.hpp \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/baseautotrader.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivitytypes.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/protocol.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/types.h
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/baseautotrader.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivitytypes.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/protocol.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/types.h

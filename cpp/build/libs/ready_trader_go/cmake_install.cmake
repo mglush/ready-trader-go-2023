@@ -1,4 +1,4 @@
-# Install script for directory: /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go
+# Install script for directory: /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

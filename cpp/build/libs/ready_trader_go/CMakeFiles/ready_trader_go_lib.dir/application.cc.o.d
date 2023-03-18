@@ -1,5 +1,5 @@
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o: \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/application.cc \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/application.cc \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/csignal \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -2082,7 +2082,7 @@ libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o: \
   /opt/homebrew/include/boost/property_tree/json_parser/detail/wide_encoding.hpp \
   /opt/homebrew/include/boost/property_tree/json_parser/detail/standard_callbacks.hpp \
   /opt/homebrew/include/boost/property_tree/json_parser/detail/write.hpp \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/application.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/application.h \
   /opt/homebrew/include/boost/asio/io_context.hpp \
   /opt/homebrew/include/boost/asio/detail/config.hpp \
   /opt/homebrew/include/boost/asio/async_result.hpp \
@@ -2645,8 +2645,8 @@ libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/application.cc.o: \
   /opt/homebrew/include/boost/log/sinks/bounded_fifo_queue.hpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/queue \
   /opt/homebrew/include/boost/log/sinks/drop_on_overflow.hpp \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/error.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/logging.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/error.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/logging.h \
   /opt/homebrew/include/boost/log/keywords/channel.hpp \
   /opt/homebrew/include/boost/log/sources/global_logger_storage.hpp \
   /opt/homebrew/include/boost/log/detail/singleton.hpp \

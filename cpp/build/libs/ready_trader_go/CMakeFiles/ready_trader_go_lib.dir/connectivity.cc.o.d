@@ -1,5 +1,5 @@
 libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o: \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivity.cc \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivity.cc \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/cstddef \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1/__config_site \
@@ -1159,13 +1159,13 @@ libs/ready_trader_go/CMakeFiles/ready_trader_go_lib.dir/connectivity.cc.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/mman.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/shm.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/sys/ipc.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivity.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivity.h \
   /opt/homebrew/include/boost/asio/streambuf.hpp \
   /opt/homebrew/include/boost/asio/basic_streambuf.hpp \
   /opt/homebrew/include/boost/asio/basic_streambuf_fwd.hpp \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/connectivitytypes.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/error.h \
-  /Users/glush/Downloads/cppready_trader_go/libs/ready_trader_go/logging.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/connectivitytypes.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/error.h \
+  /Users/glush/Desktop/ReadyTraderGo/cpp/libs/ready_trader_go/logging.h \
   /opt/homebrew/include/boost/log/keywords/channel.hpp \
   /opt/homebrew/include/boost/parameter/keyword.hpp \
   /opt/homebrew/include/boost/parameter/aux_/tag.hpp \
