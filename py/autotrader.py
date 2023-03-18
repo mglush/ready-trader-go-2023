@@ -43,12 +43,15 @@ MAX_TIME_UNHEDGED = 58  # time limit in seconds.
 LAMBDA_ONE = 0.5      # our first constant, by which we decide whether order imbalance is up or down or flat.
 
 HOW_OFTEN_TO_CHECK_HEDGE = 4
-POSITION_LIMIT_TO_UNWIND = 0
 HEDGE_POSITION_LIMIT_TO_UNWIND = 0
-UNWIND_FACTOR = 1.0
+# POSITION_LIMIT_TO_UNWIND = 0
+# REALIZE_PNL_PRICE_CHANGE_FACTOR = 0
 
-FILL_RATE_WINDOW_SIZE = 20
-DESIRED_FILL_RATE = 0.85
+# UNWIND_FACTOR = 1.05
+# FAK_LOT_SIZE = 3
+
+# FILL_RATE_WINDOW_SIZE = 20
+# DESIRED_FILL_RATE = 0.85
 
 class AutoTrader(BaseAutoTrader):
     '''
@@ -61,12 +64,10 @@ class AutoTrader(BaseAutoTrader):
         super().__init__(loop, team_name, secret)
         self.order_ids = itertools.count(1)
 
-        self.orders = {
-            Side.BID : None,                                                   # maps Side.BID -> [order id, price, volume], one at a time at most.
-            Side.ASK : None                                                    # maps Side.ASK -> [order id, price, volume], one at a time at most.
-        }
+        self.curr_bid = None                                                     # maps curr bid to its [id, price, volume]
+        self.curr_ask = None                                                      # maps curr ask to its [id, price, volume]
 
-        self.fak_orders = dict()                                               # id -> (side, price, volume)
+        # self.fak_orders = dict()                                               # id -> (side, price, volume)
 
         # self.fill_ratios = {                                                   # keeps track of the proportion of each Good For Day order that gets filled.
         #     Side.BID : [],
@@ -128,40 +129,39 @@ class AutoTrader(BaseAutoTrader):
         ask (int):          price to place ask at.
         ask_volume (int):   how many shares to ask?
         '''
-        self.logger.info(f'ENTERING MAKE A MARKET FUNCTION!')
-
-        if self.orders[Side.BID] is not None \
-            and self.orders[Side.BID]['price'] != bid:
+        if self.curr_bid is not None \
+            and self.curr_bid['price'] != bid:
             # cancel old order.
-            self.send_cancel_order(self.orders[Side.BID]['id'])
+            self.send_cancel_order(self.curr_bid['id'])
 
-        if self.orders[Side.BID] is None \
+        if self.curr_bid is None \
             and bid != 0 \
             and self.position + LOT_SIZE < POSITION_LIMIT:
             # record bid.
-            self.orders[Side.BID] = {
+            self.curr_bid = {
                 'id' : next(self.order_ids),
                 'price' : bid,
                 'volume' : bid_volume
             }
             # place bid.
-            self.send_insert_order(self.orders[Side.BID]['id'], Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
+            self.send_insert_order(self.curr_bid['id'], Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
 
-        if self.orders[Side.ASK] is not None and self.orders[Side.ASK]['price'] != ask:
+        if self.curr_ask is not None \
+             and self.curr_ask['price'] != ask:
             # cancel old order.
-            self.send_cancel_order(self.orders[Side.ASK]['id'])
+            self.send_cancel_order(self.curr_ask['id'])
 
-        if self.orders[Side.ASK] is None \
+        if self.curr_ask is None \
             and ask != 0 \
             and self.position - LOT_SIZE > -POSITION_LIMIT:
             # record order.
-            self.orders[Side.ASK] = {
+            self.curr_ask = {
                 'id' : next(self.order_ids),
                 'price' : ask,
                 'volume' : ask_volume
             }
             # send order.
-            self.send_insert_order(self.orders[Side.ASK]['id'], Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
+            self.send_insert_order(self.curr_ask['id'], Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
 
     def hedge(self) -> None:
         '''
@@ -210,41 +210,41 @@ class AutoTrader(BaseAutoTrader):
         avg_entry = self.hedged_money_in / self.hedged_position
         self.logger.critical('UNWINDING HEDGE POSITION')
         self.logger.critical(f'OUR AVERAGE ENTRY IS {avg_entry}, POSITION IS {self.hedged_position}, CURR FUTURE BID IS {self.best_futures_bid}, CURR FUTURE ASK IS {self.best_futures_ask}.')
-        if self.hedged_position > POSITION_LIMIT_TO_UNWIND:
+        if self.hedged_position > HEDGE_POSITION_LIMIT_TO_UNWIND:
             if avg_entry < 2*self.best_futures_bid - self.best_futures_ask:
                 if self.hedge_ask_id == 0:
                     self.hedge_ask_id = next(self.order_ids)
                     self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, self.hedged_position)
-        elif self.hedged_position < -POSITION_LIMIT_TO_UNWIND:
+        elif self.hedged_position < -HEDGE_POSITION_LIMIT_TO_UNWIND:
             if avg_entry > 2*self.best_futures_ask - self.best_futures_bid:
                 if self.hedge_bid_id == 0:
                     self.hedge_ask_id = next(self.order_ids)
                     self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.hedged_position))
         
-    def realize_PnL(self, bid, ask) -> None:
-        '''
-        This function realizes out PnL if we have any past a certain threshold.
-        That is, if we have +50 etf and the stock moved up, we should realize our PnL
-        by selling off some of the etf at the new higher price via a fill and kill the moment we 
-        have a "profitable enough" chance to do so.
-        '''
-        if self.position == 0:
-            return
+    # def realize_PnL(self, bid, ask) -> None:
+    #     '''
+    #     This function realizes out PnL if we have any past a certain threshold.
+    #     That is, if we have +50 etf and the stock moved up, we should realize our PnL
+    #     by selling off some of the etf at the new higher price via a fill and kill the moment we 
+    #     have a "profitable enough" chance to do so.
+    #     '''
+    #     if self.position == 0:
+    #         return
 
-        avg_entry = self.money_in / self.position
-        next_id = next(self.order_ids)
+    #     avg_entry = self.money_in / self.position
+    #     next_id = next(self.order_ids)
 
-        if self.position > POSITION_LIMIT_TO_UNWIND:
-            if avg_entry < bid / UNWIND_FACTOR:
-                # realize da PnL
-                self.fak_orders[next_id] = (Side.ASK, bid)
-                self.send_insert_order(next_id, Side.ASK, bid, 1, Lifespan.FILL_AND_KILL)
+    #     if self.position > POSITION_LIMIT_TO_UNWIND:
+    #         if avg_entry < bid / UNWIND_FACTOR:
+    #             # realize da PnL
+    #             self.fak_orders[next_id] = [Side.ASK, bid, FAK_LOT_SIZE]
+    #             self.send_insert_order(next_id, Side.ASK, bid, FAK_LOT_SIZE, Lifespan.FILL_AND_KILL)
 
-        elif self.position < -POSITION_LIMIT_TO_UNWIND:
-            if avg_entry > ask * UNWIND_FACTOR:
-                # realize da PnL
-                self.fak_orders[next_id] = (Side.BID, ask)
-                self.send_insert_order(next_id, Side.BID, ask, 1, Lifespan.FILL_AND_KILL)
+    #     elif self.position < -POSITION_LIMIT_TO_UNWIND:
+    #         if avg_entry > ask * UNWIND_FACTOR:
+    #             # realize da PnL
+    #             self.fak_orders[next_id] = [Side.BID, ask, FAK_LOT_SIZE]
+    #             self.send_insert_order(next_id, Side.BID, ask, FAK_LOT_SIZE, Lifespan.FILL_AND_KILL)
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
 
@@ -314,15 +314,17 @@ class AutoTrader(BaseAutoTrader):
             if sequence_number < self.last_order_book_sequence_etf:
                 return # check sequence is in order.
             self.last_order_book_sequence_etf = sequence_number
-
-            # next, calculate current entry, and see if we have a PnL to collect.
-            # self.realize_PnL(bid_prices[0], ask_prices[0])
             
             # calculate p_t, based on the midpoint of the bid and ask we got just now.
             p_t = (ask_prices[0] + bid_prices[0]) / 2
 
             # calculate r_t based on our p_prime values collected in order ticks.
             r_t = abs((self.p_prime_0 - self.p_prime_1) / self.p_prime_0) + BPS_ROUND_FLAT
+
+            # next, calculate current entry, and see if we have a PnL to collect.
+            # only do so if relative price change just now was big enough.
+            # if r_t > REALIZE_PNL_PRICE_CHANGE_FACTOR:
+                # self.realize_PnL(bid_prices[0], ask_prices[0])
 
             # calculate volume imbalance to see whether we need to adjust spread.
             lambda_imbalance = (sum(bid_volumes) - sum(ask_volumes)) / sum(bid_volumes + ask_volumes)
@@ -357,29 +359,29 @@ class AutoTrader(BaseAutoTrader):
         which may be better than the order's limit price. The volume is
         the number of lots filled at that price.
         """
-        if client_order_id in self.fak_orders:
-            if self.fak_orders[client_order_id][0] == Side.BID:
-                self.position += volume
-                self.money_in += price
-            elif self.fak_orders[client_order_id][0] == Side.ASK:
-                self.position -= volume
-                self.money_in -= price
-            del self.fak_orders[client_order_id]
-            return
+        # if client_order_id in self.fak_orders:
+        #     if self.fak_orders[client_order_id][0] == Side.BID:
+        #         self.position += volume
+        #         self.money_in += price * volume
+        #     elif self.fak_orders[client_order_id][0] == Side.ASK:
+        #         self.position -= volume
+        #         self.money_in -= price * volume
+        #     self.fak_orders[client_order_id][2] -= volume
+        #     return
 
-        if self.orders[Side.BID] is not None \
-            and self.orders[Side.BID]['id'] == client_order_id:
+        if self.curr_bid is not None \
+            and self.curr_bid['id'] == client_order_id:
             
             self.position += volume
             self.money_in += price * volume
-            self.orders[Side.BID]['volume'] -= volume
+            self.curr_bid['volume'] -= volume
             # self.fill_ratios[Side.BID].append(volume / LOT_SIZE)
-        elif self.orders[Side.ASK] is not None \
-            and self.orders[Side.ASK]['id'] == client_order_id:
+        elif self.curr_ask is not None \
+            and self.curr_ask['id'] == client_order_id:
             
             self.position -= volume
             self.money_in -= price * volume
-            self.orders[Side.ASK]['volume'] -= volume
+            self.curr_ask['volume'] -= volume
             # self.fill_ratios[Side.ASK].append(volume / LOT_SIZE)
         else:
             self.logger.error(f'ORDER {client_order_id} WAS NOT IN self.orders WHEN IT REACHED ORDER FILLED MESSAGE.')
@@ -405,13 +407,18 @@ class AutoTrader(BaseAutoTrader):
         If an order is cancelled its remaining volume will be zero.
         """
         if remaining_volume == 0:
-            if self.orders[Side.BID] is not None:
-                if self.orders[Side.BID]['id'] == client_order_id:
-                    self.orders[Side.BID] = None
+            # if client_order_id in self.fak_orders:
+            #     if self.fak_orders[client_order_id][2] <= 0:
+            #         del self.fak_orders[client_order_id]
+            #         return
+
+            if self.curr_bid is not None:
+                if self.curr_bid['id'] == client_order_id:
+                    self.curr_bid = None
             
-            if self.orders[Side.ASK] is not None:
-                if self.orders[Side.ASK]['id'] == client_order_id:
-                    self.orders[Side.ASK] = None
+            if self.curr_ask is not None:
+                if self.curr_ask['id'] == client_order_id:
+                    self.curr_ask = None
 
     def on_trade_ticks_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
                                ask_volumes: List[int], bid_prices: List[int], bid_volumes: List[int]) -> None:
