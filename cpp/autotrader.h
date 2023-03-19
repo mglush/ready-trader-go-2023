@@ -53,7 +53,7 @@ public:
 
     void realize_hedge_PnL();
 
-    void realize_PnL(unsigned long bid, unsigned long ask);
+    // void realize_PnL(unsigned long bid, unsigned long ask);
 
     /* THIS SECTION CONTAINS OUR HELPER FUNCTION DECLARATIONS! */
 
@@ -146,12 +146,10 @@ private:
 
     unsigned long time_of_last_imbalance;
 
-    std::vector<int> real_bid;
-    std::vector<int> real_ask;
-    boost::circular_buffer<int> traded_volumes;
+    boost::circular_buffer<unsigned long> traded_volumes;
 
-    std::unordered_map<int, boost::tuple<ReadyTraderGo::Side, unsigned long, unsigned long>> fak_orders;
-    std::unordered_map<int, boost::tuple<ReadyTraderGo::Side, unsigned long, unsigned long>> theo_orders;
+    std::unordered_map<ReadyTraderGo::Side, std::vector<unsigned long>> orders;
+    // std::unordered_map<unsigned long, boost::tuple<ReadyTraderGo::Side, unsigned long, unsigned long>> fak_orders;
 };
 
 #endif //CPPREADY_TRADER_GO_AUTOTRADER_H
