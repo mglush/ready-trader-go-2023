@@ -39,7 +39,7 @@ BPS_ROUND_IN_DIRECTION = -0.0032
 BPS_ROUND_AGAINST_DIRECTION = 0.0064
 
 UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
-MAX_TIME_UNHEDGED = 55  # time limit in seconds for us to re-hedge. 2 second buffer on actual limit.
+MAX_TIME_UNHEDGED = 58  # time limit in seconds for us to re-hedge. 2 second buffer on actual limit.
 HEDGE_POSITION_LIMIT_TO_UNWIND = 0  # unwind the moment it is profitable to do so.
 POSITION_TOO_FAR = 25
 
@@ -224,7 +224,7 @@ class AutoTrader(BaseAutoTrader):
         price levels.
         """
         # trade!
-        if bid_prices[0] == 0 or ask_prices[0] == 0 or self.p_prime_0 == 0 or self.p_prime_1 == 0: 
+        if bid_prices[0] <= 0 or ask_prices[0] <= 0 or self.p_prime_0 == 0 or self.p_prime_1 == 0:
             return # we got nothing in this thang.
 
         if instrument == Instrument.FUTURE:
@@ -244,12 +244,10 @@ class AutoTrader(BaseAutoTrader):
                 if self.event_loop.time() - self.time_of_last_imbalance > MAX_TIME_UNHEDGED:
                     self.hedge() # hedge only if absolutely necessary!
                 else:
-                    # # get rid of the hedge when we are profiting from that.
-                    # self.realize_hedge_PnL()
-                    if self.hedged_position < 0:
+                    if self.hedged_position < 0 and self.hedge_bid_id != 0:
                         self.hedge_bid_id = next(self.order_ids)
                         self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position)))
-                    elif self.hedged_position > 0:
+                    elif self.hedged_position > 0 and self.hedge_ask_id != 0:
                         self.hedge_ask_id = next(self.order_ids)
                         self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
 
