@@ -67,7 +67,7 @@ class AutoTrader(BaseAutoTrader):
 
         self.hedged_money_in = 0                                                # used for calculating average entry into position.
 
-        self.best_futures_bid = self.best_futures_ask = 0                        # keeping track of best ask and offer for futures for computing cost
+        # self.best_futures_bid = self.best_futures_ask = 0                        # keeping track of best ask and offer for futures for computing cost
 
         self.hedge_bid_id = self.hedge_ask_id = 0                                # state of the hedge order we placed so we can adjust 
                                                                                  # hedged position in the correct direction.
@@ -158,28 +158,28 @@ class AutoTrader(BaseAutoTrader):
         
         self.logger.critical(f'\tEXIT HEDGE.')
 
-    def realize_hedge_PnL(self) -> None:
-        '''
-        Calculated average entry into the hedge, and
-        unwinds our hedge when it is profitable to do so.
-        '''
-        if self.hedged_position == 0:
-            return
+    # def realize_hedge_PnL(self) -> None:
+    #     '''
+    #     Calculated average entry into the hedge, and
+    #     unwinds our hedge when it is profitable to do so.
+    #     '''
+    #     if self.hedged_position == 0:
+    #         return
 
-        avg_entry = self.hedged_money_in / self.hedged_position
-        self.logger.critical(f'OUR AVERAGE ENTRY IS {avg_entry}, POSITION IS {self.hedged_position}, CURR FUTURE BID IS {self.best_futures_bid}, CURR FUTURE ASK IS {self.best_futures_ask}.')
-        if self.hedged_position > HEDGE_POSITION_LIMIT_TO_UNWIND:
-            if avg_entry < 2*self.best_futures_bid - self.best_futures_ask:
-                if self.hedge_ask_id == 0:
-                    self.logger.critical('UNWINDING HEDGE POSITION')
-                    self.hedge_ask_id = next(self.order_ids)
-                    self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, self.hedged_position)
-        elif self.hedged_position < -HEDGE_POSITION_LIMIT_TO_UNWIND:
-            if avg_entry > 2*self.best_futures_ask - self.best_futures_bid:
-                if self.hedge_bid_id == 0:
-                    self.logger.critical('UNWINDING HEDGE POSITION')
-                    self.hedge_ask_id = next(self.order_ids)
-                    self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.hedged_position))
+    #     avg_entry = self.hedged_money_in / self.hedged_position
+    #     self.logger.critical(f'OUR AVERAGE ENTRY IS {avg_entry}, POSITION IS {self.hedged_position}, CURR FUTURE BID IS {self.best_futures_bid}, CURR FUTURE ASK IS {self.best_futures_ask}.')
+    #     if self.hedged_position > HEDGE_POSITION_LIMIT_TO_UNWIND:
+    #         if avg_entry < 2*self.best_futures_bid - self.best_futures_ask:
+    #             if self.hedge_ask_id == 0:
+    #                 self.logger.critical('UNWINDING HEDGE POSITION')
+    #                 self.hedge_ask_id = next(self.order_ids)
+    #                 self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, self.hedged_position)
+    #     elif self.hedged_position < -HEDGE_POSITION_LIMIT_TO_UNWIND:
+    #         if avg_entry > 2*self.best_futures_ask - self.best_futures_bid:
+    #             if self.hedge_bid_id == 0:
+    #                 self.logger.critical('UNWINDING HEDGE POSITION')
+    #                 self.hedge_ask_id = next(self.order_ids)
+    #                 self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.hedged_position))
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
 
@@ -224,14 +224,14 @@ class AutoTrader(BaseAutoTrader):
         price levels.
         """
         # trade!
-        if bid_prices[0] <= 0 or ask_prices[0] <= 0 or self.r_t == inf:
+        if bid_prices[0] <= 0 or ask_prices[0] <= 0:
             return # we got nothing in this thang.
 
         if instrument == Instrument.FUTURE:
             if sequence_number < self.last_order_book_sequence_fut:
                 return # check sequence is in order.
             self.last_order_book_sequence_fut = sequence_number
-            self.best_futures_bid, self.best_futures_ask = bid_prices[0], ask_prices[0]
+            # self.best_futures_bid, self.best_futures_ask = bid_prices[0], ask_prices[0]
 
             # if sequence_number % HOW_OFTEN_TO_CHECK_HEDGE == 0:
             # check if we are hedged! duh.
@@ -252,7 +252,7 @@ class AutoTrader(BaseAutoTrader):
                         self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
 
         elif instrument == Instrument.ETF:
-            if sequence_number < self.last_order_book_sequence_etf:
+            if sequence_number < self.last_order_book_sequence_etf or self.p_prime_0 == 0 or self.p_prime_1 == 0:
                 return # check sequence is in order.
             self.last_order_book_sequence_etf = sequence_number
             
