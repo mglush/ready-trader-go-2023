@@ -5,7 +5,7 @@
     "MarketOpenDelay": 5.0,
     "MatchEventsFile": "match_events.csv",
     "ScoreBoardFile": "score_board.csv",
-    "Speed": 1.0,
+    "Speed": 15.0,
     "TickInterval": 0.25
   },
   "Execution": {
@@ -37,12 +37,12 @@
   },
   "Traders": {
     "BaseModel1": "secret",
-    "Model2": "secret",
-    "Model3": "secret",
-    "Model4": "secret",
-    "TraderFour": "secret",
-    "TraderFive": "secret",
-    "TraderSix": "secret",
-    "TraderSeven": "secret"
+    "RandomParams1": "secret",
+    "RandomParams2": "secret",
+    "RandomParams3": "secret",
+    "ProvidedBot1": "secret",
+    "ProvidedBot2": "secret",
+    "ProvidedBot3": "secret",
+    "ProvidedBot4": "secret"
   }
 }

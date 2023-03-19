@@ -41,7 +41,7 @@ BPS_ROUND_IN_DIRECTION = -0.0032
 BPS_ROUND_AGAINST_DIRECTION = 0.0064
 
 UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
-MAX_TIME_UNHEDGED = 58  # time limit in seconds for us to re-hedge. 2 second buffer on actual limit.
+MAX_TIME_UNHEDGED = 55  # time limit in seconds for us to re-hedge. 2 second buffer on actual limit.
 # HOW_OFTEN_TO_CHECK_HEDGE = 20 # once every 5 seconds.
 HEDGE_POSITION_LIMIT_TO_UNWIND = 0  # unwind the moment it is profitable to do so.
 POSITION_TOO_FAR = 25
@@ -61,8 +61,6 @@ class AutoTrader(BaseAutoTrader):
 
         self.curr_bid = None                                                     # maps curr bid to its [id, price, volume]
         self.curr_ask = None                                                     # maps curr ask to its [id, price, volume]
-
-        self.bid_pad = self.ask_pad = 0
 
         self.change = True
 
@@ -275,20 +273,22 @@ class AutoTrader(BaseAutoTrader):
                         self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
 
         elif instrument == Instrument.ETF:
-            if sequence_number < self.last_order_book_sequence_etf or not self.change:
+            if sequence_number < self.last_order_book_sequence_etf:
                 return # check sequence is in order.
             self.last_order_book_sequence_etf = sequence_number
             
+            if not self.change:
+                if self.curr_ask is None and self.curr_ask is None:
+                    self.change = True
+                else:
+                    return
+
             # -------------------------------- THE MAIN ALGORITHM -------------------------------- #
 
             # calculate p_t, based on the midpoint of the bid and ask we got just now.
             p_t = (ask_prices[0] + bid_prices[0]) / 2
 
             # calculate volume imbalance to see whether we need to adjust spread.
-            # location_of_p_t = int(p_t - p_t % 5)
-            # if location_of_p_t in self.volumes_by_price:
-            #     lambda_imbalance = self.volumes_by_price[location_of_p_t][0] / self.volumes_by_price[location_of_p_t][1]
-            # else:
             lambda_imbalance = (sum(bid_volumes) - sum(ask_volumes)) / sum(bid_volumes + ask_volumes)
 
             # check if we need to adjust spread based on lambda imbalance.
@@ -308,9 +308,9 @@ class AutoTrader(BaseAutoTrader):
                 self.logger.error(f'BRANCH SHOULD NEVER BE EXECUTED!')
             
             # make the new market!
-            self.make_a_market(min(int(new_bid - new_bid % TICK_SIZE_IN_CENTS), bid_prices[0]) + self.bid_pad, \
+            self.make_a_market(min(int(new_bid - new_bid % TICK_SIZE_IN_CENTS), bid_prices[0]), \
                                   LOT_SIZE, \
-                                  max(int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS), ask_prices[0]) + self.ask_pad, \
+                                  max(int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS), ask_prices[0]), \
                                   LOT_SIZE
                               )
 
@@ -332,15 +332,6 @@ class AutoTrader(BaseAutoTrader):
         else:
             self.logger.error(f'ORDER {client_order_id} WAS NOT IN self.orders WHEN IT REACHED ORDER FILLED MESSAGE.')
 
-        # if self.position > POSITION_TOO_FAR:
-        #     self.ask_pad -= 3 * TICK_SIZE_IN_CENTS
-        #     self.bid_pad = 0
-        # elif self.position < -POSITION_TOO_FAR:
-        #     self.bid_pad += 3 * TICK_SIZE_IN_CENTS
-        #     self.ask_pad = 0
-        # else:
-        #     self.bid_pad = self.ask_pad = 0
-
     def on_order_status_message(self, client_order_id: int, fill_volume: int, remaining_volume: int,
                                 fees: int) -> None:
         """Called when the status of one of your orders changes.
@@ -355,12 +346,10 @@ class AutoTrader(BaseAutoTrader):
         if remaining_volume == 0:
             if self.curr_bid is not None:
                 if self.curr_bid['id'] == client_order_id:
-                    # self.fill_ratios[Side.BID].append(self.curr_bid['volume'] / LOT_SIZE)
                     self.curr_bid = None
             
             if self.curr_ask is not None:
                 if self.curr_ask['id'] == client_order_id:
-                    # self.fill_ratios[Side.ASK].append(self.curr_ask['volume'] / LOT_SIZE)
                     self.curr_ask = None
 
     def on_trade_ticks_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
@@ -406,12 +395,13 @@ class AutoTrader(BaseAutoTrader):
                 return
 
             if self.vol_prime_1 < 0.25 * self.vol_prime_0:
-                if self.p_prime_2 > 3 * TICK_SIZE_IN_CENTS:
+                self.bps_round_down_ask = self.bps_round_down_bid = BPS_ROUND_IN_DIRECTION
+                if self.p_prime_2 > 0.003:
                     # small volume big + price change. should keep our bid as low as it is.
                     self.bps_round_up_bid = -self.bps_round_up_bid
                     self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION
                     self.change = False
-                elif self.p_prime_2 < -3 * TICK_SIZE_IN_CENTS:
+                elif self.p_prime_2 < -0.003:
                     # small volume big + price change. should keep our bid as low as it is.
                     self.bps_round_up_ask = -self.bps_round_up_ask
                     self.bps_round_up_bid = BPS_ROUND_AGAINST_DIRECTION
@@ -421,11 +411,12 @@ class AutoTrader(BaseAutoTrader):
                     self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION
                     self.change = True
             else:
-                self.bps_round_up_bid = BPS_ROUND_AGAINST_DIRECTION
-                self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION
+                self.bps_round_down_ask = self.bps_round_down_bid = BPS_ROUND_IN_DIRECTION
+                self.bps_round_up_bid = self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION
+                self.bps_round_flat = BPS_ROUND_FLAT
                 self.change = True
 
             # calculate r_t HERE, the moment we can, so order book function can use it right when it needs to.
             self.r_t = abs( self.vol_prime_0 * ((self.p_prime_0 - self.p_prime_1) / self.p_prime_0) \
                             + self.vol_prime_1 * ((self.p_prime_1 - self.p_prime_2) / self.p_prime_1) \
-                        ) / (self.vol_prime_0 + self.vol_prime_1) + self.bps_round_flat
+                          ) / (self.vol_prime_0 + self.vol_prime_1) + self.bps_round_flat
