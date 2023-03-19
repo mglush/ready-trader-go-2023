@@ -105,8 +105,7 @@ class AutoTrader(BaseAutoTrader):
             and self.position + bid_volume < POSITION_LIMIT:
             self.curr_bid = {
                 'id' : next(self.order_ids),
-                'price' : bid,
-                'volume' : bid_volume
+                'price' : bid
             }
             self.send_insert_order(self.curr_bid['id'], Side.BID, bid, bid_volume, Lifespan.GOOD_FOR_DAY)
         
@@ -115,8 +114,7 @@ class AutoTrader(BaseAutoTrader):
             and self.position - ask_volume > -POSITION_LIMIT:
             self.curr_ask = {
                 'id' : next(self.order_ids),
-                'price' : ask,
-                'volume' : ask_volume
+                'price' : ask
             }
             self.send_insert_order(self.curr_ask['id'], Side.ASK, ask, ask_volume, Lifespan.GOOD_FOR_DAY)
 
@@ -252,7 +250,7 @@ class AutoTrader(BaseAutoTrader):
                         self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
 
         elif instrument == Instrument.ETF:
-            if sequence_number < self.last_order_book_sequence_etf or self.p_prime_0 == 0 or self.p_prime_1 == 0:
+            if sequence_number < self.last_order_book_sequence_etf or self.p_prime_0 == 0 or self.p_prime_1 == 0 or self.p_prime_2 == 0:
                 return # check sequence is in order.
             self.last_order_book_sequence_etf = sequence_number
             
@@ -304,10 +302,8 @@ class AutoTrader(BaseAutoTrader):
         """
         if self.curr_bid is not None and self.curr_bid['id'] == client_order_id:
             self.position += volume
-            self.curr_bid['volume'] -= volume
         elif self.curr_ask is not None and self.curr_ask['id'] == client_order_id:
             self.position -= volume
-            self.curr_ask['volume'] -= volume
         else:
             self.logger.error(f'ORDER {client_order_id} WAS NOT IN self.orders WHEN IT REACHED ORDER FILLED MESSAGE.')
 
