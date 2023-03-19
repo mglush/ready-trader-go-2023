@@ -238,6 +238,12 @@ class AutoTrader(BaseAutoTrader):
                     # start da timer!
                     self.time_of_last_imbalance = self.event_loop.time()
                     self.we_are_hedged = False
+                    if self.hedged_position < 0 and self.hedge_bid_id != 0:
+                        self.hedge_bid_id = next(self.order_ids)
+                        self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position)))
+                    elif self.hedged_position > 0 and self.hedge_ask_id != 0:
+                        self.hedge_ask_id = next(self.order_ids)
+                        self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
             else:
                 if self.event_loop.time() - self.time_of_last_imbalance > MAX_TIME_UNHEDGED:
                     self.hedge() # hedge only if absolutely necessary!
