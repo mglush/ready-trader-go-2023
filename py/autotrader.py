@@ -340,7 +340,7 @@ class AutoTrader(BaseAutoTrader):
         the end of both the prices and volumes arrays.
         """
         # Here, we just calculate the P' value for our formula and store is as a global variable.
-        if ask_prices[0] == 0 and bid_prices[0] == 0:
+        if ask_prices[0] <= 0 and bid_prices[0] <= 0:
             return # means nothing was traded.
         
         # INSTRUMENT MUST BE ETF!!!
