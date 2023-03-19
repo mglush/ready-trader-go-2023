@@ -23,8 +23,6 @@ from re import L
 from textwrap import fill
 from tkinter.tix import MAX
 from turtle import pos, position
-import numpy as np
-import time as TIME_MODULE
 
 from typing import List
 
@@ -42,7 +40,6 @@ BPS_ROUND_AGAINST_DIRECTION = 0.0064
 
 UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
 MAX_TIME_UNHEDGED = 55  # time limit in seconds for us to re-hedge. 2 second buffer on actual limit.
-# HOW_OFTEN_TO_CHECK_HEDGE = 20 # once every 5 seconds.
 HEDGE_POSITION_LIMIT_TO_UNWIND = 0  # unwind the moment it is profitable to do so.
 POSITION_TOO_FAR = 25
 
@@ -68,12 +65,7 @@ class AutoTrader(BaseAutoTrader):
         self.bps_round_down_bid = self.bps_round_down_ask = BPS_ROUND_IN_DIRECTION
         self.bps_round_up_bid = self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION
 
-        # self.fill_ratios = {                                                   # keeps track of the proportion of each Good For Day order that gets filled.
-        #     Side.BID : [],
-        #     Side.ASK : []
-        # }
-
-        self.hedged_money_in = 0                                 # used for calculating average entry into position.
+        self.hedged_money_in = 0                                                # used for calculating average entry into position.
 
         self.best_futures_bid = self.best_futures_ask = 0                        # keeping track of best ask and offer for futures for computing cost
 
@@ -90,18 +82,6 @@ class AutoTrader(BaseAutoTrader):
         self.time_of_last_imbalance = self.event_loop.time()                     # used to hedge as a last resort before the minute runs out.
 
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
-
-    # def avg_fill_percentage(self) -> dict:
-    #     '''
-    #     Returns average fill proportion of our orders for the bid and ask side, as a dict.
-    #     '''
-    #     bid_res = 0 if len(self.fill_ratios[Side.BID]) == 0 else ((sum(self.fill_ratios[Side.BID][-FILL_RATE_WINDOW_SIZE:]) / len(self.fill_ratios[Side.BID][-FILL_RATE_WINDOW_SIZE:])) / LOT_SIZE)
-    #     ask_res = 0 if len(self.fill_ratios[Side.ASK]) == 0 else ((sum(self.fill_ratios[Side.ASK][-FILL_RATE_WINDOW_SIZE:]) / len(self.fill_ratios[Side.ASK][-FILL_RATE_WINDOW_SIZE:])) / LOT_SIZE)
-        
-    #     return {
-    #         Side.BID : bid_res,
-    #         Side.ASK : ask_res
-    #     }
 
     def make_a_market(self, bid, bid_volume, ask, ask_volume) -> None:
         '''
@@ -147,34 +127,35 @@ class AutoTrader(BaseAutoTrader):
         '''
         self.logger.critical(f'ENTER HEDGE:')
         self.logger.critical(f'\tPOSITION IS {self.position} HEDGE IS {self.hedged_position}.')
-        self.we_are_hedged = True
 
         next_id = next(self.order_ids)
         if self.position < 0:
-            if -self.position < self.hedged_position: # sell.
+            if -self.position < self.hedged_position and self.hedge_ask_id == 0: # sell.
                 self.hedge_ask_id = next_id
                 self.send_hedge_order(next_id, Side.ASK, MIN_BID_NEAREST_TICK, abs(self.position + self.hedged_position))
             else: # buy.
-                self.hedge_bid_id = next_id
-                self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.position + self.hedged_position))
+                if self.hedge_bid_id == 0:
+                    self.hedge_bid_id = next_id
+                    self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.position + self.hedged_position))
         elif self.position == 0:
-            if self.hedged_position < 0: # buy.
+            if self.hedged_position < 0 and self.hedge_bid_id == 0: # buy.
                 self.hedge_bid_id = next_id
                 self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.hedged_position))
             else: # sell.
-                self.hedge_ask_id = next_id
-                self.send_hedge_order(next_id, Side.ASK, MIN_BID_NEAREST_TICK, self.hedged_position)
+                if self.hedge_ask_id == 0:
+                    self.hedge_ask_id = next_id
+                    self.send_hedge_order(next_id, Side.ASK, MIN_BID_NEAREST_TICK, self.hedged_position)
         elif self.position > 0:
-            if self.position > -self.hedged_position: # sell.
+            if self.position > -self.hedged_position and self.hedge_ask_id == 0: # sell.
                 self.hedge_ask_id = next_id
                 self.send_hedge_order(next_id, Side.ASK, MIN_BID_NEAREST_TICK, abs(self.position + self.hedged_position))
             else: # buy.
-                self.hedge_bid_id = next_id
-                self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.position + self.hedged_position))
+                if self.hedge_bid_id == 0:
+                    self.hedge_bid_id = next_id
+                    self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.position + self.hedged_position))
         else:
             self.logger.error(f'CASE SHOULD NEVER HAPPEN!!!')
         
-        self.we_are_hedged = False
         self.logger.critical(f'\tEXIT HEDGE.')
 
     def realize_hedge_PnL(self) -> None:
@@ -344,13 +325,10 @@ class AutoTrader(BaseAutoTrader):
         If an order is cancelled its remaining volume will be zero.
         """
         if remaining_volume == 0:
-            if self.curr_bid is not None:
-                if self.curr_bid['id'] == client_order_id:
-                    self.curr_bid = None
-            
-            if self.curr_ask is not None:
-                if self.curr_ask['id'] == client_order_id:
-                    self.curr_ask = None
+            if self.curr_bid is not None and self.curr_bid['id'] == client_order_id:
+                self.curr_bid = None
+            elif self.curr_ask is not None and self.curr_ask['id'] == client_order_id:
+                self.curr_ask = None
 
     def on_trade_ticks_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
                                ask_volumes: List[int], bid_prices: List[int], bid_volumes: List[int]) -> None:

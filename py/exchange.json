@@ -5,7 +5,7 @@
     "MarketOpenDelay": 5.0,
     "MatchEventsFile": "match_events.csv",
     "ScoreBoardFile": "score_board.csv",
-    "Speed": 15.0,
+    "Speed": 1.0,
     "TickInterval": 0.25
   },
   "Execution": {
