@@ -7,7 +7,7 @@
       "Type": "mmap",
       "Name": "info.dat"
     },
-    "TeamName": "BaseModel1",
+    "TeamName": "base",
     "Secret": "secret"
   }
   

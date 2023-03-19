@@ -67,8 +67,6 @@ class AutoTrader(BaseAutoTrader):
 
         self.hedged_money_in = 0                                                # used for calculating average entry into position.
 
-        # self.best_futures_bid = self.best_futures_ask = 0                        # keeping track of best ask and offer for futures for computing cost
-
         self.hedge_bid_id = self.hedge_ask_id = 0                                # state of the hedge order we placed so we can adjust 
                                                                                  # hedged position in the correct direction.
         self.position = self.hedged_position = 0                                 # state of each position's size.
@@ -77,6 +75,7 @@ class AutoTrader(BaseAutoTrader):
         self.r_t = inf
         self.last_ticks_sequence_etf = self.last_order_book_sequence_etf = -1    # last message we processed (one for ticks one for order book). ETF
         self.last_ticks_sequence_fut = self.last_order_book_sequence_fut = -1    # last message we processed (one for ticks one for order book). FUT
+
 
         self.we_are_hedged = True                                                # flag to set for when we are set vs not.
         self.time_of_last_imbalance = self.event_loop.time()                     # used to hedge as a last resort before the minute runs out.
