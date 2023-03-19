@@ -42,11 +42,11 @@ BPS_ROUND_AGAINST_DIRECTION = 0.0064
 
 UNHEDGED_LOTS_LIMIT = 10 # volume limit in lots.
 MAX_TIME_UNHEDGED = 58  # time limit in seconds for us to re-hedge. 2 second buffer on actual limit.
-HOW_OFTEN_TO_CHECK_HEDGE = 20 # once every 5 seconds.
+# HOW_OFTEN_TO_CHECK_HEDGE = 20 # once every 5 seconds.
 HEDGE_POSITION_LIMIT_TO_UNWIND = 0  # unwind the moment it is profitable to do so.
+POSITION_TOO_FAR = 25
 
 LAMBDA_ONE = 0.5      # our first constant, by which we decide whether order imbalance is up or down or flat.]
-LAMBDA_TWO = 0.75      # our first constant, by which we decide whether order imbalance is up or down or flat.]
 
 class AutoTrader(BaseAutoTrader):
     '''
@@ -61,6 +61,8 @@ class AutoTrader(BaseAutoTrader):
 
         self.curr_bid = None                                                     # maps curr bid to its [id, price, volume]
         self.curr_ask = None                                                     # maps curr ask to its [id, price, volume]
+
+        self.bid_pad = self.ask_pad = 0
 
         self.change = True
 
@@ -147,6 +149,7 @@ class AutoTrader(BaseAutoTrader):
         '''
         self.logger.critical(f'ENTER HEDGE:')
         self.logger.critical(f'\tPOSITION IS {self.position} HEDGE IS {self.hedged_position}.')
+        self.we_are_hedged = True
 
         next_id = next(self.order_ids)
         if self.position < 0:
@@ -172,8 +175,8 @@ class AutoTrader(BaseAutoTrader):
                 self.send_hedge_order(next_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.position + self.hedged_position))
         else:
             self.logger.error(f'CASE SHOULD NEVER HAPPEN!!!')
-
-        self.we_are_hedged = True
+        
+        self.we_are_hedged = False
         self.logger.critical(f'\tEXIT HEDGE.')
 
     def realize_hedge_PnL(self) -> None:
@@ -230,6 +233,8 @@ class AutoTrader(BaseAutoTrader):
         if self.hedged_position == 0:
             self.hedged_money_in = 0
 
+        self.we_are_hedged = ( abs(self.position + self.hedged_position) <  UNHEDGED_LOTS_LIMIT)
+
     def on_order_book_update_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
                                      ask_volumes: List[int], bid_prices: List[int], bid_volumes: List[int]) -> None:
         """Called periodically to report the status of an order book.
@@ -249,25 +254,25 @@ class AutoTrader(BaseAutoTrader):
             self.last_order_book_sequence_fut = sequence_number
             self.best_futures_bid, self.best_futures_ask = bid_prices[0], ask_prices[0]
 
-            if sequence_number % HOW_OFTEN_TO_CHECK_HEDGE == 0:
-                # check if we are hedged! duh.
-                if self.we_are_hedged:
-                    if abs(self.position + self.hedged_position) > UNHEDGED_LOTS_LIMIT:
-                        # start da timer!
-                        self.time_of_last_imbalance = self.event_loop.time()
-                        self.we_are_hedged = False
+            # if sequence_number % HOW_OFTEN_TO_CHECK_HEDGE == 0:
+            # check if we are hedged! duh.
+            if self.we_are_hedged:
+                if abs(self.position + self.hedged_position) > UNHEDGED_LOTS_LIMIT:
+                    # start da timer!
+                    self.time_of_last_imbalance = self.event_loop.time()
+                    self.we_are_hedged = False
+            else:
+                if self.event_loop.time() - self.time_of_last_imbalance > MAX_TIME_UNHEDGED:
+                    self.hedge() # hedge only if absolutely necessary!
                 else:
-                    if self.event_loop.time() - self.time_of_last_imbalance > MAX_TIME_UNHEDGED:
-                        self.hedge() # hedge only if absolutely necessary!
-                    else:
-                        # # get rid of the hedge when we are profiting from that.
-                        # self.realize_hedge_PnL()
-                        if self.hedged_position < 0:
-                            self.hedge_bid_id = next(self.order_ids)
-                            self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position)))
-                        elif self.hedged_position > 0:
-                            self.hedge_ask_id = next(self.order_ids)
-                            self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
+                    # # get rid of the hedge when we are profiting from that.
+                    # self.realize_hedge_PnL()
+                    if self.hedged_position < 0:
+                        self.hedge_bid_id = next(self.order_ids)
+                        self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position)))
+                    elif self.hedged_position > 0:
+                        self.hedge_ask_id = next(self.order_ids)
+                        self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
 
         elif instrument == Instrument.ETF:
             if sequence_number < self.last_order_book_sequence_etf or not self.change:
@@ -303,9 +308,9 @@ class AutoTrader(BaseAutoTrader):
                 self.logger.error(f'BRANCH SHOULD NEVER BE EXECUTED!')
             
             # make the new market!
-            self.make_a_market(min(int(new_bid - new_bid % TICK_SIZE_IN_CENTS), bid_prices[0]), \
+            self.make_a_market(min(int(new_bid - new_bid % TICK_SIZE_IN_CENTS), bid_prices[0]) + self.bid_pad, \
                                   LOT_SIZE, \
-                                  max(int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS), ask_prices[0]), \
+                                  max(int(new_ask + TICK_SIZE_IN_CENTS - new_ask % TICK_SIZE_IN_CENTS), ask_prices[0]) + self.ask_pad, \
                                   LOT_SIZE
                               )
 
@@ -327,6 +332,15 @@ class AutoTrader(BaseAutoTrader):
         else:
             self.logger.error(f'ORDER {client_order_id} WAS NOT IN self.orders WHEN IT REACHED ORDER FILLED MESSAGE.')
 
+        # if self.position > POSITION_TOO_FAR:
+        #     self.ask_pad -= 3 * TICK_SIZE_IN_CENTS
+        #     self.bid_pad = 0
+        # elif self.position < -POSITION_TOO_FAR:
+        #     self.bid_pad += 3 * TICK_SIZE_IN_CENTS
+        #     self.ask_pad = 0
+        # else:
+        #     self.bid_pad = self.ask_pad = 0
+
     def on_order_status_message(self, client_order_id: int, fill_volume: int, remaining_volume: int,
                                 fees: int) -> None:
         """Called when the status of one of your orders changes.
@@ -343,20 +357,11 @@ class AutoTrader(BaseAutoTrader):
                 if self.curr_bid['id'] == client_order_id:
                     # self.fill_ratios[Side.BID].append(self.curr_bid['volume'] / LOT_SIZE)
                     self.curr_bid = None
-                    # if self.position > POSITION_TOO_FAR_FROM_ZERO:
-                    #     self.bps_round_up_bid -= 0.0006 # we want to be selling our position out, ask side of the spread should move down.
-                    # elif self.position > 0:
-                    #     self.bps_round_up_bid = BPS_ROUND_AGAINST_DIRECTION # reset pad to 0 when we are within position limits.
             
             if self.curr_ask is not None:
                 if self.curr_ask['id'] == client_order_id:
                     # self.fill_ratios[Side.ASK].append(self.curr_ask['volume'] / LOT_SIZE)
                     self.curr_ask = None
-                    # if self.position < -POSITION_TOO_FAR_FROM_ZERO:
-                    #     self.bps_round_up_ask -= 0.0006 # we want to be selling our position out, ask side of the spread should move down.
-                    # elif self.position > 0:
-                    #     self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION # reset pad to 0 when we are within position limits.
-
 
     def on_trade_ticks_message(self, instrument: int, sequence_number: int, ask_prices: List[int],
                                ask_volumes: List[int], bid_prices: List[int], bid_volumes: List[int]) -> None:
@@ -401,14 +406,14 @@ class AutoTrader(BaseAutoTrader):
                 return
 
             if self.vol_prime_1 < 0.25 * self.vol_prime_0:
-                if self.p_prime_2 > 0.00125:
+                if self.p_prime_2 > 3 * TICK_SIZE_IN_CENTS:
                     # small volume big + price change. should keep our bid as low as it is.
-                    self.bps_round_up_bid = -2 * self.bps_round_up_bid
+                    self.bps_round_up_bid = -self.bps_round_up_bid
                     self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION
                     self.change = False
-                elif self.p_prime_2 < -0.00125:
+                elif self.p_prime_2 < -3 * TICK_SIZE_IN_CENTS:
                     # small volume big + price change. should keep our bid as low as it is.
-                    self.bps_round_up_ask = -2 * self.bps_round_up_ask
+                    self.bps_round_up_ask = -self.bps_round_up_ask
                     self.bps_round_up_bid = BPS_ROUND_AGAINST_DIRECTION
                     self.change = False
                 else:
