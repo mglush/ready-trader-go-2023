@@ -224,7 +224,7 @@ class AutoTrader(BaseAutoTrader):
         price levels.
         """
         # trade!
-        if bid_prices[0] <= 0 or ask_prices[0] <= 0 or self.p_prime_0 == 0 or self.p_prime_1 == 0:
+        if bid_prices[0] <= 0 or ask_prices[0] <= 0 or self.r_t == inf:
             return # we got nothing in this thang.
 
         if instrument == Instrument.FUTURE:
