@@ -17,6 +17,7 @@ autotrader.log
 exchange.log
 info.dat
 SCORE*
+match_events.csv
 LOG*
 
 volume_signals.txt
