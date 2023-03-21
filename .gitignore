@@ -15,9 +15,6 @@ provided_autotrader*.*
 
 autotrader.log
 exchange.log
-market_data_merged.csv
-match_events.csv
-score_board.csv
 info.dat
 SCORE*
 LOG*
