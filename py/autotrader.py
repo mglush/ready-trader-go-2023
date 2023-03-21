@@ -65,8 +65,6 @@ class AutoTrader(BaseAutoTrader):
         self.bps_round_down_bid = self.bps_round_down_ask = BPS_ROUND_IN_DIRECTION
         self.bps_round_up_bid = self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION
 
-        self.hedged_money_in = 0                                                # used for calculating average entry into position.
-
         self.hedge_bid_id = self.hedge_ask_id = 0                                # state of the hedge order we placed so we can adjust 
                                                                                  # hedged position in the correct direction.
         self.position = self.hedged_position = 0                                 # state of each position's size.
@@ -74,7 +72,7 @@ class AutoTrader(BaseAutoTrader):
         self.vol_prime_0 = self.vol_prime_1 = 0                                  # so we can use a weighed average of the p_primes.
         self.r_t = inf
         self.last_ticks_sequence_etf = self.last_order_book_sequence_etf = -1    # last message we processed (one for ticks one for order book). ETF
-        self.last_ticks_sequence_fut = self.last_order_book_sequence_fut = -1    # last message we processed (one for ticks one for order book). FUT
+        self.last_ticks_sequence_fut = -1                                        # last message we processed for ticks FUT
 
 
         self.we_are_hedged = True                                                # flag to set for when we are set vs not.
@@ -155,29 +153,6 @@ class AutoTrader(BaseAutoTrader):
         
         self.logger.critical(f'\tEXIT HEDGE.')
 
-    # def realize_hedge_PnL(self) -> None:
-    #     '''
-    #     Calculated average entry into the hedge, and
-    #     unwinds our hedge when it is profitable to do so.
-    #     '''
-    #     if self.hedged_position == 0:
-    #         return
-
-    #     avg_entry = self.hedged_money_in / self.hedged_position
-    #     self.logger.critical(f'OUR AVERAGE ENTRY IS {avg_entry}, POSITION IS {self.hedged_position}, CURR FUTURE BID IS {self.best_futures_bid}, CURR FUTURE ASK IS {self.best_futures_ask}.')
-    #     if self.hedged_position > HEDGE_POSITION_LIMIT_TO_UNWIND:
-    #         if avg_entry < 2*self.best_futures_bid - self.best_futures_ask:
-    #             if self.hedge_ask_id == 0:
-    #                 self.logger.critical('UNWINDING HEDGE POSITION')
-    #                 self.hedge_ask_id = next(self.order_ids)
-    #                 self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, self.hedged_position)
-    #     elif self.hedged_position < -HEDGE_POSITION_LIMIT_TO_UNWIND:
-    #         if avg_entry > 2*self.best_futures_ask - self.best_futures_bid:
-    #             if self.hedge_bid_id == 0:
-    #                 self.logger.critical('UNWINDING HEDGE POSITION')
-    #                 self.hedge_ask_id = next(self.order_ids)
-    #                 self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(self.hedged_position))
-
     #-----------------------------------HELPER FUNCTIONS WE USE-----------------------------------------------#
 
     def on_error_message(self, client_order_id: int, error_message: bytes) -> None:
@@ -197,17 +172,22 @@ class AutoTrader(BaseAutoTrader):
         self.logger.info(f'FILLED A HEDGE {client_order_id} PRICE {price} VOLUME {volume}')
         if client_order_id == self.hedge_bid_id:
             self.hedged_position += volume
-            self.hedged_money_in += price * volume
             self.hedge_bid_id = 0
         elif client_order_id == self.hedge_ask_id:
             self.hedged_position -= volume
-            self.hedged_money_in -= price * volume
             self.hedge_ask_id = 0
         else:
             self.logger.error(f'HEDGE FILLED BUT WE DONT KNOW IF IT WAS A BID OR AN ASK!!!')
         
         if self.hedged_position == 0:
             self.hedged_money_in = 0
+
+        if self.hedged_position < 0 and self.hedge_bid_id != 0:
+            self.hedge_bid_id = next(self.order_ids)
+            self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position / 2)))
+        elif self.hedged_position > 0 and self.hedge_ask_id != 0:
+            self.hedge_ask_id = next(self.order_ids)
+            self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position / 2))
 
         self.we_are_hedged = ( abs(self.position + self.hedged_position) <  UNHEDGED_LOTS_LIMIT)
 
@@ -225,12 +205,6 @@ class AutoTrader(BaseAutoTrader):
             return # we got nothing in this thang.
 
         if instrument == Instrument.FUTURE:
-            if sequence_number < self.last_order_book_sequence_fut:
-                return # check sequence is in order.
-            self.last_order_book_sequence_fut = sequence_number
-            # self.best_futures_bid, self.best_futures_ask = bid_prices[0], ask_prices[0]
-
-            # if sequence_number % HOW_OFTEN_TO_CHECK_HEDGE == 0:
             # check if we are hedged! duh.
             if self.we_are_hedged:
                 if abs(self.position + self.hedged_position) > UNHEDGED_LOTS_LIMIT:
@@ -239,24 +213,27 @@ class AutoTrader(BaseAutoTrader):
                     self.we_are_hedged = False
                     if self.hedged_position < 0 and self.hedge_bid_id != 0:
                         self.hedge_bid_id = next(self.order_ids)
-                        self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position)))
+                        self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position / 2)))
                     elif self.hedged_position > 0 and self.hedge_ask_id != 0:
                         self.hedge_ask_id = next(self.order_ids)
-                        self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
+                        self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position / 2))
             else:
                 if self.event_loop.time() - self.time_of_last_imbalance > MAX_TIME_UNHEDGED:
                     self.hedge() # hedge only if absolutely necessary!
                 else:
                     if self.hedged_position < 0 and self.hedge_bid_id != 0:
                         self.hedge_bid_id = next(self.order_ids)
-                        self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position)))
+                        self.send_hedge_order(self.hedge_bid_id, Side.BID, MAX_ASK_NEAREST_TICK, abs(int(self.hedged_position / 2)))
                     elif self.hedged_position > 0 and self.hedge_ask_id != 0:
                         self.hedge_ask_id = next(self.order_ids)
-                        self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position))
+                        self.send_hedge_order(self.hedge_ask_id, Side.ASK, MIN_BID_NEAREST_TICK, int(self.hedged_position / 2))
 
         elif instrument == Instrument.ETF:
-            if sequence_number < self.last_order_book_sequence_etf or self.p_prime_0 == 0 or self.p_prime_1 == 0 or self.p_prime_2 == 0:
-                return # check sequence is in order.
+            if self.p_prime_0 == 0 or self.p_prime_1 == 0 or self.p_prime_2 == 0:
+                return
+            
+            if sequence_number < self.last_order_book_sequence_etf and (self.curr_ask is not None or self.curr_bid is not None):
+                return
             self.last_order_book_sequence_etf = sequence_number
             
             if not self.change:
@@ -367,18 +344,26 @@ class AutoTrader(BaseAutoTrader):
             self.p_prime_1 = self.p_prime_2
             self.p_prime_2 = numer / self.vol_prime_1
 
-            # first iteration...
-            if self.p_prime_0 == 0:
+            # first couple iterations...
+            if self.p_prime_0 == 0 or self.p_prime_1 == 0:
                 return
+
+            second_to_last_change = (self.p_prime_0 - self.p_prime_1) / self.p_prime_0
+            last_change = (self.p_prime_1 - self.p_prime_2) / self.p_prime_1
+
+            # calculate r_t HERE, the first time so we can use it if we really need to.
+            self.r_t = abs( self.vol_prime_0 * second_to_last_change \
+                            + self.vol_prime_1 * last_change \
+                          ) / (self.vol_prime_0 + self.vol_prime_1) + self.bps_round_flat
 
             if self.vol_prime_1 < 0.25 * self.vol_prime_0:
                 self.bps_round_down_ask = self.bps_round_down_bid = BPS_ROUND_IN_DIRECTION
-                if self.p_prime_2 > 0.003:
+                if last_change > 0.003:
                     # small volume big + price change. should keep our bid as low as it is.
                     self.bps_round_up_bid = -self.bps_round_up_bid
                     self.bps_round_up_ask = BPS_ROUND_AGAINST_DIRECTION
                     self.change = False
-                elif self.p_prime_2 < -0.003:
+                elif last_change < -0.003:
                     # small volume big + price change. should keep our bid as low as it is.
                     self.bps_round_up_ask = -self.bps_round_up_ask
                     self.bps_round_up_bid = BPS_ROUND_AGAINST_DIRECTION
@@ -394,6 +379,6 @@ class AutoTrader(BaseAutoTrader):
                 self.change = True
 
             # calculate r_t HERE, the moment we can, so order book function can use it right when it needs to.
-            self.r_t = abs( self.vol_prime_0 * ((self.p_prime_0 - self.p_prime_1) / self.p_prime_0) \
-                            + self.vol_prime_1 * ((self.p_prime_1 - self.p_prime_2) / self.p_prime_1) \
+            self.r_t = abs( self.vol_prime_0 * second_to_last_change \
+                            + self.vol_prime_1 * last_change \
                           ) / (self.vol_prime_0 + self.vol_prime_1) + self.bps_round_flat

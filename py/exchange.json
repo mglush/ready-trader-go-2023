@@ -1,11 +1,11 @@
 {
   "Engine": {
-    "MarketDataFile": "data/market_data4.csv",
+    "MarketDataFile": "data/market_data7.csv",
     "MarketEventInterval": 0.05,
     "MarketOpenDelay": 5.0,
     "MatchEventsFile": "match_events.csv",
     "ScoreBoardFile": "score_board.csv",
-    "Speed": 1.0,
+    "Speed": 15.0,
     "TickInterval": 0.25
   },
   "Execution": {
@@ -36,7 +36,7 @@
     "PositionLimit": 100
   },
   "Traders": {
-    "BaseModel1": "secret",
+    "LiquidBears": "secret",
     "RandomParams1": "secret",
     "RandomParams2": "secret",
     "RandomParams3": "secret",
