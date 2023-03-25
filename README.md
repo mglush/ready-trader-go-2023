@@ -1,5 +1,5 @@
 # Optiver's 2023 Ready Trader Go Competition
-#### Submission by Michael Glushchenko and Vasyliy Ostapenko as Team LiquidBears.
+#### Submission by Michael Glushchenko and Vasiliy Ostapenko as Team LiquidBears.
 
 ## Table of Contents
 * [Reasons to Participate](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#reasons-to-participate).
