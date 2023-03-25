@@ -45,7 +45,6 @@ Vasyl and I ended up making it to the 5th round out of 9, earning us a top 128/1
 ![Tournament 2 Open Market](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/result_open_market.png)  
   
 More details about P/L can be found in the [tournaments](https://github.com/mglush/ready-trader-go-2023/tree/main/py/tournaments) folder. It contains our results from the test round, as well as tournament 2.  
-Analysis regarding how other bots compared to ours can be found in the [analysis](https://github.com/mglush/ready-trader-go-2023/tree/main/py/analysis) folder; specifically, in model_analysis.ipynb.  
 
 ## Logical Faults of the Plan
   1) From the beginning, we tried to implement a strategy that involved placing multiple bid-ask spreads at different prices, and keeping track of each order with the help of a dictionary (or unordered map). The problem: it was incredibly slow to iterate though the orders map to cancel orders that were no longer "optimal". The solution: implementing a strategy that used only a single bid-ask spread at a time, due to the limited time we had.
