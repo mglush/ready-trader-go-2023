@@ -6,7 +6,8 @@
 * [Rules of the Game](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#rules-of-the-game).
 * [Our Strategy](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#our-strategy).
 * [Results](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#results).
-* [Faults of the Plan](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#faults-of-the-plan).
+* [Logical Faults of the Plan](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#logical-faults-of-the-plan).
+* [Bugs](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#bugs).
 * [Next Steps](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#next-steps).
 * [Technologies](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#technologies).
 
@@ -47,11 +48,14 @@ Vasyl and I ended up making it to the 5th round out of 9, earning us a top 128/1
 More details about P/L can be found in the [tournaments](https://github.com/mglush/ready-trader-go-2023/tree/main/py/tournaments) folder. It contains our results from the test round, as well as tournament 2.  
 Analysis regarding how other bots compared to ours can be found in the [analysis](https://github.com/mglush/ready-trader-go-2023/tree/main/py/analysis) folder; specifically, in model_analysis.ipynb.  
 
-## Faults of the Plan
+## Logical Faults of the Plan
   1) From the beginning, we tried to implement a strategy that involved placing multiple bid-ask spreads at different prices, and keeping track of each order with the help of a dictionary (or unordered map). The problem: it was incredibly slow to iterate though the orders map to cancel orders that were no longer "optimal". The solution: implementing a strategy that used only a single bid-ask spread at a time, due to the limited time we had.
   2) Given one of the rules stated that a team cannot be unhedged for longer than a minute, we put great focus into trying to always be hedged; however, the problem was that by hedging every order we made, the losses on the hedge outweighed any profits our bot made. The solution: to hedge at the last possible moment, unless there's a "profitable" opportunity to do so earlier.
   3) Initially, we made a big attempt to use volume as an indicator of market movement. While we were correct in trying to use volume as a "market conditions" indicator, we were wrong in trying to make it tell us which way the market will move. The solution: to use volume as an indicator of "price change is coming" rather than "price is moving in this direction" indicator.
   4) In general, we dove into the coding portion of the project too quickly. We should have spent an extra day or two in front of the whiteboard, perfecting the design before touching any of the code. You live, you learn.
+  
+## Bugs
+The main bug that I did not catch in time was that our bot trades very well at first, but becomes idle for the second half of the match. Although the bug comes up in very specific market situations, it was sadly there at submission time. The trading logic tells the bot the not change its spread if prices aren't changing often, or if a price change happened on insignificant volume. The way I implemented it, however, I would not post a new spread during such conditions, rather than not changing my spread. This specific bugs seems to be the reason we did not make it through to later rounds, as you can see our P/L flattens out half way though each round, with a tiny fix letting us raise the Sharpe ratio of the model from 1.7 to 1.99.
 
 ## Next Steps 
 I would very much like to improve the autotrader implementation once I have the time to do so. I am still curious about how certain optimizations help/hurt the bot's performance. Here's my plan for the future of this repository:
