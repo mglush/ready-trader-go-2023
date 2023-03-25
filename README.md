@@ -31,21 +31,21 @@ Coming into this competition, Vasyl and I had no market making experience. After
 
 ## Results
 Vasyl and I ended up making it to the 5th round out of 9, earning us a top 128/1050 spot in the tournament. Results by round are as follows:
-  1) 2/4
+  1) 2/4  
 ![Round 1 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round1.png)
-  2) 1/6
+  2) 1/6  
 ![Round 2 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round2.png)
-  3) 3/8
+  3) 3/8  
 ![Round 3 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round3.png)
-  4) 4/8
+  4) 4/8  
 ![Round 4 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round4.png)
-  5) 8/8
+  5) 8/8  
 ![Round 5 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round5.png)
 
-Running the autotrader on the same chart in the open market, (no other autotraders), here's the results we get:
+Running the autotrader on the same chart in the open market, (no other autotraders), here's the results we get:  
 ![Tournament 2 Open Market](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/result_open_market.png)
   
-More details about P/L can be found in the [tournaments](https://github.com/mglush/ready-trader-go-2023/tree/main/py/tournaments) folder. It contains our results from the test round, as well as tournament 2.
+More details about P/L can be found in the [tournaments](https://github.com/mglush/ready-trader-go-2023/tree/main/py/tournaments) folder. It contains our results from the test round, as well as tournament 2.  
 Analysis regarding how other bots compared to others can be found in the [analysis](https://github.com/mglush/ready-trader-go-2023/tree/main/py/analysis) folder; specifically, in model_analysis.ipynb.
 
 ## Faults of the Plan
