@@ -31,7 +31,7 @@ Coming into this competition, Vasyl and I had no market making experience. After
 
 ## Results
 Vasyl and I ended up making it to the 5th round out of 9, earning us a top 128/1050 spot in the tournament. Results by round are as follows:
-  1) 2/4
+  1) ![Second out of four](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round1.png)
   2) 1/6
   3) 3/8
   4) 4/8
