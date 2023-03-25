@@ -2,13 +2,13 @@
 #### Submission by Michael Glushchenko and Vasylliy Ostapenko as Team LiquidBears.
 
 ## Table of Contents
-* [Reasons to Participate](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#reasons-to-participate)
-* [Rules of the Game](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#rules-of-the-game)
-* [Our Strategy](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#our-strategy)
-* [Results](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#results)
-* [Faults of the Plan](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#faults-of-the-plan)
-* [Next Steps](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#next-steps)
-* [Technologies](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#technologies)
+* [Reasons to Participate](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#reasons-to-participate).
+* [Rules of the Game](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#rules-of-the-game).
+* [Our Strategy](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#our-strategy).
+* [Results](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#results).
+* [Faults of the Plan](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#faults-of-the-plan).
+* [Next Steps](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#next-steps).
+* [Technologies](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#technologies).
 
 ## Reasons to Participate
 Financial math and algorithmic trading are a big passion of mine, but I've never coded an autotrader before. This competition allowed me to understand how an autotrader might be implemented, as well as to test, first-hand, my understanding of market making and liquidity providing.
@@ -17,7 +17,7 @@ Financial math and algorithmic trading are a big passion of mine, but I've never
 The rules of the game can be found on the Optiver [website](https://readytradergo.optiver.com/how-to-play/).
 
 ## How to run
-1) [Python how to run.](https://github.com/mglush/ready-trader-go-2023/tree/main/py#ready-trader-go).
+1) [Python how to run](https://github.com/mglush/ready-trader-go-2023/tree/main/py#ready-trader-go).
 2) [C++ how to run](https://github.com/mglush/ready-trader-go-2023/tree/main/cpp#ready-trader-go).
 
 ## Our Strategy
@@ -31,22 +31,22 @@ Coming into this competition, Vasyl and I had no market making experience. After
 
 ## Results
 Vasyl and I ended up making it to the 5th round out of 9, earning us a top 128/1050 spot in the tournament. Results by round are as follows:
-  1) 2/4  
+  Round1: 2/4  
 ![Round 1 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round1.png)
-  2) 1/6  
+  Round2: 1/6  
 ![Round 2 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round2.png)
-  3) 3/8  
+  Round3: 3/8  
 ![Round 3 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round3.png)
-  4) 4/8  
+  Round4: 4/8  
 ![Round 4 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round4.png)
-  5) 8/8  
+  Round5: 8/8  
 ![Round 5 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round5.png)
 
 Running the autotrader on the same chart in the open market, (no other autotraders), here's the results we get:  
 ![Tournament 2 Open Market](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/result_open_market.png)
   
 More details about P/L can be found in the [tournaments](https://github.com/mglush/ready-trader-go-2023/tree/main/py/tournaments) folder. It contains our results from the test round, as well as tournament 2.  
-Analysis regarding how other bots compared to others can be found in the [analysis](https://github.com/mglush/ready-trader-go-2023/tree/main/py/analysis) folder; specifically, in model_analysis.ipynb.
+Analysis regarding how other bots compared to ours can be found in the [analysis](https://github.com/mglush/ready-trader-go-2023/tree/main/py/analysis) folder; specifically, in model_analysis.ipynb.
 
 ## Faults of the Plan
   1) From the beginning, we tried to implement a strategy that involved placing multiple bid-ask spreads at different prices, and keeping track of each order with the help of a dictionary (or unordered map). The problem: it was incredibly slow to iterate though the orders map to cancel orders that were no longer "optimal". The solution: implementing a strategy that used only a single bid-ask spread at a time, due to the limited time we had.
