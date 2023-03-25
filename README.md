@@ -31,15 +31,15 @@ Coming into this competition, Vasyl and I had no market making experience. After
 
 ## Results
 Vasyl and I ended up making it to the 5th round out of 9, earning us a top 128/1050 spot in the tournament. Results by round are as follows:  
-  Round1: 2/4  
+#### Round 1: 2/4  
 ![Round 1 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round1.png)  
-  Round2: 1/6  
+#### Round 1: 1/6  
 ![Round 2 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round2.png)  
-  Round3: 3/8  
+#### Round 1: 3/8  
 ![Round 3 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round3.png)  
-  Round4: 4/8  
+#### Round 1: 4/8  
 ![Round 4 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round4.png)  
-  Round5: 8/8  
+#### Round 1: 8/8  
 ![Round 5 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round5.png)  
 
 Running the autotrader on the same chart in the open market, (no other autotraders), here's the results we get:  
