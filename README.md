@@ -1,5 +1,5 @@
 # Optiver's 2023 Ready Trader Go Competition
-#### Submission by Michael Glushchenko and Vasylliy Ostapenko as Team LiquidBears.
+#### Submission by Michael Glushchenko and Vasyliy Ostapenko as Team LiquidBears.
 
 ## Table of Contents
 * [Reasons to Participate](https://github.com/mglush/ready-trader-go-2023/blob/main/README.md#reasons-to-participate).
@@ -30,23 +30,23 @@ Coming into this competition, Vasyl and I had no market making experience. After
     3.3) We would spped our bot up (move the bid ask spread closer towards the middle) when the order execution rate (rate with which the ticks of the market function would get called) was high, and vice versa when it was low. The idea for this was that we cannot afford to try to get a bigger spread on an instrument that trades very often, so we had to adjust accordingly.
 
 ## Results
-Vasyl and I ended up making it to the 5th round out of 9, earning us a top 128/1050 spot in the tournament. Results by round are as follows:
+Vasyl and I ended up making it to the 5th round out of 9, earning us a top 128/1050 spot in the tournament. Results by round are as follows:  
   Round1: 2/4  
-![Round 1 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round1.png)
+![Round 1 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round1.png)  
   Round2: 1/6  
-![Round 2 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round2.png)
+![Round 2 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round2.png)  
   Round3: 3/8  
-![Round 3 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round3.png)
+![Round 3 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round3.png)  
   Round4: 4/8  
-![Round 4 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round4.png)
+![Round 4 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round4.png)  
   Round5: 8/8  
-![Round 5 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round5.png)
+![Round 5 results](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/match_round5.png)  
 
 Running the autotrader on the same chart in the open market, (no other autotraders), here's the results we get:  
-![Tournament 2 Open Market](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/result_open_market.png)
+![Tournament 2 Open Market](https://github.com/mglush/ready-trader-go-2023/blob/main/py/analysis/result_plots/result_open_market.png)  
   
 More details about P/L can be found in the [tournaments](https://github.com/mglush/ready-trader-go-2023/tree/main/py/tournaments) folder. It contains our results from the test round, as well as tournament 2.  
-Analysis regarding how other bots compared to ours can be found in the [analysis](https://github.com/mglush/ready-trader-go-2023/tree/main/py/analysis) folder; specifically, in model_analysis.ipynb.
+Analysis regarding how other bots compared to ours can be found in the [analysis](https://github.com/mglush/ready-trader-go-2023/tree/main/py/analysis) folder; specifically, in model_analysis.ipynb.  
 
 ## Faults of the Plan
   1) From the beginning, we tried to implement a strategy that involved placing multiple bid-ask spreads at different prices, and keeping track of each order with the help of a dictionary (or unordered map). The problem: it was incredibly slow to iterate though the orders map to cancel orders that were no longer "optimal". The solution: implementing a strategy that used only a single bid-ask spread at a time, due to the limited time we had.
